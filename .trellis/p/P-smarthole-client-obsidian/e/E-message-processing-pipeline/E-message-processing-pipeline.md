@@ -21,6 +21,10 @@ affectedFiles:
   src/processor/index.ts: Created module exports following codebase conventions
   src/main.ts: Integrated InboxManager and MessageProcessor for full message
     processing pipeline
+  CLAUDE.md: Added processor/ module to Project Structure section
+  docs/living-spec.md: Updated acceptance criteria for Message Processing and
+    Error Handling; added Message Processor technical documentation section;
+    added Message processor to Affected Areas
 log: []
 schema: v1.0
 childrenIds:
