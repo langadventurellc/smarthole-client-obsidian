@@ -4,8 +4,9 @@
  * Public exports for LLM provider abstraction and tool calling.
  */
 
-// Provider Interface
+// Provider Interface and Implementation
 export type { LLMProvider } from "./types";
+export { AnthropicProvider } from "./AnthropicProvider";
 
 // Message Types
 export type { LLMMessage, MessageRole, ContentBlock } from "./types";
