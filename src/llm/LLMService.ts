@@ -49,6 +49,7 @@ export class LLMService {
   private app: App;
   private settings: SmartHoleSettings;
   private initialized = false;
+  private conversationContext = "";
 
   constructor(app: App, settings: SmartHoleSettings) {
     this.app = app;
@@ -198,6 +199,17 @@ export class LLMService {
   }
 
   /**
+   * Set conversation context from persistent history.
+   * This context is included in the system prompt to provide continuity
+   * across plugin restarts.
+   *
+   * @param context - Formatted context string from ConversationHistory
+   */
+  setConversationContext(context: string): void {
+    this.conversationContext = context;
+  }
+
+  /**
    * Get all registered tool definitions.
    */
   private getToolDefinitions(): Tool[] {
@@ -205,7 +217,7 @@ export class LLMService {
   }
 
   /**
-   * Build the system prompt including information architecture from settings.
+   * Build the system prompt including information architecture and conversation context.
    */
   private buildSystemPrompt(): string {
     const iaSection = this.settings.informationArchitecture.trim()
@@ -217,6 +229,8 @@ export class LLMService {
         ? `## Available Tools\nYou have access to tools for manipulating the vault. Use them to fulfill user requests.\n`
         : "";
 
+    const contextSection = this.conversationContext.trim() ? `\n\n${this.conversationContext}` : "";
+
     return `You are an intelligent assistant managing an Obsidian vault. You help users organize their notes, create new content, and find information.
 
 ${iaSection}## Guidelines
@@ -226,7 +240,7 @@ ${iaSection}## Guidelines
 - Send notifications via SmartHole to inform the user of actions taken
 - Be concise in responses; focus on what was done rather than lengthy explanations
 
-${toolsSection}`.trim();
+${toolsSection}${contextSection}`.trim();
   }
 
   /**

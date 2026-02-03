@@ -1,15 +1,39 @@
 ---
 id: F-conversation-history
 title: Conversation History Persistence and IA Description Generation
-status: open
+status: done
 priority: medium
 parent: E-message-processing-pipeline
 prerequisites:
   - F-message-processor-orchestratio
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/types.ts: Created type definitions for HistoryEntry,
+    ConversationSummary, and PersistedHistory interfaces
+  src/context/ConversationHistory.ts: Created main class with load,
+    addConversation, getContextPrompt, clear, summarizeOld methods and
+    persistence via plugin data
+  src/context/index.ts: Created public exports for the context module
+  src/settings.ts: "Added maxConversationHistory to SmartHoleSettings interface,
+    DEFAULT_SETTINGS, and settings UI; Added imports for LLMService, LLMError,
+    and extractTextContent from ./llm module. Replaced the placeholder Generate
+    button onClick handler with full implementation: validation for API key and
+    IA text, loading state management, LLM service initialization and message
+    processing, settings update and save, UI refresh, and inline status display
+    for success/error feedback."
+  src/main.ts: Added conversationHistory property, initialization on load, passing
+    to MessageProcessor, cleanup on unload
+  src/processor/types.ts: Added conversationHistory to MessageProcessorConfig
+  src/processor/MessageProcessor.ts: Added conversation recording after successful
+    processing, tools tracking, summarization triggering, and context passing to
+    LLM
+  src/llm/LLMService.ts: Added conversationContext property,
+    setConversationContext() method, and context inclusion in system prompt
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-conversation
+  - T-implement-generate-description
 created: 2026-02-03T14:52:17.138Z
 updated: 2026-02-03T14:52:17.138Z
 ---
