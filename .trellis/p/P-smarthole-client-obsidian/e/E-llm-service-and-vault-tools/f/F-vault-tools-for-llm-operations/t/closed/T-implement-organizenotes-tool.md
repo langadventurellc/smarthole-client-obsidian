@@ -1,14 +1,65 @@
 ---
 id: T-implement-organizenotes-tool
 title: Implement organizeNotes tool and tool registry
-status: open
+status: done
 priority: high
 parent: F-vault-tools-for-llm-operations
 prerequisites:
   - T-implement-createnote-and
   - T-implement-searchnotes-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/organizeNotes.ts: Created factory function
+    createOrganizeNoteTool(app) that returns a ToolHandler for the organize_note
+    tool. Supports renaming and moving notes with automatic destination folder
+    creation, conflict detection, and path normalization.
+  src/llm/tools/index.ts: Added createVaultTools(app) function that returns an
+    array of all instantiated vault tools for bulk registration. Added export
+    for createOrganizeNoteTool.
+  src/llm/index.ts: Added exports for createVaultTools and createOrganizeNoteTool
+    from the tools module.
+log:
+  - >-
+    Research completed. Identified patterns from existing tools (createNote.ts,
+    modifyNote.ts, searchNotes.ts):
+
+    - Factory function pattern: createXxxTool(app: App): ToolHandler
+
+    - Tool definition with name, description, inputSchema
+
+    - Execute function returns Promise<string> with error prefix for failures
+
+    - Path normalization helper for .md extension
+
+    - ensureParentFolder helper can be adapted for destination folder creation
+
+
+    Starting implementation of organizeNotes.ts following established patterns.
+  - >-
+    Implemented the organizeNotes tool and tool registry for the LLM vault tools
+    feature.
+
+
+    The organize_note tool enables renaming and moving notes within the vault
+    using `vault.rename()`. It includes:
+
+    - Input validation for path and new_path parameters
+
+    - Path normalization to ensure .md extension
+
+    - Conflict detection (prevents overwriting existing files)
+
+    - Automatic destination folder creation using `vault.createFolder()`
+
+    - Clear error messages for missing source files and path conflicts
+
+
+    The tool registry (`createVaultTools` function) was added to provide a
+    convenient way to instantiate all vault tools at once for bulk registration
+    with LLMService.
+
+
+    All quality checks (lint, format, type-check) pass and the build compiles
+    successfully.
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T06:50:42.034Z

@@ -1,7 +1,7 @@
 ---
 id: F-vault-tools-for-llm-operations
 title: Vault Tools for LLM Operations
-status: in-progress
+status: done
 priority: high
 parent: E-llm-service-and-vault-tools
 prerequisites:
@@ -19,21 +19,30 @@ affectedFiles:
     missing files.
   src/llm/tools/index.ts: Created barrel export file for the tools module,
     exporting both createCreateNoteTool and createModifyNoteTool factory
-    functions.; Added export for createSearchNotesTool from the tools module.
+    functions.; Added export for createSearchNotesTool from the tools module.;
+    Added createVaultTools(app) function that returns an array of all
+    instantiated vault tools for bulk registration. Added export for
+    createOrganizeNoteTool.
   src/llm/index.ts: Updated to export the new vault tools (createCreateNoteTool,
     createModifyNoteTool) from the tools submodule.; Added createSearchNotesTool
-    to the Vault Tools exports.
+    to the Vault Tools exports.; Added exports for createVaultTools and
+    createOrganizeNoteTool from the tools module.
   src/llm/tools/searchNotes.ts: Created factory function
     createSearchNotesTool(app) that returns a ToolHandler for the search_notes
     tool. Uses prepareSimpleSearch() for efficient plain text search, returns up
     to 10 results with excerpts showing match context, supports optional
     read_content parameter for full file content.
-log: []
+  src/llm/tools/organizeNotes.ts: Created factory function
+    createOrganizeNoteTool(app) that returns a ToolHandler for the organize_note
+    tool. Supports renaming and moving notes with automatic destination folder
+    creation, conflict detection, and path normalization.
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
+  - T-implement-createnote-and
   - T-implement-organizenotes-tool
   - T-implement-searchnotes-tool
-  - T-implement-createnote-and
 created: 2026-02-03T06:20:22.210Z
 updated: 2026-02-03T06:20:22.210Z
 ---

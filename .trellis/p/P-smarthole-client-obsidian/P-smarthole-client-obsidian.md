@@ -83,7 +83,8 @@ affectedFiles:
     Added exports for LLMService class and ToolHandler interface; Updated to
     export the new vault tools (createCreateNoteTool, createModifyNoteTool) from
     the tools submodule.; Added createSearchNotesTool to the Vault Tools
-    exports.
+    exports.; Added exports for createVaultTools and createOrganizeNoteTool from
+    the tools module.
   src/llm/AnthropicProvider.ts: Created AnthropicProvider class implementing
     LLMProvider interface with Anthropic SDK integration, message/tool type
     conversion, retry logic with exponential backoff, and comprehensive error
@@ -105,12 +106,19 @@ affectedFiles:
     missing files.
   src/llm/tools/index.ts: Created barrel export file for the tools module,
     exporting both createCreateNoteTool and createModifyNoteTool factory
-    functions.; Added export for createSearchNotesTool from the tools module.
+    functions.; Added export for createSearchNotesTool from the tools module.;
+    Added createVaultTools(app) function that returns an array of all
+    instantiated vault tools for bulk registration. Added export for
+    createOrganizeNoteTool.
   src/llm/tools/searchNotes.ts: Created factory function
     createSearchNotesTool(app) that returns a ToolHandler for the search_notes
     tool. Uses prepareSimpleSearch() for efficient plain text search, returns up
     to 10 results with excerpts showing match context, supports optional
     read_content parameter for full file content.
+  src/llm/tools/organizeNotes.ts: Created factory function
+    createOrganizeNoteTool(app) that returns a ToolHandler for the organize_note
+    tool. Supports renaming and moving notes with automatic destination folder
+    creation, conflict detection, and path normalization.
 log: []
 schema: v1.0
 childrenIds:
