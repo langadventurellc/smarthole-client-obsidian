@@ -15,7 +15,7 @@
   padding: var(--size-4-3);
   display: flex;
   flex-direction: column;
-  gap: var(--size-4-2);
+  gap: var(--size-4-4);
 }
 
 /* Base message styling */
@@ -39,6 +39,26 @@
   background-color: var(--background-secondary);
   align-self: flex-start;
   margin-right: var(--size-4-8);
+  border-left: 3px solid var(--text-muted);
+}
+
+/* Message header with role label and timestamp */
+.smarthole-chat-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--size-4-1);
+  font-size: var(--font-ui-small);
+}
+
+.smarthole-chat-message-role {
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+
+.smarthole-chat-message-timestamp {
+  color: var(--text-faint);
+  font-size: var(--font-smallest);
 }
 
 /* Message content */

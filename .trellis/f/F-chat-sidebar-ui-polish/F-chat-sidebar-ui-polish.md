@@ -1,14 +1,22 @@
 ---
 id: F-chat-sidebar-ui-polish
 title: Chat Sidebar UI Polish
-status: in-progress
+status: done
 priority: medium
 parent: none
 prerequisites: []
 affectedFiles:
   styles.css: "Added align-items: flex-end to .smarthole-chat-input-area and
-    reduced min-height from 40px to 36px in .smarthole-chat-input"
-log: []
+    reduced min-height from 40px to 36px in .smarthole-chat-input; Increased
+    message gap from size-4-2 to size-4-4; added border-left to assistant
+    messages; added new CSS classes for message header
+    (.smarthole-chat-message-header), role label (.smarthole-chat-message-role),
+    and timestamp (.smarthole-chat-message-timestamp)"
+  src/views/ChatView.ts: Added formatTimestamp() method for human-readable
+    timestamps; updated renderMessage() to render a header with role label and
+    timestamp before the message content
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-fix-input-area-alignment-and

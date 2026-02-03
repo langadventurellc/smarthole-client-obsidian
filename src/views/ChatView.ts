@@ -228,12 +228,43 @@ export class ChatView extends ItemView {
     }
   }
 
+  private formatTimestamp(isoString: string): string {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+
+    // Same day: show time only
+    if (date.toDateString() === now.toDateString()) {
+      return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    // Different day: show date and time
+    return (
+      date.toLocaleDateString([], { month: "short", day: "numeric" }) +
+      " " +
+      date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    );
+  }
+
   private renderMessage(message: ChatMessage): void {
     if (!this.messagesEl) return;
 
     const messageEl = this.messagesEl.createEl("div", {
       cls: `smarthole-chat-message smarthole-chat-message-${message.role}`,
     });
+
+    // Header with role label and timestamp
+    const headerEl = messageEl.createEl("div", { cls: "smarthole-chat-message-header" });
+
+    const roleEl = headerEl.createEl("span", { cls: "smarthole-chat-message-role" });
+    roleEl.setText(message.role === "user" ? "You" : "Assistant");
+
+    const timestampEl = headerEl.createEl("span", { cls: "smarthole-chat-message-timestamp" });
+    timestampEl.setText(this.formatTimestamp(message.timestamp));
 
     // Content
     const contentEl = messageEl.createEl("div", { cls: "smarthole-chat-message-content" });

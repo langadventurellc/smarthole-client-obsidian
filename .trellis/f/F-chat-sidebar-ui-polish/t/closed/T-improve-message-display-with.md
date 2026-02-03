@@ -1,12 +1,26 @@
 ---
 id: T-improve-message-display-with
 title: Improve message display with labels, timestamps, and spacing
-status: open
+status: done
 priority: medium
 parent: F-chat-sidebar-ui-polish
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  styles.css: Increased message gap from size-4-2 to size-4-4; added border-left
+    to assistant messages; added new CSS classes for message header
+    (.smarthole-chat-message-header), role label (.smarthole-chat-message-role),
+    and timestamp (.smarthole-chat-message-timestamp)
+  src/views/ChatView.ts: Added formatTimestamp() method for human-readable
+    timestamps; updated renderMessage() to render a header with role label and
+    timestamp before the message content
+log:
+  - Implemented improved message display with role labels, timestamps, and
+    enhanced spacing. Added formatTimestamp() helper that shows human-readable
+    times ("just now", "5m ago", "2:30 PM", or "Feb 3 2:30 PM" for older
+    messages). Updated renderMessage() to include a header with role label
+    ("You" / "Assistant") and timestamp. Increased message spacing from size-4-2
+    to size-4-4 and added a subtle 3px left border to assistant messages for
+    visual hierarchy.
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T20:01:44.986Z
