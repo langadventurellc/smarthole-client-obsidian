@@ -1,10 +1,11 @@
-import { Plugin } from "obsidian";
+import { Plugin, WorkspaceLeaf } from "obsidian";
 
 import { ConversationHistory } from "./context";
 import { InboxManager } from "./inbox";
 import { MessageProcessor } from "./processor";
 import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 import type { ConnectionStatus } from "./types";
+import { ChatView, VIEW_TYPE_CHAT } from "./views";
 import { SmartHoleConnection } from "./websocket/SmartHoleConnection";
 
 export default class SmartHolePlugin extends Plugin {
@@ -22,6 +23,21 @@ export default class SmartHolePlugin extends Plugin {
     // Initialize status bar
     this.statusBarEl = this.addStatusBarItem();
     this.updateStatusBar("disconnected");
+
+    // Register ChatView
+    this.registerView(VIEW_TYPE_CHAT, (leaf: WorkspaceLeaf) => new ChatView(leaf));
+
+    // Add ribbon icon to open chat sidebar
+    this.addRibbonIcon("message-circle", "Open SmartHole Chat", () => {
+      this.activateChatView();
+    });
+
+    // Add command to open chat sidebar
+    this.addCommand({
+      id: "open-chat",
+      name: "Open Chat",
+      callback: () => this.activateChatView(),
+    });
 
     // Add click handler for status bar
     this.statusBarEl.addEventListener("click", () => {
@@ -136,5 +152,25 @@ export default class SmartHolePlugin extends Plugin {
       error: "SmartHole: Error",
     };
     this.statusBarEl.setText(statusText[status]);
+  }
+
+  async activateChatView(): Promise<void> {
+    const { workspace } = this.app;
+
+    let leaf: WorkspaceLeaf | null = null;
+    const existingLeaves = workspace.getLeavesOfType(VIEW_TYPE_CHAT);
+
+    if (existingLeaves.length > 0) {
+      leaf = existingLeaves[0];
+    } else {
+      leaf = workspace.getRightLeaf(false);
+      if (leaf) {
+        await leaf.setViewState({ type: VIEW_TYPE_CHAT, active: true });
+      }
+    }
+
+    if (leaf) {
+      workspace.revealLeaf(leaf);
+    }
   }
 }
