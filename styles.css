@@ -78,6 +78,7 @@
 /* Input area - fixed at bottom */
 .smarthole-chat-input-area {
   display: flex;
+  align-items: flex-end;
   gap: var(--size-4-2);
   padding: var(--size-4-3);
   border-top: 1px solid var(--background-modifier-border);
@@ -88,7 +89,7 @@
 .smarthole-chat-input {
   flex: 1;
   resize: none;
-  min-height: 40px;
+  min-height: 36px;
   max-height: 120px;
   padding: var(--size-4-2);
   border: 1px solid var(--background-modifier-border);
