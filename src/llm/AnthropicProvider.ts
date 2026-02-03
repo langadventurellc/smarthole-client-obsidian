@@ -48,7 +48,10 @@ export class AnthropicProvider implements LLMProvider {
       throw LLMError.authError("Invalid API key. Please check your Anthropic API key in settings.");
     }
 
-    this.client = new Anthropic({ apiKey: apiKey.trim() });
+    this.client = new Anthropic({
+      apiKey: apiKey.trim(),
+      dangerouslyAllowBrowser: true, // Required for Electron/Obsidian environment
+    });
   }
 
   /**
