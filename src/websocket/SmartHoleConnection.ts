@@ -1,8 +1,8 @@
 /**
  * SmartHoleConnection - Core WebSocket connection class for SmartHole protocol.
  *
- * Handles connection lifecycle, registration, message parsing, and responses.
- * Does NOT handle reconnection logic (that's managed by higher-level code).
+ * Handles connection lifecycle, registration, message parsing, responses,
+ * and automatic reconnection with exponential backoff.
  */
 
 import type { ConnectionStatus } from "../types";
@@ -22,6 +22,12 @@ import {
 
 /** SmartHole WebSocket server URL (localhost only for security) */
 const SMARTHOLE_URL = "ws://127.0.0.1:9473";
+
+/** Base delay for reconnection backoff (1 second) */
+const RECONNECT_BASE_DELAY = 1000;
+
+/** Maximum delay for reconnection backoff (30 seconds) */
+const RECONNECT_MAX_DELAY = 30000;
 
 /** Options for creating a SmartHoleConnection */
 export interface SmartHoleConnectionOptions {
@@ -69,6 +75,11 @@ export class SmartHoleConnection {
   private options: Required<Pick<SmartHoleConnectionOptions, "name" | "description">> &
     Pick<SmartHoleConnectionOptions, "version" | "capabilities">;
 
+  // Reconnection state
+  private reconnectionEnabled = false;
+  private reconnectAttempts = 0;
+  private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
   // Callbacks
   onStateChange: ((state: ConnectionStatus) => void) | null = null;
   onRegistrationResult: ((success: boolean, error?: RegistrationError) => void) | null = null;
@@ -87,6 +98,27 @@ export class SmartHoleConnection {
   /** Returns the current connection state */
   getState(): ConnectionStatus {
     return this.state;
+  }
+
+  /** Enables automatic reconnection on disconnect */
+  enableReconnection(): void {
+    this.reconnectionEnabled = true;
+  }
+
+  /** Disables automatic reconnection and cancels any pending reconnect */
+  disableReconnection(): void {
+    this.reconnectionEnabled = false;
+    this.cancelPendingReconnect();
+  }
+
+  /** Returns true if a reconnection attempt is pending */
+  isReconnecting(): boolean {
+    return this.reconnectTimeoutId !== null;
+  }
+
+  /** Returns the number of reconnection attempts since last successful connection */
+  getReconnectAttempts(): number {
+    return this.reconnectAttempts;
   }
 
   /** Establishes WebSocket connection to SmartHole server */
@@ -110,8 +142,11 @@ export class SmartHoleConnection {
     }
   }
 
-  /** Gracefully closes the WebSocket connection */
+  /** Gracefully closes the WebSocket connection and disables reconnection */
   disconnect(): void {
+    // Disable reconnection when manually disconnecting
+    this.disableReconnection();
+
     if (!this.ws) {
       return;
     }
@@ -193,6 +228,9 @@ export class SmartHoleConnection {
         );
         this.ws = null;
         this.setState("disconnected");
+
+        // Schedule reconnection if enabled
+        this.scheduleReconnect();
       }
     };
 
@@ -266,6 +304,8 @@ export class SmartHoleConnection {
     if (isRegistrationSuccess(payload)) {
       console.log(`SmartHoleConnection: Registration successful (clientId: ${payload.clientId})`);
       this.setState("connected");
+      // Reset backoff on successful connection AND registration
+      this.resetReconnectState();
       this.onRegistrationResult?.(true);
     } else if (isRegistrationFailure(payload)) {
       console.error(
@@ -276,6 +316,10 @@ export class SmartHoleConnection {
         code: payload.code,
         message: payload.message,
       });
+      // Close connection to trigger reconnection via onclose handler
+      if (this.ws) {
+        this.ws.close(4000, "Registration failed");
+      }
     }
   }
 
@@ -303,5 +347,47 @@ export class SmartHoleConnection {
 
   private emitError(error: Error): void {
     this.onError?.(error);
+  }
+
+  /** Calculates delay for next reconnection attempt using exponential backoff */
+  private calculateReconnectDelay(): number {
+    return Math.min(
+      RECONNECT_BASE_DELAY * Math.pow(2, this.reconnectAttempts),
+      RECONNECT_MAX_DELAY
+    );
+  }
+
+  /** Cancels any pending reconnection timeout */
+  private cancelPendingReconnect(): void {
+    if (this.reconnectTimeoutId !== null) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
+    }
+  }
+
+  /** Schedules a reconnection attempt after the appropriate backoff delay */
+  private scheduleReconnect(): void {
+    if (!this.reconnectionEnabled) {
+      return;
+    }
+
+    this.cancelPendingReconnect();
+
+    const delay = this.calculateReconnectDelay();
+    console.log(
+      `SmartHoleConnection: Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts + 1})`
+    );
+
+    this.reconnectTimeoutId = setTimeout(() => {
+      this.reconnectTimeoutId = null;
+      this.reconnectAttempts++;
+      this.connect();
+    }, delay);
+  }
+
+  /** Resets reconnection state after successful connection and registration */
+  private resetReconnectState(): void {
+    this.reconnectAttempts = 0;
+    this.cancelPendingReconnect();
   }
 }

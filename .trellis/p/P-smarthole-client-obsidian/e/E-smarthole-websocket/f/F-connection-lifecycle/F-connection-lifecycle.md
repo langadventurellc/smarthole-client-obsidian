@@ -1,15 +1,24 @@
 ---
 id: F-connection-lifecycle
 title: Connection Lifecycle & Automatic Reconnection
-status: open
+status: in-progress
 priority: high
 parent: E-smarthole-websocket
 prerequisites:
   - F-websocket-connection-manager
-affectedFiles: {}
+affectedFiles:
+  src/websocket/SmartHoleConnection.ts: "Added reconnection manager with
+    exponential backoff: constants for base/max delay (1s/30s), reconnection
+    state variables, public API methods (enableReconnection,
+    disableReconnection, isReconnecting, getReconnectAttempts), private helper
+    methods (calculateReconnectDelay, cancelPendingReconnect, scheduleReconnect,
+    resetReconnectState). Modified disconnect() to disable reconnection, onclose
+    to trigger reconnection, and registration success to reset backoff."
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-reconnection
+  - T-integrate-smartholeconnection
 created: 2026-02-03T05:13:46.583Z
 updated: 2026-02-03T05:13:46.583Z
 ---

@@ -64,7 +64,14 @@ affectedFiles:
     automatic registration on connection open, message parsing with validation
     using type guards from types.ts, callback system (onStateChange,
     onRegistrationResult, onMessage, onError), response methods (sendAck,
-    sendReject, sendNotification), and proper error handling throughout"
+    sendReject, sendNotification), and proper error handling throughout; Added
+    reconnection manager with exponential backoff: constants for base/max delay
+    (1s/30s), reconnection state variables, public API methods
+    (enableReconnection, disableReconnection, isReconnecting,
+    getReconnectAttempts), private helper methods (calculateReconnectDelay,
+    cancelPendingReconnect, scheduleReconnect, resetReconnectState). Modified
+    disconnect() to disable reconnection, onclose to trigger reconnection, and
+    registration success to reset backoff."
 log: []
 schema: v1.0
 childrenIds:
