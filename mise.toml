@@ -16,7 +16,7 @@ depends = ["lint", "format", "type-check"]
 
 [tasks.lint]
 description = "ESLint only"
-run = "npx eslint src --ext .ts"
+run = "npx eslint src"
 
 [tasks.format]
 description = "Prettier check"

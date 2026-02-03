@@ -6,8 +6,10 @@ priority: high
 parent: E-plugin-foundation-and-settings
 prerequisites: []
 affectedFiles:
-  package.json: Created package.json with runtime dependency @anthropic-ai/sdk and
-    dev dependencies for TypeScript/Obsidian development
+  package.json: "Created package.json with runtime dependency @anthropic-ai/sdk
+    and dev dependencies for TypeScript/Obsidian development; Added dev
+    dependencies: eslint ^9.39.2, @eslint/js ^9.39.2, typescript-eslint ^8.54.0,
+    prettier ^3.8.1"
   tsconfig.json: Created TypeScript configuration with strict mode, ES2018 target,
     and source maps for Obsidian plugin development
   manifest.json: "Created Obsidian plugin manifest with isDesktopOnly: true for
@@ -16,13 +18,23 @@ affectedFiles:
     point src/main.ts, output main.js, external modules for Obsidian, watch mode
     for dev and minification for production
   mise.toml: "Created mise task runner configuration with all commands from
-    CLAUDE.md: dev, build, test, quality, lint, format, type-check"
+    CLAUDE.md: dev, build, test, quality, lint, format, type-check; Updated lint
+    task to use ESLint 9 syntax (removed deprecated --ext flag)"
+  eslint.config.mjs: Created ESLint flat config with typescript-eslint recommended
+    rules, ignores for build output, and configured
+    @typescript-eslint/no-unused-vars with argsIgnorePattern
+  .prettierrc: Created Prettier config with semi, double quotes, 2-space tabs, es5
+    trailing commas, and 100 char print width
+  .prettierignore: Created Prettier ignore file excluding main.js, node_modules,
+    reference-docs, docs, .trellis, and markdown files
+  .gitignore: Created gitignore excluding node_modules, build output (main.js,
+    main.js.map), IDE files, OS files, and logs
 log: []
 schema: v1.0
 childrenIds:
-  - T-create-build-configuration
   - T-create-initial-source
   - T-set-up-code-quality-tooling
+  - T-create-build-configuration
   - T-create-core-configuration
 created: 2026-02-03T04:11:47.524Z
 updated: 2026-02-03T04:11:47.524Z

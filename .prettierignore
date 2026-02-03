@@ -1,0 +1,6 @@
+main.js
+node_modules
+reference-docs
+docs
+.trellis
+*.md
