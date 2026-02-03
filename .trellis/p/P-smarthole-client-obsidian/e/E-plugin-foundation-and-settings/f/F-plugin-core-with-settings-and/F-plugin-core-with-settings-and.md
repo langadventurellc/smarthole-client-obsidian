@@ -9,9 +9,15 @@ prerequisites:
 affectedFiles:
   src/types.ts: Created with ConnectionStatus type, CLAUDE_MODELS constant, and
     ClaudeModelId type
-  src/settings.ts: Created with SmartHoleSettings interface and DEFAULT_SETTINGS
-    constant with default values from living spec
-  src/main.ts: Updated with settings property, loadSettings(), and saveSettings() methods
+  src/settings.ts: "Created with SmartHoleSettings interface and DEFAULT_SETTINGS
+    constant with default values from living spec; Added SmartHoleSettingTab
+    class extending PluginSettingTab with display() method implementing all
+    settings fields: SecretComponent for API key, dropdown for model selection,
+    text input for client name, textareas for routing description and
+    information architecture, and Generate button with MVP placeholder"
+  src/main.ts: Updated with settings property, loadSettings(), and saveSettings()
+    methods; Added import for SmartHoleSettingTab and registered the settings
+    tab in onload() using this.addSettingTab()
 log: []
 schema: v1.0
 childrenIds:

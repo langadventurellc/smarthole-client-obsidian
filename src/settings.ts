@@ -1,4 +1,7 @@
-import type { ClaudeModelId } from "./types";
+import { App, PluginSettingTab, SecretComponent, Setting } from "obsidian";
+
+import type SmartHolePlugin from "./main";
+import { CLAUDE_MODELS, type ClaudeModelId } from "./types";
 
 export interface SmartHoleSettings {
   anthropicApiKeyName: string;
@@ -28,3 +31,97 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   routingDescription: DEFAULT_ROUTING_DESCRIPTION,
   informationArchitecture: DEFAULT_INFORMATION_ARCHITECTURE,
 };
+
+export class SmartHoleSettingTab extends PluginSettingTab {
+  plugin: SmartHolePlugin;
+
+  constructor(app: App, plugin: SmartHolePlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    // API Key setting using SecretComponent
+    new Setting(containerEl)
+      .setName("Anthropic API Key")
+      .setDesc("Select or create a secret for your Anthropic API key")
+      .addComponent((el) =>
+        new SecretComponent(this.app, el)
+          .setValue(this.plugin.settings.anthropicApiKeyName)
+          .onChange(async (value) => {
+            this.plugin.settings.anthropicApiKeyName = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Model selection dropdown
+    new Setting(containerEl)
+      .setName("Claude Model")
+      .setDesc("Select the Claude model to use for processing")
+      .addDropdown((dropdown) => {
+        for (const [modelId, displayName] of Object.entries(CLAUDE_MODELS)) {
+          dropdown.addOption(modelId, displayName);
+        }
+        return dropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
+          this.plugin.settings.model = value as ClaudeModelId;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    // Client name text input
+    new Setting(containerEl)
+      .setName("Client Name")
+      .setDesc("Name used when registering with SmartHole")
+      .addText((text) =>
+        text
+          .setPlaceholder("Miss Simone")
+          .setValue(this.plugin.settings.clientName)
+          .onChange(async (value) => {
+            this.plugin.settings.clientName = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Routing description textarea
+    new Setting(containerEl)
+      .setName("Routing Description")
+      .setDesc("Description used by SmartHole to route messages to this client")
+      .addTextArea((text) => {
+        text.inputEl.rows = 4;
+        text.inputEl.cols = 50;
+        return text.setValue(this.plugin.settings.routingDescription).onChange(async (value) => {
+          this.plugin.settings.routingDescription = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    // Information Architecture textarea
+    new Setting(containerEl)
+      .setName("Information Architecture")
+      .setDesc("Prompt defining how notes should be organized in your vault")
+      .addTextArea((text) => {
+        text.inputEl.rows = 8;
+        text.inputEl.cols = 50;
+        return text
+          .setValue(this.plugin.settings.informationArchitecture)
+          .onChange(async (value) => {
+            this.plugin.settings.informationArchitecture = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    // Generate Description button
+    new Setting(containerEl)
+      .setName("Generate from IA")
+      .setDesc("Generate routing description based on your Information Architecture")
+      .addButton((button) =>
+        button.setButtonText("Generate").onClick(() => {
+          // MVP placeholder - feature requires API connection
+          console.log("Generate description feature requires API connection (not yet implemented)");
+        })
+      );
+  }
+}

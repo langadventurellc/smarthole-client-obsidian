@@ -1,12 +1,13 @@
 import { Plugin } from "obsidian";
 
-import { DEFAULT_SETTINGS, type SmartHoleSettings } from "./settings";
+import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 
 export default class SmartHolePlugin extends Plugin {
   settings!: SmartHoleSettings;
 
   async onload() {
     await this.loadSettings();
+    this.addSettingTab(new SmartHoleSettingTab(this.app, this));
     console.log("SmartHole Client plugin loaded");
   }
 
