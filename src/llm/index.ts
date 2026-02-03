@@ -8,6 +8,10 @@
 export type { LLMProvider } from "./types";
 export { AnthropicProvider } from "./AnthropicProvider";
 
+// Service Layer
+export { LLMService } from "./LLMService";
+export type { ToolHandler } from "./LLMService";
+
 // Message Types
 export type { LLMMessage, MessageRole, ContentBlock } from "./types";
 
