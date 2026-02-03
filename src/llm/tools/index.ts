@@ -7,3 +7,4 @@
 
 export { createCreateNoteTool } from "./createNote";
 export { createModifyNoteTool } from "./modifyNote";
+export { createSearchNotesTool } from "./searchNotes";

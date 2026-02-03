@@ -19,15 +19,21 @@ affectedFiles:
     missing files.
   src/llm/tools/index.ts: Created barrel export file for the tools module,
     exporting both createCreateNoteTool and createModifyNoteTool factory
-    functions.
+    functions.; Added export for createSearchNotesTool from the tools module.
   src/llm/index.ts: Updated to export the new vault tools (createCreateNoteTool,
-    createModifyNoteTool) from the tools submodule.
+    createModifyNoteTool) from the tools submodule.; Added createSearchNotesTool
+    to the Vault Tools exports.
+  src/llm/tools/searchNotes.ts: Created factory function
+    createSearchNotesTool(app) that returns a ToolHandler for the search_notes
+    tool. Uses prepareSimpleSearch() for efficient plain text search, returns up
+    to 10 results with excerpts showing match context, supports optional
+    read_content parameter for full file content.
 log: []
 schema: v1.0
 childrenIds:
-  - T-implement-createnote-and
   - T-implement-organizenotes-tool
   - T-implement-searchnotes-tool
+  - T-implement-createnote-and
 created: 2026-02-03T06:20:22.210Z
 updated: 2026-02-03T06:20:22.210Z
 ---

@@ -38,4 +38,4 @@ export {
 } from "./types";
 
 // Vault Tools
-export { createCreateNoteTool, createModifyNoteTool } from "./tools";
+export { createCreateNoteTool, createModifyNoteTool, createSearchNotesTool } from "./tools";
