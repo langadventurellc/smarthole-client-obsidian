@@ -18,6 +18,8 @@ export interface HistoryEntry {
   assistantResponse: string;
   /** Names of tools that were invoked during this conversation */
   toolsUsed: string[];
+  /** Source of the message: "direct" for sidebar input, "websocket" for SmartHole server */
+  source?: "direct" | "websocket";
 }
 
 /**

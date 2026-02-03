@@ -32,6 +32,6 @@ depends = ["build"]
 run = """
 PLUGIN_DIR="${OBSIDIAN_PLUGIN_DIR:-$HOME/Documents/Obsidian/the void/.obsidian/plugins/smarthole-client}"
 mkdir -p "$PLUGIN_DIR"
-cp main.js manifest.json "$PLUGIN_DIR/"
+cp main.js manifest.json styles.css "$PLUGIN_DIR/"
 echo "Deployed to: $PLUGIN_DIR"
 """

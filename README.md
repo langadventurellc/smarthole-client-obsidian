@@ -5,6 +5,7 @@ An Obsidian plugin that acts as a SmartHole client, receiving voice and text com
 ## Features
 
 - **Voice & Text Commands**: Speak or type natural language commands like "remember to buy milk tomorrow" or "add this to my project notes"
+- **Chat Sidebar**: Direct in-Obsidian chat interface for interacting with the agent without routing through SmartHole
 - **Intelligent Note Management**: Claude interprets your commands and decides where to create, update, or organize notes
 - **Customizable Organization**: Define your own "information architecture" to guide how notes are organized
 - **Message Durability**: Commands are saved to an inbox before processing, so nothing is lost if the API is temporarily unavailable
@@ -50,6 +51,8 @@ After enabling the plugin, go to Settings → SmartHole Client to configure:
 
 ## Usage
 
+### Via SmartHole (Voice/Text)
+
 1. Start the SmartHole desktop application
 2. The plugin will automatically connect (status shown in Obsidian's status bar)
 3. Use voice or text commands through SmartHole:
@@ -58,9 +61,20 @@ After enabling the plugin, go to Settings → SmartHole Client to configure:
    - "What's on my todo list?"
    - "Move my project notes to the Archive folder"
 
+### Via Chat Sidebar (Direct)
+
+1. Click the chat icon in the left ribbon, or use command palette: "SmartHole: Open Chat"
+2. Type messages directly in the sidebar
+3. Press Enter or click the send button to submit
+4. View conversation history, tool usage, and message sources (typed vs voice)
+
+The chat sidebar shows a unified view of all conversations, whether they came from SmartHole voice commands or direct typing in the sidebar.
+
 The plugin uses your Information Architecture prompt to decide where to put things. The default organizes notes into Journal, Lists, Projects, and Notes folders, but you can customize this to match your workflow.
 
 ## How It Works
+
+### Via SmartHole
 
 ```
 Voice/Text → SmartHole → WebSocket → Plugin → Claude → Vault
@@ -74,6 +88,19 @@ Voice/Text → SmartHole → WebSocket → Plugin → Claude → Vault
 4. Claude interprets the command using your Information Architecture
 5. The plugin executes vault operations (create, modify, search, organize)
 6. A notification is sent back through SmartHole
+
+### Via Chat Sidebar
+
+```
+Chat Sidebar → Plugin → Claude → Vault
+                  ↓
+            Sidebar Response
+```
+
+1. You type a command in the chat sidebar
+2. The message goes directly to the plugin (bypassing WebSocket)
+3. Claude interprets the command and executes vault operations
+4. The response appears in the sidebar with tool usage details
 
 ## Supported Commands
 

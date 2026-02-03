@@ -69,11 +69,13 @@ export interface MessageMetadata {
   /** How the user provided input */
   inputMethod: InputMethod;
   /** True if user used "clientname: message" syntax to bypass LLM routing */
-  directRouted: boolean;
+  directRouted?: boolean;
   /** STT confidence score (0-1), only present for voice input */
   confidence?: number;
   /** LLM's explanation for choosing this client */
   routingReason?: string;
+  /** Source of the message: "direct" for sidebar input, "websocket" for SmartHole server */
+  source?: "direct" | "websocket";
 }
 
 export interface RoutedMessagePayload {

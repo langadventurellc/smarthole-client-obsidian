@@ -25,3 +25,36 @@ export interface ProcessResult {
   response?: string;
   error?: string;
 }
+
+/**
+ * Callback type for notifying listeners of processed message results.
+ * Used by ChatView to receive responses from direct messages.
+ */
+export type ResponseCallback = (result: {
+  messageId: string;
+  success: boolean;
+  response?: string;
+  error?: string;
+  originalMessage: string;
+  toolsUsed: string[];
+}) => void;
+
+/**
+ * Callback type for notifying listeners when a message is received for processing.
+ * Used by ChatView to display incoming WebSocket messages in real-time.
+ */
+export type MessageReceivedCallback = (message: {
+  type: "message";
+  payload: {
+    id: string;
+    text: string;
+    timestamp: string;
+    metadata: {
+      inputMethod: "voice" | "text";
+      source?: "direct" | "websocket";
+      directRouted?: boolean;
+      confidence?: number;
+      routingReason?: string;
+    };
+  };
+}) => void;

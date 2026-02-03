@@ -11,7 +11,12 @@ import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
 import type { InboxManager, InboxMessage } from "../inbox";
 import { LLMService, LLMError, extractTextContent, createVaultTools } from "../llm";
-import type { MessageProcessorConfig, ProcessResult } from "./types";
+import type {
+  MessageProcessorConfig,
+  ProcessResult,
+  ResponseCallback,
+  MessageReceivedCallback,
+} from "./types";
 
 /** Maximum number of retry attempts for transient LLM errors */
 const MAX_RETRY_ATTEMPTS = 3;
@@ -25,6 +30,8 @@ export class MessageProcessor {
   private app: App;
   private settings: SmartHoleSettings;
   private conversationHistory: ConversationHistory;
+  private responseCallbacks: ResponseCallback[] = [];
+  private messageReceivedCallbacks: MessageReceivedCallback[] = [];
 
   constructor(config: MessageProcessorConfig) {
     this.connection = config.connection;
@@ -34,9 +41,64 @@ export class MessageProcessor {
     this.conversationHistory = config.conversationHistory;
   }
 
+  /**
+   * Register a callback to be notified when message processing completes.
+   * Returns an unsubscribe function.
+   */
+  onResponse(callback: ResponseCallback): () => void {
+    this.responseCallbacks.push(callback);
+    return () => {
+      const idx = this.responseCallbacks.indexOf(callback);
+      if (idx >= 0) this.responseCallbacks.splice(idx, 1);
+    };
+  }
+
+  /**
+   * Register a callback to be notified when a message is received for processing.
+   * Used by ChatView to display incoming WebSocket messages in real-time.
+   * Returns an unsubscribe function.
+   */
+  onMessageReceived(callback: MessageReceivedCallback): () => void {
+    this.messageReceivedCallbacks.push(callback);
+    return () => {
+      const idx = this.messageReceivedCallbacks.indexOf(callback);
+      if (idx >= 0) this.messageReceivedCallbacks.splice(idx, 1);
+    };
+  }
+
+  private notifyMessageReceivedCallbacks(message: RoutedMessage): void {
+    for (const callback of this.messageReceivedCallbacks) {
+      try {
+        callback(message);
+      } catch (err) {
+        console.error("MessageProcessor: Message received callback error:", err);
+      }
+    }
+  }
+
+  private notifyResponseCallbacks(result: {
+    messageId: string;
+    success: boolean;
+    response?: string;
+    error?: string;
+    originalMessage: string;
+    toolsUsed: string[];
+  }): void {
+    for (const callback of this.responseCallbacks) {
+      try {
+        callback(result);
+      } catch (err) {
+        console.error("MessageProcessor: Response callback error:", err);
+      }
+    }
+  }
+
   /** Process a message through the complete pipeline. */
   async process(message: RoutedMessage, skipAck = false): Promise<ProcessResult> {
     const messageId = message.payload.id;
+
+    // Notify listeners that a message was received (for real-time sidebar updates)
+    this.notifyMessageReceivedCallbacks(message);
 
     // Step 1: Save to inbox for durability
     try {
@@ -58,11 +120,23 @@ export class MessageProcessor {
     }
 
     // Step 3: Process with LLM (with retry logic)
-    const llmResult = await this.processWithRetry(message.payload.text, messageId);
+    const source = message.payload.metadata?.source === "direct" ? "direct" : "websocket";
+    const llmResult = await this.processWithRetry(message.payload.text, messageId, source);
 
     if (llmResult.success) {
-      // Step 4a: Send success notification
-      this.sendSuccessNotification(messageId, llmResult.response!);
+      // Step 4a: Send success notification (skip for direct messages)
+      if (message.payload.metadata?.source !== "direct") {
+        this.sendSuccessNotification(messageId, llmResult.response!);
+      }
+
+      // Notify response callbacks regardless of source
+      this.notifyResponseCallbacks({
+        messageId,
+        success: true,
+        response: llmResult.response,
+        originalMessage: message.payload.text,
+        toolsUsed: llmResult.toolsUsed,
+      });
 
       // Step 5: Remove from inbox on success
       try {
@@ -78,8 +152,19 @@ export class MessageProcessor {
         response: llmResult.response,
       };
     } else {
-      // Step 4b: Send error notification (leave message in inbox)
-      this.sendErrorNotification(messageId, llmResult.error!);
+      // Step 4b: Send error notification (skip for direct messages, leave message in inbox)
+      if (message.payload.metadata?.source !== "direct") {
+        this.sendErrorNotification(messageId, llmResult.error!);
+      }
+
+      // Notify response callbacks of error
+      this.notifyResponseCallbacks({
+        messageId,
+        success: false,
+        error: llmResult.error,
+        originalMessage: message.payload.text,
+        toolsUsed: [],
+      });
 
       return {
         success: false,
@@ -133,7 +218,8 @@ export class MessageProcessor {
 
   private async processWithRetry(
     messageText: string,
-    messageId: string
+    messageId: string,
+    source: "direct" | "websocket"
   ): Promise<
     { success: true; response: string; toolsUsed: string[] } | { success: false; error: string }
   > {
@@ -169,6 +255,7 @@ export class MessageProcessor {
           userMessage: messageText,
           assistantResponse: textContent,
           toolsUsed,
+          source,
         };
         await this.conversationHistory.addConversation(historyEntry);
 
