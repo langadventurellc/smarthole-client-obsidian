@@ -1,0 +1,228 @@
+# SmartHole Client for Obsidian - Living Specification Document
+
+(Living specification documents are intended to be maintained during the life of the application and should be updated to reference the current expected state of the application. Before development starts, it's the same thing as a requirements document - it describes the desired state.)
+
+## Overview
+
+An Obsidian plugin that acts as a SmartHole client, receiving voice and text commands to intelligently manage notes in an Obsidian vault. The plugin connects to the SmartHole desktop application via WebSocket and uses Claude (Anthropic) to interpret commands and execute actions on the vault.
+
+---
+
+## What
+
+### Core Functionality
+
+**SmartHole Integration**
+- Connect to SmartHole's WebSocket server at `ws://127.0.0.1:9473`
+- Register with a configurable client name (default: "Miss Simone") and routing description
+- Receive routed messages containing user voice/text commands
+- Send acknowledgments and notifications back through SmartHole
+
+**LLM-Powered Command Processing**
+- Integrate with Anthropic's Claude API to interpret incoming messages
+- Provide the LLM with tools to manipulate the Obsidian vault:
+  - Create new notes in appropriate locations
+  - Modify existing notes (append, update, edit content)
+  - Search and read note contents
+  - Organize notes (rename, move between folders)
+- LLM makes decisions guided by a user-configurable "information architecture" prompt
+
+**Message Durability**
+- Save incoming messages to an inbox folder before LLM processing
+- If API processing fails, messages remain in inbox for later reprocessing
+- Provides recovery path when API is unavailable
+
+**Conversation Context**
+- Maintain summaries of recent conversations in plugin storage
+- Provide searchable history for context retrieval
+- History stored internally, not as visible vault files
+
+### Connection Behavior
+
+- Attempt connection to SmartHole on plugin load
+- On connection failure: retry every 30 seconds
+- Gracefully handle SmartHole not running (plugin remains functional, just disconnected)
+- Clean up WebSocket connection on plugin unload
+
+### Search
+
+- Use Obsidian's built-in search capabilities (simple text search)
+- No RAG or vector search in MVP - plain markdown file search is sufficient
+
+---
+
+## Where
+
+### Affected Areas
+
+**New Plugin Structure**
+- Main plugin class extending Obsidian's `Plugin`
+- Settings tab for configuration
+- WebSocket connection manager
+- LLM service layer (Anthropic integration)
+- Tool implementations for vault operations
+- Inbox manager for message durability
+
+**Obsidian Vault**
+- Inbox folder for pending messages (location TBD, likely `.smarthole/inbox/`)
+- All other vault modifications are user-directed via voice/text commands
+
+**Plugin Data Storage**
+- Settings (API key, model, client name, routing description, IA prompt)
+- Conversation history and summaries
+
+---
+
+## Why
+
+### Context and Motivation
+
+SmartHole provides a unified voice/text interface that routes commands to appropriate applications. An Obsidian plugin enables hands-free, natural language note management - users can speak commands like "remember to buy milk tomorrow" or "add this to my project notes" and have them intelligently processed.
+
+The plugin having its own LLM integration (rather than relying on SmartHole) provides:
+- Full control over how commands are interpreted
+- Access to vault contents for context-aware decisions
+- Foundation for future capabilities and customization
+- Independence from SmartHole's routing LLM limitations
+
+The information architecture prompt allows users to define their organizational preferences without rigid templates - the LLM uses it as guidance, not strict rules.
+
+### Design Decisions
+
+**Anthropic Claude for MVP, extensible architecture**
+- Start with Anthropic (Haiku/Sonnet) for proven quality
+- Design the LLM service layer to support future providers (OpenAI, local models)
+- Don't hardcode Anthropic-specific patterns throughout the codebase
+
+**Best-guess for ambiguity (not interactive clarification)**
+- Interactive back-and-forth requires complex conversation state management
+- For MVP, the LLM should make reasonable decisions based on context and IA prompt
+- Can revisit interactive clarification post-MVP when conversation infrastructure is stronger
+
+**Inbox folder pattern for durability**
+- Voice commands shouldn't be lost due to transient API failures
+- Persisting before processing ensures recovery path
+- Can implement "process pending" functionality for manual or automatic retry
+
+**SmartHole notifications only (not Obsidian notices)**
+- Keeps notification experience consistent for users
+- User is likely not looking at Obsidian when issuing voice commands
+- SmartHole's system notifications are more visible
+
+---
+
+## Done
+
+### MVP Acceptance Criteria
+
+**Connection & Registration**
+- [ ] Plugin connects to SmartHole on load (or retries every 30s if unavailable)
+- [ ] Registers with configurable name and description
+- [ ] Shows connection status indicator in Obsidian UI
+- [ ] Cleanly disconnects on plugin unload
+
+**Settings**
+- [ ] Anthropic API key field (stored securely in plugin data)
+- [ ] Model selection dropdown (Haiku, Sonnet)
+- [ ] Client name field (default: "Miss Simone")
+- [ ] Routing description textarea (user-editable)
+- [ ] "Generate description from IA" button
+- [ ] Information architecture prompt textarea (with sensible default)
+
+**Message Processing**
+- [ ] Incoming messages saved to inbox folder before processing
+- [ ] Messages sent to Claude with appropriate system prompt and tools
+- [ ] LLM can create new notes in the vault
+- [ ] LLM can modify existing notes
+- [ ] LLM can search and read notes
+- [ ] LLM can move/rename notes
+- [ ] Successful actions send notification via SmartHole
+- [ ] Failed actions notify user via SmartHole
+
+**Error Handling**
+- [ ] API failures trigger silent retry (2-3 attempts)
+- [ ] Persistent failures notify user via SmartHole
+- [ ] Failed messages remain in inbox for later processing
+- [ ] Invalid API key produces clear error message in settings
+
+**Conversation Context**
+- [ ] Recent conversation history stored in plugin data
+- [ ] History available to LLM for context
+- [ ] Summaries maintained for older conversations
+
+---
+
+## Settings Specification
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `apiKey` | string (password) | empty | Anthropic API key |
+| `model` | dropdown | `claude-3-haiku-20240307` | Claude model to use |
+| `clientName` | string | `Miss Simone` | Name for SmartHole registration |
+| `routingDescription` | textarea | (see below) | Description for SmartHole routing |
+| `informationArchitecture` | textarea | (see below) | Prompt defining vault organization |
+
+### Default Routing Description
+```
+I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.
+```
+
+### Default Information Architecture Prompt
+```
+This is a personal knowledge notebook. Notes can be organized flexibly based on content:
+
+- Daily notes and journals go in the "Journal" folder
+- Lists (shopping, todos, etc.) go in the "Lists" folder
+- Project-related notes go in the "Projects" folder
+- General reference and wiki-style notes go in the root or "Notes" folder
+
+When encountering information that doesn't fit clearly into existing categories, create a new note in the most logical location and use descriptive naming. Prefer linking related notes together using [[wiki links]].
+
+The goal is an evolving personal wiki where information is easy to find and naturally connected.
+```
+
+---
+
+## Technical Notes
+
+### SmartHole Protocol
+
+Refer to `/reference-docs/smarthole-client-docs/` for complete protocol documentation:
+- WebSocket connection to `ws://127.0.0.1:9473`
+- Registration message with name, description, version
+- Receive `message` type with `id`, `text`, `timestamp`, `metadata`
+- Respond with `ack`, `reject`, or `notification` types
+
+### Obsidian APIs
+
+Refer to `/reference-docs/obsidian-plugin-docs/` for API documentation:
+- `Plugin` lifecycle (`onload`, `onunload`)
+- `Vault` for file operations (create, modify, read, delete, rename)
+- `PluginSettingTab` for settings UI
+- `prepareFuzzySearch` / `prepareSimpleSearch` for search
+- Native `WebSocket` API (Electron environment)
+
+### LLM Architecture Considerations
+
+Design the LLM integration layer with future extensibility:
+- Abstract interface for LLM providers
+- Anthropic implementation as first concrete provider
+- Tool definitions separate from provider-specific formatting
+- Configuration for model selection within a provider
+
+---
+
+## Out of Scope (Post-MVP)
+
+- Migration tooling to convert existing vaults to new structure
+- Additional LLM providers (OpenAI, local models)
+- Interactive clarification conversations
+- RAG/vector search
+- Advanced UI (chat panel, conversation view)
+- Obsidian mobile support (desktop only for WebSocket)
+
+---
+
+## Open Questions
+
+None at this time. All requirements have been clarified.
