@@ -1,7 +1,7 @@
 ---
 id: F-connection-lifecycle
 title: Connection Lifecycle & Automatic Reconnection
-status: in-progress
+status: done
 priority: high
 parent: E-smarthole-websocket
 prerequisites:
@@ -14,7 +14,12 @@ affectedFiles:
     methods (calculateReconnectDelay, cancelPendingReconnect, scheduleReconnect,
     resetReconnectState). Modified disconnect() to disable reconnection, onclose
     to trigger reconnection, and registration success to reset backoff."
-log: []
+  src/main.ts: Added SmartHoleConnection import, connection property,
+    initialization in onload() with state/message callbacks and reconnection
+    enabled, cleanup in onunload() that disables reconnection and disconnects
+    cleanly
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-implement-reconnection

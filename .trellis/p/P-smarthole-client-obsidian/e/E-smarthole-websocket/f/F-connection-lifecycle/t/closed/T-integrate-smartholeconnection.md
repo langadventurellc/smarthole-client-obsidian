@@ -1,13 +1,26 @@
 ---
 id: T-integrate-smartholeconnection
 title: Integrate SmartHoleConnection into Plugin Lifecycle
-status: open
+status: done
 priority: high
 parent: F-connection-lifecycle
 prerequisites:
   - T-implement-reconnection
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/main.ts: Added SmartHoleConnection import, connection property,
+    initialization in onload() with state/message callbacks and reconnection
+    enabled, cleanup in onunload() that disables reconnection and disconnects
+    cleanly
+log:
+  - Integrated SmartHoleConnection into the Obsidian plugin lifecycle. On load,
+    the plugin creates a SmartHoleConnection instance with settings (clientName,
+    routingDescription, version from manifest), sets up state change callbacks
+    to update the status bar, sets up a message callback placeholder for future
+    LLM processing, enables reconnection, and initiates the connection. On
+    unload, the plugin disables reconnection, disconnects cleanly, and clears
+    the connection reference. The plugin remains functional when SmartHole is
+    not running due to the graceful reconnection handling in
+    SmartHoleConnection.
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T05:37:48.543Z
