@@ -33,7 +33,7 @@ cd path/to/vault/.obsidian/plugins
 git clone https://github.com/langadventurellc/smarthole-client-obsidian.git smarthole-client
 cd smarthole-client
 npm install
-npm run dev
+mise run dev
 ```
 
 ## Configuration
