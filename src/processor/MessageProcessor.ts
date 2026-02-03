@@ -6,6 +6,7 @@
  */
 
 import type { App } from "obsidian";
+import type { ConversationHistory, HistoryEntry } from "../context";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
 import type { InboxManager, InboxMessage } from "../inbox";
@@ -23,12 +24,14 @@ export class MessageProcessor {
   private inboxManager: InboxManager;
   private app: App;
   private settings: SmartHoleSettings;
+  private conversationHistory: ConversationHistory;
 
   constructor(config: MessageProcessorConfig) {
     this.connection = config.connection;
     this.inboxManager = config.inboxManager;
     this.app = config.app;
     this.settings = config.settings;
+    this.conversationHistory = config.conversationHistory;
   }
 
   /** Process a message through the complete pipeline. */
@@ -55,7 +58,7 @@ export class MessageProcessor {
     }
 
     // Step 3: Process with LLM (with retry logic)
-    const llmResult = await this.processWithRetry(message.payload.text);
+    const llmResult = await this.processWithRetry(message.payload.text, messageId);
 
     if (llmResult.success) {
       // Step 4a: Send success notification
@@ -129,8 +132,11 @@ export class MessageProcessor {
   }
 
   private async processWithRetry(
-    messageText: string
-  ): Promise<{ success: true; response: string } | { success: false; error: string }> {
+    messageText: string,
+    messageId: string
+  ): Promise<
+    { success: true; response: string; toolsUsed: string[] } | { success: false; error: string }
+  > {
     let lastError: string | undefined;
 
     for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
@@ -139,8 +145,12 @@ export class MessageProcessor {
         const llmService = new LLMService(this.app, this.settings);
         await llmService.initialize();
 
-        // Register all vault tools
+        // Set conversation context from history
+        llmService.setConversationContext(this.conversationHistory.getContextPrompt());
+
+        // Register all vault tools and track their names
         const tools = createVaultTools(this.app);
+        const toolNames = tools.map((t) => t.definition.name);
         for (const tool of tools) {
           llmService.registerTool(tool);
         }
@@ -149,9 +159,30 @@ export class MessageProcessor {
         const response = await llmService.processMessage(messageText);
         const textContent = extractTextContent(response);
 
+        // Determine which tools were actually used by examining the response history
+        const toolsUsed = this.extractToolsUsed(llmService, toolNames);
+
+        // Record successful conversation in history
+        const historyEntry: HistoryEntry = {
+          id: messageId,
+          timestamp: new Date().toISOString(),
+          userMessage: messageText,
+          assistantResponse: textContent,
+          toolsUsed,
+        };
+        await this.conversationHistory.addConversation(historyEntry);
+
+        // Trigger summarization if needed (async, don't await)
+        if (this.conversationHistory.needsSummarization()) {
+          this.triggerSummarization().catch((err) => {
+            console.error("MessageProcessor: Failed to summarize old conversations:", err);
+          });
+        }
+
         return {
           success: true,
           response: textContent,
+          toolsUsed,
         };
       } catch (error) {
         const isLLMError = error instanceof LLMError;
@@ -181,6 +212,30 @@ export class MessageProcessor {
       success: false,
       error: lastError || "Unknown error during LLM processing",
     };
+  }
+
+  private extractToolsUsed(llmService: LLMService, availableTools: string[]): string[] {
+    const history = llmService.getHistory();
+    const toolsUsed = new Set<string>();
+
+    for (const message of history) {
+      if (message.role === "assistant" && Array.isArray(message.content)) {
+        for (const block of message.content) {
+          if (block.type === "tool_use" && availableTools.includes(block.name)) {
+            toolsUsed.add(block.name);
+          }
+        }
+      }
+    }
+
+    return Array.from(toolsUsed);
+  }
+
+  private async triggerSummarization(): Promise<void> {
+    // Create a fresh LLM service for summarization
+    const llmService = new LLMService(this.app, this.settings);
+    await llmService.initialize();
+    await this.conversationHistory.summarizeOld(llmService);
   }
 
   private sendSuccessNotification(messageId: string, response: string): void {

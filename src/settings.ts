@@ -9,6 +9,7 @@ export interface SmartHoleSettings {
   clientName: string;
   routingDescription: string;
   informationArchitecture: string;
+  maxConversationHistory: number;
 }
 
 const DEFAULT_ROUTING_DESCRIPTION = `Miss Simone - I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.`;
@@ -30,6 +31,7 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   clientName: "obsidian",
   routingDescription: DEFAULT_ROUTING_DESCRIPTION,
   informationArchitecture: DEFAULT_INFORMATION_ARCHITECTURE,
+  maxConversationHistory: 50,
 };
 
 export class SmartHoleSettingTab extends PluginSettingTab {
@@ -122,6 +124,25 @@ export class SmartHoleSettingTab extends PluginSettingTab {
           // MVP placeholder - feature requires API connection
           console.log("Generate description feature requires API connection (not yet implemented)");
         })
+      );
+
+    // Max Conversation History setting
+    new Setting(containerEl)
+      .setName("Conversation History Limit")
+      .setDesc(
+        "Maximum number of recent conversations to keep in full detail (older ones are summarized)"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("50")
+          .setValue(String(this.plugin.settings.maxConversationHistory))
+          .onChange(async (value) => {
+            const parsed = parseInt(value, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+              this.plugin.settings.maxConversationHistory = parsed;
+              await this.plugin.saveSettings();
+            }
+          })
       );
   }
 }

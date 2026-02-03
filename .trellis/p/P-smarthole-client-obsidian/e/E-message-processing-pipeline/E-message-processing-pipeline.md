@@ -15,16 +15,30 @@ affectedFiles:
     InboxManager class
   src/inbox/InboxManager.ts: Created InboxManager class with save, delete,
     listPending, and get methods for message durability
-  src/processor/types.ts: Created MessageProcessorConfig and ProcessResult type definitions
+  src/processor/types.ts: Created MessageProcessorConfig and ProcessResult type
+    definitions; Added conversationHistory to MessageProcessorConfig
   src/processor/MessageProcessor.ts: Created main orchestration class with
-    process(), reprocessPending(), and retry logic
+    process(), reprocessPending(), and retry logic; Added conversation recording
+    after successful processing, tools tracking, summarization triggering, and
+    context passing to LLM
   src/processor/index.ts: Created module exports following codebase conventions
   src/main.ts: Integrated InboxManager and MessageProcessor for full message
-    processing pipeline
+    processing pipeline; Added conversationHistory property, initialization on
+    load, passing to MessageProcessor, cleanup on unload
   CLAUDE.md: Added processor/ module to Project Structure section
   docs/living-spec.md: Updated acceptance criteria for Message Processing and
     Error Handling; added Message Processor technical documentation section;
     added Message processor to Affected Areas
+  src/context/types.ts: Created type definitions for HistoryEntry,
+    ConversationSummary, and PersistedHistory interfaces
+  src/context/ConversationHistory.ts: Created main class with load,
+    addConversation, getContextPrompt, clear, summarizeOld methods and
+    persistence via plugin data
+  src/context/index.ts: Created public exports for the context module
+  src/settings.ts: Added maxConversationHistory to SmartHoleSettings interface,
+    DEFAULT_SETTINGS, and settings UI
+  src/llm/LLMService.ts: Added conversationContext property,
+    setConversationContext() method, and context inclusion in system prompt
 log: []
 schema: v1.0
 childrenIds:
