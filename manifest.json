@@ -1,0 +1,9 @@
+{
+  "id": "smarthole-client",
+  "name": "SmartHole Client",
+  "description": "Voice and text-driven note management powered by Claude via SmartHole",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "author": "SmartHole",
+  "isDesktopOnly": true
+}

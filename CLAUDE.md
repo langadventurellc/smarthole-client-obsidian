@@ -8,7 +8,7 @@ TypeScript, Obsidian Plugin API, esbuild, @anthropic-ai/sdk
 
 ## Commands
 
-Commands will use `mise` for all development tasks (to be configured):
+Commands use `mise` for all development tasks:
 
 ```bash
 mise run dev         # Start dev mode with hot reload
