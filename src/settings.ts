@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, SecretComponent, Setting } from "obsidian";
 
+import { extractTextContent, LLMError, LLMService } from "./llm";
 import type SmartHolePlugin from "./main";
 import { CLAUDE_MODELS, type ClaudeModelId } from "./types";
 
@@ -87,13 +88,15 @@ export class SmartHoleSettingTab extends PluginSettingTab {
           })
       );
 
-    // Routing description textarea
+    // Routing description textarea - store reference for programmatic updates
+    let routingDescriptionTextarea: HTMLTextAreaElement | null = null;
     new Setting(containerEl)
       .setName("Routing Description")
       .setDesc("Description used by SmartHole to route messages to this client")
       .addTextArea((text) => {
         text.inputEl.rows = 4;
         text.inputEl.cols = 50;
+        routingDescriptionTextarea = text.inputEl;
         return text.setValue(this.plugin.settings.routingDescription).onChange(async (value) => {
           this.plugin.settings.routingDescription = value;
           await this.plugin.saveSettings();
@@ -115,16 +118,101 @@ export class SmartHoleSettingTab extends PluginSettingTab {
           });
       });
 
-    // Generate Description button
-    new Setting(containerEl)
+    // Generate Description button with inline status
+    const generateSetting = new Setting(containerEl)
       .setName("Generate from IA")
-      .setDesc("Generate routing description based on your Information Architecture")
-      .addButton((button) =>
-        button.setButtonText("Generate").onClick(() => {
-          // MVP placeholder - feature requires API connection
-          console.log("Generate description feature requires API connection (not yet implemented)");
-        })
-      );
+      .setDesc("Generate routing description based on your Information Architecture");
+
+    // Status text element for inline feedback with inline styles
+    const statusEl = generateSetting.descEl.createSpan();
+    statusEl.style.marginLeft = "8px";
+    statusEl.style.fontWeight = "500";
+
+    const setStatusError = (message: string) => {
+      statusEl.setText(message);
+      statusEl.style.color = "var(--text-error)";
+    };
+
+    const setStatusSuccess = (message: string) => {
+      statusEl.setText(message);
+      statusEl.style.color = "var(--text-success)";
+    };
+
+    const clearStatus = () => {
+      statusEl.setText("");
+      statusEl.style.color = "";
+    };
+
+    generateSetting.addButton((button) =>
+      button.setButtonText("Generate").onClick(async () => {
+        // Clear previous status
+        clearStatus();
+
+        // Validate API key is configured
+        if (!this.plugin.settings.anthropicApiKeyName?.trim()) {
+          setStatusError("Error: API key not configured");
+          return;
+        }
+
+        // Validate Information Architecture is not empty
+        if (!this.plugin.settings.informationArchitecture?.trim()) {
+          setStatusError("Error: Information Architecture is empty");
+          return;
+        }
+
+        // Show loading state
+        button.setDisabled(true);
+        const originalText = button.buttonEl.textContent ?? "Generate";
+        button.setButtonText("Generating...");
+
+        try {
+          // Initialize LLM service
+          const llmService = new LLMService(this.app, this.plugin.settings);
+          await llmService.initialize();
+
+          // Create prompt for generating routing description
+          const prompt = `Analyze the following Information Architecture for an Obsidian vault and generate a concise routing description (under 150 words) that explains what this client can do and when to use it. The description should be in first person and help a routing system decide when to send messages to this client.
+
+Information Architecture:
+${this.plugin.settings.informationArchitecture}
+
+Generate only the routing description text, nothing else. Do not include any preamble or explanation.`;
+
+          // Send to LLM
+          const response = await llmService.processMessage(prompt);
+          const generatedDescription = extractTextContent(response).trim();
+
+          if (!generatedDescription) {
+            throw new Error("LLM returned empty response");
+          }
+
+          // Update settings
+          this.plugin.settings.routingDescription = generatedDescription;
+          await this.plugin.saveSettings();
+
+          // Update the textarea directly without re-rendering the entire panel
+          if (routingDescriptionTextarea) {
+            routingDescriptionTextarea.value = generatedDescription;
+          }
+
+          // Show success message
+          setStatusSuccess("Description generated successfully!");
+        } catch (error) {
+          // Handle errors with inline status
+          let errorMessage = "Generation failed";
+          if (error instanceof LLMError) {
+            errorMessage = error.message;
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          setStatusError(`Error: ${errorMessage}`);
+        } finally {
+          // Restore button state
+          button.setDisabled(false);
+          button.setButtonText(originalText);
+        }
+      })
+    );
 
     // Max Conversation History setting
     new Setting(containerEl)
