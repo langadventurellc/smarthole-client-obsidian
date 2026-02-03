@@ -46,6 +46,15 @@ affectedFiles:
     settings fields: SecretComponent for API key, dropdown for model selection,
     text input for client name, textareas for routing description and
     information architecture, and Generate button with MVP placeholder"
+  src/websocket/types.ts: Created all protocol type definitions including
+    RegistrationPayload, RegistrationMessage, RegistrationResponseMessage with
+    success/failure variants, RegistrationErrorCode, RoutedMessage with
+    MessageMetadata, ResponseMessage with ack/reject/notification payloads,
+    union types (OutgoingMessage, IncomingMessage), and type guard functions for
+    runtime type discrimination
+  src/websocket/index.ts: Created public exports file with organized exports for
+    all types and type guards, grouped by category (outgoing messages, incoming
+    messages, union types/utilities, type guards)
 log: []
 schema: v1.0
 childrenIds:

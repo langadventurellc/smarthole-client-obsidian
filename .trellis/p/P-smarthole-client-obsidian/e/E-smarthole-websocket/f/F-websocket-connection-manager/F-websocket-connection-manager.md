@@ -1,14 +1,25 @@
 ---
 id: F-websocket-connection-manager
 title: WebSocket Connection Manager & Protocol Implementation
-status: open
+status: in-progress
 priority: high
 parent: E-smarthole-websocket
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/websocket/types.ts: Created all protocol type definitions including
+    RegistrationPayload, RegistrationMessage, RegistrationResponseMessage with
+    success/failure variants, RegistrationErrorCode, RoutedMessage with
+    MessageMetadata, ResponseMessage with ack/reject/notification payloads,
+    union types (OutgoingMessage, IncomingMessage), and type guard functions for
+    runtime type discrimination
+  src/websocket/index.ts: Created public exports file with organized exports for
+    all types and type guards, grouped by category (outgoing messages, incoming
+    messages, union types/utilities, type guards)
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-define-websocket-protocol
+  - T-implement-smartholeconnection
 created: 2026-02-03T05:13:28.179Z
 updated: 2026-02-03T05:13:28.179Z
 ---
