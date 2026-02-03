@@ -11,7 +11,7 @@ export interface SmartHoleSettings {
   informationArchitecture: string;
 }
 
-const DEFAULT_ROUTING_DESCRIPTION = `I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.`;
+const DEFAULT_ROUTING_DESCRIPTION = `Miss Simone - I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.`;
 
 const DEFAULT_INFORMATION_ARCHITECTURE = `This is a personal knowledge notebook. Notes can be organized flexibly based on content:
 
@@ -27,7 +27,7 @@ The goal is an evolving personal wiki where information is easy to find and natu
 export const DEFAULT_SETTINGS: SmartHoleSettings = {
   anthropicApiKeyName: "",
   model: "claude-haiku-4-5-20251001",
-  clientName: "Miss Simone",
+  clientName: "obsidian",
   routingDescription: DEFAULT_ROUTING_DESCRIPTION,
   informationArchitecture: DEFAULT_INFORMATION_ARCHITECTURE,
 };
@@ -74,10 +74,10 @@ export class SmartHoleSettingTab extends PluginSettingTab {
     // Client name text input
     new Setting(containerEl)
       .setName("Client Name")
-      .setDesc("Name used when registering with SmartHole")
+      .setDesc("Identifier used when registering with SmartHole (lowercase, no spaces)")
       .addText((text) =>
         text
-          .setPlaceholder("Miss Simone")
+          .setPlaceholder("obsidian")
           .setValue(this.plugin.settings.clientName)
           .onChange(async (value) => {
             this.plugin.settings.clientName = value;

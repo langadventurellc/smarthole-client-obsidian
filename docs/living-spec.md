@@ -116,10 +116,10 @@ The information architecture prompt allows users to define their organizational 
 ### MVP Acceptance Criteria
 
 **Connection & Registration**
-- [ ] Plugin connects to SmartHole on load (or retries every 30s if unavailable)
+- [x] Plugin connects to SmartHole on load (or retries every 30s if unavailable)
 - [x] Registers with configurable name and description (SmartHoleConnection class)
 - [x] Shows connection status indicator in Obsidian UI (status bar)
-- [ ] Cleanly disconnects on plugin unload
+- [x] Cleanly disconnects on plugin unload
 
 **Settings**
 - [x] Anthropic API key field (stored securely via SecretComponent)
@@ -193,7 +193,7 @@ Refer to `/reference-docs/smarthole-client-docs/` for complete protocol document
 - Receive `message` type with `id`, `text`, `timestamp`, `metadata`
 - Respond with `ack`, `reject`, or `notification` types
 
-**Implementation**: `src/websocket/` contains the SmartHoleConnection class and protocol types. The connection class handles registration, message parsing with type guards, and response methods (sendAck, sendReject, sendNotification).
+**Implementation**: `src/websocket/` contains the SmartHoleConnection class and protocol types. The connection class handles registration, message parsing with type guards, response methods (sendAck, sendReject, sendNotification), and automatic reconnection with exponential backoff (1s → 30s cap).
 
 ### Obsidian APIs
 

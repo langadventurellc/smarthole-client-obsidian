@@ -1,7 +1,7 @@
 ---
 id: E-smarthole-websocket
 title: SmartHole WebSocket Integration
-status: in-progress
+status: done
 priority: medium
 parent: P-smarthole-client-obsidian
 prerequisites:
@@ -25,8 +25,20 @@ affectedFiles:
     automatic registration on connection open, message parsing with validation
     using type guards from types.ts, callback system (onStateChange,
     onRegistrationResult, onMessage, onError), response methods (sendAck,
-    sendReject, sendNotification), and proper error handling throughout"
-log: []
+    sendReject, sendNotification), and proper error handling throughout; Added
+    reconnection manager with exponential backoff: constants for base/max delay
+    (1s/30s), reconnection state variables, public API methods
+    (enableReconnection, disableReconnection, isReconnecting,
+    getReconnectAttempts), private helper methods (calculateReconnectDelay,
+    cancelPendingReconnect, scheduleReconnect, resetReconnectState). Modified
+    disconnect() to disable reconnection, onclose to trigger reconnection, and
+    registration success to reset backoff."
+  src/main.ts: Added SmartHoleConnection import, connection property,
+    initialization in onload() with state/message callbacks and reconnection
+    enabled, cleanup in onunload() that disables reconnection and disconnects
+    cleanly
+log:
+  - "Auto-completed: All child features are complete"
 schema: v1.0
 childrenIds:
   - F-connection-lifecycle
