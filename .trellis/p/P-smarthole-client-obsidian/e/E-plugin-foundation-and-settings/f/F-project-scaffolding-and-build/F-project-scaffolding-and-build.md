@@ -12,13 +12,18 @@ affectedFiles:
     and source maps for Obsidian plugin development
   manifest.json: "Created Obsidian plugin manifest with isDesktopOnly: true for
     WebSocket support"
+  esbuild.config.mjs: Created esbuild build configuration with ESM syntax, entry
+    point src/main.ts, output main.js, external modules for Obsidian, watch mode
+    for dev and minification for production
+  mise.toml: "Created mise task runner configuration with all commands from
+    CLAUDE.md: dev, build, test, quality, lint, format, type-check"
 log: []
 schema: v1.0
 childrenIds:
   - T-create-build-configuration
-  - T-create-core-configuration
   - T-create-initial-source
   - T-set-up-code-quality-tooling
+  - T-create-core-configuration
 created: 2026-02-03T04:11:47.524Z
 updated: 2026-02-03T04:11:47.524Z
 ---
