@@ -1,15 +1,33 @@
 ---
 id: F-vault-tools-for-llm-operations
 title: Vault Tools for LLM Operations
-status: open
+status: in-progress
 priority: high
 parent: E-llm-service-and-vault-tools
 prerequisites:
   - F-llm-service-layer-with
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/createNote.ts: Created factory function createCreateNoteTool(app)
+    that returns a ToolHandler for the create_note tool. Supports optional path
+    parameter with auto-filename generation from H1 headings or content,
+    automatic parent folder creation, and validation to prevent overwriting
+    existing files.
+  src/llm/tools/modifyNote.ts: Created factory function createModifyNoteTool(app)
+    that returns a ToolHandler for the modify_note tool. Supports
+    append/prepend/replace operations with atomic vault.process() for safe
+    concurrent access, proper newline handling, and clear error messages for
+    missing files.
+  src/llm/tools/index.ts: Created barrel export file for the tools module,
+    exporting both createCreateNoteTool and createModifyNoteTool factory
+    functions.
+  src/llm/index.ts: Updated to export the new vault tools (createCreateNoteTool,
+    createModifyNoteTool) from the tools submodule.
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-createnote-and
+  - T-implement-organizenotes-tool
+  - T-implement-searchnotes-tool
 created: 2026-02-03T06:20:22.210Z
 updated: 2026-02-03T06:20:22.210Z
 ---

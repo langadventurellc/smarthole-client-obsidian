@@ -36,3 +36,6 @@ export {
   extractToolCalls,
   extractTextContent,
 } from "./types";
+
+// Vault Tools
+export { createCreateNoteTool, createModifyNoteTool } from "./tools";
