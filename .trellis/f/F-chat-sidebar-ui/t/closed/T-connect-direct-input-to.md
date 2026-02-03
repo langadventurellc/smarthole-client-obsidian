@@ -1,13 +1,101 @@
 ---
 id: T-connect-direct-input-to
 title: Connect direct input to MessageProcessor
-status: open
+status: done
 priority: high
 parent: F-chat-sidebar-ui
 prerequisites:
   - T-build-chat-message-display
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/processor/types.ts: Added ResponseCallback type for notifying listeners of
+    processed message results
+  src/processor/index.ts: Exported ResponseCallback type
+  src/processor/MessageProcessor.ts: Added response callback mechanism
+    (onResponse, notifyResponseCallbacks) and conditional WebSocket notification
+    skip for direct messages
+  src/websocket/types.ts: Added optional source field to MessageMetadata interface
+  src/main.ts: Made messageProcessor public, added processDirectMessage() and
+    onMessageResponse() methods, updated view registration to pass plugin
+    reference
+  src/views/ChatView.ts: Added plugin constructor parameter, unsubscribe property,
+    wired send handler to processDirectMessage, subscribed to response callbacks
+    in onOpen, cleanup in onClose
+log:
+  - >-
+    Research phase complete. Analyzed all relevant files:
+
+    - MessageProcessor.ts: Needs response callback mechanism and conditional
+    notification skip for direct messages
+
+    - main.ts: Needs processDirectMessage method, updated view registration to
+    pass plugin reference
+
+    - ChatView.ts: Needs plugin constructor parameter, send handler wiring,
+    response subscription
+
+    - websocket/types.ts: MessageMetadata already supports inputMethod and
+    directRouted but needs source field for direct messages
+
+    - processor/types.ts: Needs ResponseCallback type
+
+
+    Verified file paths exist and patterns identified. Starting implementation.
+  - >-
+    Connected the chat sidebar input to the MessageProcessor pipeline so
+    messages typed in the sidebar are processed through the LLM and responses
+    are displayed.
+
+
+    Key changes:
+
+    1. Added ResponseCallback type to processor/types.ts for notifying listeners
+    of processing results
+
+    2. Updated MessageMetadata in websocket/types.ts to include optional
+    `source` field ("direct" | "websocket")
+
+    3. Added response callback mechanism to MessageProcessor with onResponse()
+    method and notifyResponseCallbacks()
+
+    4. Modified MessageProcessor.process() to skip WebSocket notifications for
+    direct messages (source === "direct") while still calling response callbacks
+
+    5. Made messageProcessor public on SmartHolePlugin for ChatView access
+
+    6. Added processDirectMessage() method to SmartHolePlugin that creates a
+    synthetic RoutedMessage with source: "direct"
+
+    7. Added onMessageResponse() helper method on SmartHolePlugin
+
+    8. Updated ChatView constructor to accept plugin reference
+
+    9. Wired ChatView.onOpen() to subscribe to response callbacks and set up
+    send handler that calls processDirectMessage()
+
+    10. Added cleanup in ChatView.onClose() to unsubscribe from response
+    callbacks
+
+    11. Updated view registration in main.ts to pass plugin reference to
+    ChatView
+
+
+    The implementation enables:
+
+    - Typing in sidebar and pressing Enter/Send triggers message processing
+
+    - User message appears immediately (optimistic UI)
+
+    - "Thinking..." indicator shows during processing
+
+    - Agent response appears when processing completes
+
+    - Tool actions displayed with assistant messages
+
+    - Errors display as error messages
+
+    - WebSocket notification NOT sent for direct messages
+
+    - Input remains enabled during processing (allows queuing)
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T19:12:46.344Z

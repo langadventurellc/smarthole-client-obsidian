@@ -2,18 +2,20 @@ import { Plugin, WorkspaceLeaf } from "obsidian";
 
 import { ConversationHistory } from "./context";
 import { InboxManager } from "./inbox";
-import { MessageProcessor } from "./processor";
+import { MessageProcessor, type ResponseCallback } from "./processor";
 import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 import type { ConnectionStatus } from "./types";
 import { ChatView, VIEW_TYPE_CHAT } from "./views";
 import { SmartHoleConnection } from "./websocket/SmartHoleConnection";
+import type { RoutedMessage } from "./websocket";
 
 export default class SmartHolePlugin extends Plugin {
   settings!: SmartHoleSettings;
   private statusBarEl!: HTMLElement;
   private connection: SmartHoleConnection | null = null;
   private inboxManager: InboxManager | null = null;
-  private messageProcessor: MessageProcessor | null = null;
+  /** Exposed for ChatView to subscribe to response callbacks */
+  messageProcessor: MessageProcessor | null = null;
   private conversationHistory: ConversationHistory | null = null;
 
   async onload() {
@@ -24,8 +26,8 @@ export default class SmartHolePlugin extends Plugin {
     this.statusBarEl = this.addStatusBarItem();
     this.updateStatusBar("disconnected");
 
-    // Register ChatView
-    this.registerView(VIEW_TYPE_CHAT, (leaf: WorkspaceLeaf) => new ChatView(leaf));
+    // Register ChatView with plugin reference for direct message handling
+    this.registerView(VIEW_TYPE_CHAT, (leaf: WorkspaceLeaf) => new ChatView(leaf, this));
 
     // Add ribbon icon to open chat sidebar
     this.addRibbonIcon("message-circle", "Open SmartHole Chat", () => {
@@ -172,5 +174,43 @@ export default class SmartHolePlugin extends Plugin {
     if (leaf) {
       workspace.revealLeaf(leaf);
     }
+  }
+
+  /**
+   * Process a message directly from the chat sidebar (bypassing WebSocket).
+   * The message is processed through the LLM pipeline but does not send
+   * WebSocket ack or notification responses.
+   */
+  async processDirectMessage(text: string): Promise<void> {
+    if (!this.messageProcessor) {
+      throw new Error("MessageProcessor not initialized");
+    }
+
+    const routedMessage: RoutedMessage = {
+      type: "message",
+      payload: {
+        id: crypto.randomUUID(),
+        text,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          inputMethod: "text",
+          source: "direct",
+        },
+      },
+    };
+
+    // Skip ack (no WebSocket to ack to), process message
+    await this.messageProcessor.process(routedMessage, true);
+  }
+
+  /**
+   * Subscribe to message processing responses.
+   * Returns an unsubscribe function.
+   */
+  onMessageResponse(callback: ResponseCallback): () => void {
+    if (!this.messageProcessor) {
+      return () => {};
+    }
+    return this.messageProcessor.onResponse(callback);
   }
 }

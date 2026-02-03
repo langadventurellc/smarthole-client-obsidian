@@ -1,4 +1,5 @@
 import { ItemView, setIcon, WorkspaceLeaf } from "obsidian";
+import type SmartHolePlugin from "../main";
 
 export const VIEW_TYPE_CHAT = "smarthole-chat-view";
 
@@ -12,14 +13,17 @@ export interface ChatMessage {
 }
 
 export class ChatView extends ItemView {
+  private plugin: SmartHolePlugin;
   private messages: ChatMessage[] = [];
   private messagesEl: HTMLElement | null = null;
   private inputEl: HTMLTextAreaElement | null = null;
   private typingEl: HTMLElement | null = null;
   private onSendCallback: ((text: string) => void) | null = null;
+  private unsubscribe: (() => void) | null = null;
 
-  constructor(leaf: WorkspaceLeaf) {
+  constructor(leaf: WorkspaceLeaf, plugin: SmartHolePlugin) {
     super(leaf);
+    this.plugin = plugin;
   }
 
   getViewType(): string {
@@ -70,9 +74,51 @@ export class ChatView extends ItemView {
     this.inputEl.addEventListener("input", () => {
       this.autoResizeTextarea();
     });
+
+    // Subscribe to message processing responses
+    this.unsubscribe = this.plugin.onMessageResponse((result) => {
+      this.addMessage({
+        id: result.messageId,
+        role: "assistant",
+        content: result.success ? (result.response ?? "No response") : `Error: ${result.error}`,
+        timestamp: new Date().toISOString(),
+        toolsUsed: result.toolsUsed,
+      });
+      this.hideTypingIndicator();
+    });
+
+    // Set the send callback to process direct messages
+    this.setOnSendCallback(async (text) => {
+      // Add user message immediately (optimistic UI)
+      this.addMessage({
+        id: crypto.randomUUID(),
+        role: "user",
+        content: text,
+        timestamp: new Date().toISOString(),
+        source: "direct",
+      });
+
+      this.showTypingIndicator();
+
+      try {
+        await this.plugin.processDirectMessage(text);
+      } catch (error) {
+        this.hideTypingIndicator();
+        this.addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    });
   }
 
   async onClose(): Promise<void> {
+    // Clean up response subscription
+    this.unsubscribe?.();
+    this.unsubscribe = null;
+
     this.messages = [];
     this.messagesEl = null;
     this.inputEl = null;

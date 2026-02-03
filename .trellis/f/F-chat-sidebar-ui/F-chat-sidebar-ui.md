@@ -11,7 +11,9 @@ affectedFiles:
     message rendering with user/assistant styling, collapsible tool actions
     using details/summary, input handling with Enter to send, send button with
     Lucide icon, typing indicator methods, auto-scroll, auto-resize textarea,
-    and public API for integration"
+    and public API for integration; Added plugin constructor parameter,
+    unsubscribe property, wired send handler to processDirectMessage, subscribed
+    to response callbacks in onOpen, cleanup in onClose"
   src/views/index.ts: Created barrel export for ChatView and VIEW_TYPE_CHAT; Added
     ChatMessage type export for use by other modules
   styles.css: Created root-level CSS file with .smarthole-chat-container styling
@@ -20,13 +22,23 @@ affectedFiles:
     assistant left-aligned secondary), tool actions (collapsible
     details/summary), input area (flex with textarea and button), send button
     (icon button with hover states), and typing indicator
-  src/main.ts: Added view registration, ribbon icon, command, and activateChatView() method
+  src/main.ts: Added view registration, ribbon icon, command, and
+    activateChatView() method; Made messageProcessor public, added
+    processDirectMessage() and onMessageResponse() methods, updated view
+    registration to pass plugin reference
+  src/processor/types.ts: Added ResponseCallback type for notifying listeners of
+    processed message results
+  src/processor/index.ts: Exported ResponseCallback type
+  src/processor/MessageProcessor.ts: Added response callback mechanism
+    (onResponse, notifyResponseCallbacks) and conditional WebSocket notification
+    skip for direct messages
+  src/websocket/types.ts: Added optional source field to MessageMetadata interface
 log: []
 schema: v1.0
 childrenIds:
-  - T-build-chat-message-display
   - T-connect-direct-input-to
   - T-integrate-conversation
+  - T-build-chat-message-display
   - T-create-chatview-sidebar
 created: 2026-02-03T19:11:51.796Z
 updated: 2026-02-03T19:11:51.796Z

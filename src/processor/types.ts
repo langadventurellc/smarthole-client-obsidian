@@ -25,3 +25,16 @@ export interface ProcessResult {
   response?: string;
   error?: string;
 }
+
+/**
+ * Callback type for notifying listeners of processed message results.
+ * Used by ChatView to receive responses from direct messages.
+ */
+export type ResponseCallback = (result: {
+  messageId: string;
+  success: boolean;
+  response?: string;
+  error?: string;
+  originalMessage: string;
+  toolsUsed: string[];
+}) => void;

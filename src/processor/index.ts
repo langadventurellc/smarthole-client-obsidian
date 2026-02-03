@@ -6,7 +6,7 @@
  */
 
 // Type Definitions
-export type { MessageProcessorConfig, ProcessResult } from "./types";
+export type { MessageProcessorConfig, ProcessResult, ResponseCallback } from "./types";
 
 // Processor Class
 export { MessageProcessor } from "./MessageProcessor";
