@@ -7,5 +7,5 @@
 // Type Definitions
 export type { InboxMessage } from "./types";
 
-// Manager Class (to be implemented in T-implement-inboxmanager-class)
-// export { InboxManager } from "./InboxManager";
+// Manager Class
+export { InboxManager } from "./InboxManager";
