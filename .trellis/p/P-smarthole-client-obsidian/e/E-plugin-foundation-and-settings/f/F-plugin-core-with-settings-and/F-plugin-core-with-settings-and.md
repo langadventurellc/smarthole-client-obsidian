@@ -1,15 +1,33 @@
 ---
 id: F-plugin-core-with-settings-and
 title: Plugin Core with Settings and Status Bar
-status: open
+status: done
 priority: high
 parent: E-plugin-foundation-and-settings
 prerequisites:
   - F-project-scaffolding-and-build
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/types.ts: Created with ConnectionStatus type, CLAUDE_MODELS constant, and
+    ClaudeModelId type
+  src/settings.ts: "Created with SmartHoleSettings interface and DEFAULT_SETTINGS
+    constant with default values from living spec; Added SmartHoleSettingTab
+    class extending PluginSettingTab with display() method implementing all
+    settings fields: SecretComponent for API key, dropdown for model selection,
+    text input for client name, textareas for routing description and
+    information architecture, and Generate button with MVP placeholder"
+  src/main.ts: Updated with settings property, loadSettings(), and saveSettings()
+    methods; Added import for SmartHoleSettingTab and registered the settings
+    tab in onload() using this.addSettingTab(); Added ConnectionStatus import,
+    statusBarEl property, status bar initialization in onload(), click handler
+    logging, and updateStatusBar() method with Record mapping all four
+    connection states
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-settings-tab-ui
+  - T-implement-status-bar
+  - T-implement-types-settings
 created: 2026-02-03T04:12:16.932Z
 updated: 2026-02-03T04:12:16.932Z
 ---

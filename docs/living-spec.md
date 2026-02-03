@@ -118,16 +118,16 @@ The information architecture prompt allows users to define their organizational 
 **Connection & Registration**
 - [ ] Plugin connects to SmartHole on load (or retries every 30s if unavailable)
 - [ ] Registers with configurable name and description
-- [ ] Shows connection status indicator in Obsidian UI
+- [x] Shows connection status indicator in Obsidian UI (status bar)
 - [ ] Cleanly disconnects on plugin unload
 
 **Settings**
-- [ ] Anthropic API key field (stored securely in plugin data)
-- [ ] Model selection dropdown (Haiku, Sonnet)
-- [ ] Client name field (default: "Miss Simone")
-- [ ] Routing description textarea (user-editable)
-- [ ] "Generate description from IA" button
-- [ ] Information architecture prompt textarea (with sensible default)
+- [x] Anthropic API key field (stored securely via SecretComponent)
+- [x] Model selection dropdown (Haiku 4.5, Sonnet 4.5, Opus 4.5)
+- [x] Client name field (default: "Miss Simone")
+- [x] Routing description textarea (user-editable)
+- [x] "Generate description from IA" button (MVP placeholder - logs to console)
+- [x] Information architecture prompt textarea (with sensible default)
 
 **Message Processing**
 - [ ] Incoming messages saved to inbox folder before processing
@@ -156,8 +156,8 @@ The information architecture prompt allows users to define their organizational 
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `apiKey` | string (password) | empty | Anthropic API key |
-| `model` | dropdown | `claude-3-haiku-20240307` | Claude model to use |
+| `anthropicApiKeyName` | SecretComponent | empty | Reference to stored API key secret |
+| `model` | dropdown | `claude-haiku-4-5-20251001` | Claude model to use (Haiku 4.5, Sonnet 4.5, Opus 4.5) |
 | `clientName` | string | `Miss Simone` | Name for SmartHole registration |
 | `routingDescription` | textarea | (see below) | Description for SmartHole routing |
 | `informationArchitecture` | textarea | (see below) | Prompt defining vault organization |

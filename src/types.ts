@@ -1,0 +1,9 @@
+export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
+
+export const CLAUDE_MODELS = {
+  "claude-haiku-4-5-20251001": "Claude Haiku 4.5 (Fast, cost-efficient)",
+  "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5 (Balanced)",
+  "claude-opus-4-5-20251101": "Claude Opus 4.5 (Most capable)",
+} as const;
+
+export type ClaudeModelId = keyof typeof CLAUDE_MODELS;

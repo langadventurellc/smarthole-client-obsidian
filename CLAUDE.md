@@ -24,22 +24,13 @@ mise run type-check  # TypeScript only
 
 ```
 src/
-├── main.ts                    # Main plugin class (Plugin lifecycle)
-├── settings.ts                # Settings interface and tab
-├── websocket/
-│   └── SmartHoleConnection.ts # WebSocket connection manager
-├── llm/
-│   ├── types.ts              # Abstract LLM interfaces
-│   ├── AnthropicProvider.ts  # Anthropic implementation
-│   └── tools/                # Tool definitions and handlers
-│       ├── createNote.ts
-│       ├── modifyNote.ts
-│       ├── searchNotes.ts
-│       └── organizeNotes.ts
-├── inbox/
-│   └── InboxManager.ts       # Message durability layer
-└── context/
-    └── ConversationHistory.ts # Conversation context management
+├── main.ts        # Main plugin class (Plugin lifecycle, status bar)
+├── settings.ts    # Settings interface, defaults, and tab UI
+├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
+├── websocket/     # (planned) WebSocket connection manager
+├── llm/           # (planned) LLM integration layer
+├── inbox/         # (planned) Message durability layer
+└── context/       # (planned) Conversation context management
 ```
 
 ## Architecture Rules
