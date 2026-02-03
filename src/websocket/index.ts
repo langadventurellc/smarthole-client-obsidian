@@ -4,6 +4,15 @@
  * Public exports for WebSocket connection management and protocol types.
  */
 
+// Connection Class
+export { SmartHoleConnection } from "./SmartHoleConnection";
+export type {
+  SmartHoleConnectionOptions,
+  SmartHoleConnectionCallbacks,
+  NotificationOptions,
+  RegistrationError,
+} from "./SmartHoleConnection";
+
 // Protocol Types - Outgoing Messages (Client → Server)
 export type {
   RegistrationPayload,

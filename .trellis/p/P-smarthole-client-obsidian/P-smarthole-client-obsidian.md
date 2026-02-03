@@ -54,7 +54,17 @@ affectedFiles:
     runtime type discrimination
   src/websocket/index.ts: Created public exports file with organized exports for
     all types and type guards, grouped by category (outgoing messages, incoming
-    messages, union types/utilities, type guards)
+    messages, union types/utilities, type guards); Added exports for
+    SmartHoleConnection class and its associated types
+    (SmartHoleConnectionOptions, SmartHoleConnectionCallbacks,
+    NotificationOptions, RegistrationError)
+  src/websocket/SmartHoleConnection.ts: "Created SmartHoleConnection class with:
+    constructor accepting SmartHoleConnectionOptions (name, description,
+    version, capabilities), connect/disconnect methods for WebSocket lifecycle,
+    automatic registration on connection open, message parsing with validation
+    using type guards from types.ts, callback system (onStateChange,
+    onRegistrationResult, onMessage, onError), response methods (sendAck,
+    sendReject, sendNotification), and proper error handling throughout"
 log: []
 schema: v1.0
 childrenIds:

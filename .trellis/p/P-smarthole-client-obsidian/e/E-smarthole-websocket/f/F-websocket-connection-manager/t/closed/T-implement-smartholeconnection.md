@@ -1,13 +1,29 @@
 ---
 id: T-implement-smartholeconnection
 title: Implement SmartHoleConnection Class
-status: open
+status: done
 priority: high
 parent: F-websocket-connection-manager
 prerequisites:
   - T-define-websocket-protocol
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/websocket/SmartHoleConnection.ts: "Created SmartHoleConnection class with:
+    constructor accepting SmartHoleConnectionOptions (name, description,
+    version, capabilities), connect/disconnect methods for WebSocket lifecycle,
+    automatic registration on connection open, message parsing with validation
+    using type guards from types.ts, callback system (onStateChange,
+    onRegistrationResult, onMessage, onError), response methods (sendAck,
+    sendReject, sendNotification), and proper error handling throughout"
+  src/websocket/index.ts: Added exports for SmartHoleConnection class and its
+    associated types (SmartHoleConnectionOptions, SmartHoleConnectionCallbacks,
+    NotificationOptions, RegistrationError)
+log:
+  - Implemented SmartHoleConnection class - the core WebSocket connection
+    handler for SmartHole protocol. The class connects to ws://127.0.0.1:9473,
+    handles automatic registration on connect, parses and validates incoming
+    messages using type guards, provides a callback system for state
+    changes/registration results/messages/errors, and includes response methods
+    (sendAck, sendReject, sendNotification). All quality checks pass.
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T05:17:43.207Z
