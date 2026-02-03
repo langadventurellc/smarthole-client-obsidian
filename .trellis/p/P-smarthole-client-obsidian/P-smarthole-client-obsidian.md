@@ -119,6 +119,10 @@ affectedFiles:
     createOrganizeNoteTool(app) that returns a ToolHandler for the organize_note
     tool. Supports renaming and moving notes with automatic destination folder
     creation, conflict detection, and path normalization.
+  src/inbox/types.ts: Created inbox message type definitions with InboxMessage
+    interface importing MessageMetadata from websocket types
+  src/inbox/index.ts: Created module public exports file with InboxMessage type
+    export and placeholder for InboxManager
 log: []
 schema: v1.0
 childrenIds:
