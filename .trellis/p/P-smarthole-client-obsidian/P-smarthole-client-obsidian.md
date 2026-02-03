@@ -75,6 +75,21 @@ affectedFiles:
     cancelPendingReconnect, scheduleReconnect, resetReconnectState). Modified
     disconnect() to disable reconnection, onclose to trigger reconnection, and
     registration success to reset backoff."
+  src/llm/types.ts: Created LLM abstraction types including LLMProvider interface,
+    LLMMessage, ContentBlock variants, Tool/ToolCall/ToolResult types,
+    LLMResponse, LLMError class with error codes, and type guards/utilities
+  src/llm/index.ts: Created public exports module for LLM types, error class, type
+    guards, and utility functions; Added export for AnthropicProvider class;
+    Added exports for LLMService class and ToolHandler interface
+  src/llm/AnthropicProvider.ts: Created AnthropicProvider class implementing
+    LLMProvider interface with Anthropic SDK integration, message/tool type
+    conversion, retry logic with exponential backoff, and comprehensive error
+    handling
+  src/llm/LLMService.ts: Created LLMService class with initialize(),
+    registerTool(), unregisterTool(), processMessage(), clearHistory(), and
+    getHistory() methods. Includes ToolHandler interface, system prompt
+    construction with information architecture, tool use loop with max 10
+    iterations, and conversation history trimming.
 log: []
 schema: v1.0
 childrenIds:

@@ -28,7 +28,7 @@ src/
 ├── settings.ts    # Settings interface, defaults, and tab UI
 ├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
-├── llm/           # (planned) LLM integration layer
+├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
 ├── inbox/         # (planned) Message durability layer
 └── context/       # (planned) Conversation context management
 ```
