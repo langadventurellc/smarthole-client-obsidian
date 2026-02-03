@@ -75,6 +75,11 @@ affectedFiles:
     cancelPendingReconnect, scheduleReconnect, resetReconnectState). Modified
     disconnect() to disable reconnection, onclose to trigger reconnection, and
     registration success to reset backoff."
+  src/llm/types.ts: Created LLM abstraction types including LLMProvider interface,
+    LLMMessage, ContentBlock variants, Tool/ToolCall/ToolResult types,
+    LLMResponse, LLMError class with error codes, and type guards/utilities
+  src/llm/index.ts: Created public exports module for LLM types, error class, type
+    guards, and utility functions
 log: []
 schema: v1.0
 childrenIds:
