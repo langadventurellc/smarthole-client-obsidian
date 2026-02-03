@@ -182,6 +182,15 @@ export class ConversationHistory {
   }
 
   /**
+   * Get a copy of recent conversations for display in the chat sidebar.
+   *
+   * @returns Array of recent conversation entries
+   */
+  getRecentConversations(): HistoryEntry[] {
+    return [...this.history.recentConversations];
+  }
+
+  /**
    * Check if summarization is needed based on current settings.
    */
   needsSummarization(): boolean {

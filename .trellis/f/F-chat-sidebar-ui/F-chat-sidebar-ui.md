@@ -1,7 +1,7 @@
 ---
 id: F-chat-sidebar-ui
 title: Chat Sidebar UI
-status: in-progress
+status: done
 priority: medium
 parent: none
 prerequisites: []
@@ -13,7 +13,9 @@ affectedFiles:
     Lucide icon, typing indicator methods, auto-scroll, auto-resize textarea,
     and public API for integration; Added plugin constructor parameter,
     unsubscribe property, wired send handler to processDirectMessage, subscribed
-    to response callbacks in onOpen, cleanup in onClose"
+    to response callbacks in onOpen, cleanup in onClose; Added history loading
+    on open, WebSocket message subscription, deduplication via
+    renderedMessageIds Set, source indicator rendering, and cleanup in onClose"
   src/views/index.ts: Created barrel export for ChatView and VIEW_TYPE_CHAT; Added
     ChatMessage type export for use by other modules
   styles.css: Created root-level CSS file with .smarthole-chat-container styling
@@ -21,25 +23,36 @@ affectedFiles:
     (scrollable flex container), message bubbles (user right-aligned accent,
     assistant left-aligned secondary), tool actions (collapsible
     details/summary), input area (flex with textarea and button), send button
-    (icon button with hover states), and typing indicator
+    (icon button with hover states), and typing indicator; Added
+    .smarthole-chat-source styling for the typed/voice source indicator
   src/main.ts: Added view registration, ribbon icon, command, and
     activateChatView() method; Made messageProcessor public, added
     processDirectMessage() and onMessageResponse() methods, updated view
-    registration to pass plugin reference
+    registration to pass plugin reference; Made conversationHistory public,
+    added onMessageReceived() method for ChatView to subscribe to incoming
+    messages
   src/processor/types.ts: Added ResponseCallback type for notifying listeners of
-    processed message results
-  src/processor/index.ts: Exported ResponseCallback type
+    processed message results; Added MessageReceivedCallback type for notifying
+    listeners when messages are received
+  src/processor/index.ts: Exported ResponseCallback type; Exported MessageReceivedCallback type
   src/processor/MessageProcessor.ts: Added response callback mechanism
     (onResponse, notifyResponseCallbacks) and conditional WebSocket notification
-    skip for direct messages
+    skip for direct messages; Added onMessageReceived callback mechanism,
+    notifyMessageReceivedCallbacks method, and included source field when
+    recording history entries
   src/websocket/types.ts: Added optional source field to MessageMetadata interface
-log: []
+  src/context/types.ts: Added optional source field to HistoryEntry interface for
+    tracking message origin (direct vs websocket)
+  src/context/ConversationHistory.ts: Added getRecentConversations() method to
+    expose conversation history for the chat sidebar
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
-  - T-connect-direct-input-to
-  - T-integrate-conversation
   - T-build-chat-message-display
+  - T-connect-direct-input-to
   - T-create-chatview-sidebar
+  - T-integrate-conversation
 created: 2026-02-03T19:11:51.796Z
 updated: 2026-02-03T19:11:51.796Z
 ---

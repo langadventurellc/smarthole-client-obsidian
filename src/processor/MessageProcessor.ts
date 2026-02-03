@@ -11,7 +11,12 @@ import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
 import type { InboxManager, InboxMessage } from "../inbox";
 import { LLMService, LLMError, extractTextContent, createVaultTools } from "../llm";
-import type { MessageProcessorConfig, ProcessResult, ResponseCallback } from "./types";
+import type {
+  MessageProcessorConfig,
+  ProcessResult,
+  ResponseCallback,
+  MessageReceivedCallback,
+} from "./types";
 
 /** Maximum number of retry attempts for transient LLM errors */
 const MAX_RETRY_ATTEMPTS = 3;
@@ -26,6 +31,7 @@ export class MessageProcessor {
   private settings: SmartHoleSettings;
   private conversationHistory: ConversationHistory;
   private responseCallbacks: ResponseCallback[] = [];
+  private messageReceivedCallbacks: MessageReceivedCallback[] = [];
 
   constructor(config: MessageProcessorConfig) {
     this.connection = config.connection;
@@ -45,6 +51,29 @@ export class MessageProcessor {
       const idx = this.responseCallbacks.indexOf(callback);
       if (idx >= 0) this.responseCallbacks.splice(idx, 1);
     };
+  }
+
+  /**
+   * Register a callback to be notified when a message is received for processing.
+   * Used by ChatView to display incoming WebSocket messages in real-time.
+   * Returns an unsubscribe function.
+   */
+  onMessageReceived(callback: MessageReceivedCallback): () => void {
+    this.messageReceivedCallbacks.push(callback);
+    return () => {
+      const idx = this.messageReceivedCallbacks.indexOf(callback);
+      if (idx >= 0) this.messageReceivedCallbacks.splice(idx, 1);
+    };
+  }
+
+  private notifyMessageReceivedCallbacks(message: RoutedMessage): void {
+    for (const callback of this.messageReceivedCallbacks) {
+      try {
+        callback(message);
+      } catch (err) {
+        console.error("MessageProcessor: Message received callback error:", err);
+      }
+    }
   }
 
   private notifyResponseCallbacks(result: {
@@ -68,6 +97,9 @@ export class MessageProcessor {
   async process(message: RoutedMessage, skipAck = false): Promise<ProcessResult> {
     const messageId = message.payload.id;
 
+    // Notify listeners that a message was received (for real-time sidebar updates)
+    this.notifyMessageReceivedCallbacks(message);
+
     // Step 1: Save to inbox for durability
     try {
       await this.inboxManager.save(message);
@@ -88,7 +120,8 @@ export class MessageProcessor {
     }
 
     // Step 3: Process with LLM (with retry logic)
-    const llmResult = await this.processWithRetry(message.payload.text, messageId);
+    const source = message.payload.metadata?.source === "direct" ? "direct" : "websocket";
+    const llmResult = await this.processWithRetry(message.payload.text, messageId, source);
 
     if (llmResult.success) {
       // Step 4a: Send success notification (skip for direct messages)
@@ -185,7 +218,8 @@ export class MessageProcessor {
 
   private async processWithRetry(
     messageText: string,
-    messageId: string
+    messageId: string,
+    source: "direct" | "websocket"
   ): Promise<
     { success: true; response: string; toolsUsed: string[] } | { success: false; error: string }
   > {
@@ -221,6 +255,7 @@ export class MessageProcessor {
           userMessage: messageText,
           assistantResponse: textContent,
           toolsUsed,
+          source,
         };
         await this.conversationHistory.addConversation(historyEntry);
 

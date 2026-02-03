@@ -2,7 +2,7 @@ import { Plugin, WorkspaceLeaf } from "obsidian";
 
 import { ConversationHistory } from "./context";
 import { InboxManager } from "./inbox";
-import { MessageProcessor, type ResponseCallback } from "./processor";
+import { MessageProcessor, type ResponseCallback, type MessageReceivedCallback } from "./processor";
 import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 import type { ConnectionStatus } from "./types";
 import { ChatView, VIEW_TYPE_CHAT } from "./views";
@@ -16,7 +16,8 @@ export default class SmartHolePlugin extends Plugin {
   private inboxManager: InboxManager | null = null;
   /** Exposed for ChatView to subscribe to response callbacks */
   messageProcessor: MessageProcessor | null = null;
-  private conversationHistory: ConversationHistory | null = null;
+  /** Exposed for ChatView to load conversation history */
+  conversationHistory: ConversationHistory | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -212,5 +213,17 @@ export default class SmartHolePlugin extends Plugin {
       return () => {};
     }
     return this.messageProcessor.onResponse(callback);
+  }
+
+  /**
+   * Subscribe to incoming message notifications.
+   * Used by ChatView to display WebSocket messages in real-time.
+   * Returns an unsubscribe function.
+   */
+  onMessageReceived(callback: MessageReceivedCallback): () => void {
+    if (!this.messageProcessor) {
+      return () => {};
+    }
+    return this.messageProcessor.onMessageReceived(callback);
   }
 }

@@ -1,13 +1,35 @@
 ---
 id: T-integrate-conversation
 title: Integrate conversation history and WebSocket messages
-status: open
+status: done
 priority: medium
 parent: F-chat-sidebar-ui
 prerequisites:
   - T-connect-direct-input-to
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/types.ts: Added optional source field to HistoryEntry interface for
+    tracking message origin (direct vs websocket)
+  src/context/ConversationHistory.ts: Added getRecentConversations() method to
+    expose conversation history for the chat sidebar
+  src/processor/types.ts: Added MessageReceivedCallback type for notifying
+    listeners when messages are received
+  src/processor/index.ts: Exported MessageReceivedCallback type
+  src/processor/MessageProcessor.ts: Added onMessageReceived callback mechanism,
+    notifyMessageReceivedCallbacks method, and included source field when
+    recording history entries
+  src/main.ts: Made conversationHistory public, added onMessageReceived() method
+    for ChatView to subscribe to incoming messages
+  src/views/ChatView.ts: Added history loading on open, WebSocket message
+    subscription, deduplication via renderedMessageIds Set, source indicator
+    rendering, and cleanup in onClose
+  styles.css: Added .smarthole-chat-source styling for the typed/voice source indicator
+log:
+  - Implemented conversation history integration and WebSocket message display
+    in the chat sidebar. The sidebar now loads persisted conversation history on
+    open, displays both user messages and assistant responses with tool actions,
+    shows real-time WebSocket messages, includes source indicators ("typed" vs
+    "voice") for user messages, and prevents duplicate messages through ID-based
+    deduplication.
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T19:13:08.238Z

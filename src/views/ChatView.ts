@@ -20,6 +20,8 @@ export class ChatView extends ItemView {
   private typingEl: HTMLElement | null = null;
   private onSendCallback: ((text: string) => void) | null = null;
   private unsubscribe: (() => void) | null = null;
+  private unsubscribeMessageReceived: (() => void) | null = null;
+  private renderedMessageIds = new Set<string>();
 
   constructor(leaf: WorkspaceLeaf, plugin: SmartHolePlugin) {
     super(leaf);
@@ -75,6 +77,29 @@ export class ChatView extends ItemView {
       this.autoResizeTextarea();
     });
 
+    // Load persisted conversation history
+    const history = this.plugin.conversationHistory?.getRecentConversations() ?? [];
+    for (const entry of history) {
+      // Render user message
+      this.addMessage({
+        id: `${entry.id}-user`,
+        role: "user",
+        content: entry.userMessage,
+        timestamp: entry.timestamp,
+        source: entry.source ?? "websocket",
+      });
+
+      // Render assistant response
+      this.addMessage({
+        id: `${entry.id}-assistant`,
+        role: "assistant",
+        content: entry.assistantResponse,
+        timestamp: entry.timestamp,
+        toolsUsed: entry.toolsUsed,
+      });
+    }
+    this.scrollToBottom();
+
     // Subscribe to message processing responses
     this.unsubscribe = this.plugin.onMessageResponse((result) => {
       this.addMessage({
@@ -85,6 +110,21 @@ export class ChatView extends ItemView {
         toolsUsed: result.toolsUsed,
       });
       this.hideTypingIndicator();
+    });
+
+    // Subscribe to incoming messages (for WebSocket-originated messages)
+    this.unsubscribeMessageReceived = this.plugin.onMessageReceived((msg) => {
+      // Only show if not direct (direct messages already shown optimistically by handleSend)
+      if (msg.payload.metadata?.source !== "direct") {
+        this.addMessage({
+          id: msg.payload.id,
+          role: "user",
+          content: msg.payload.text,
+          timestamp: msg.payload.timestamp,
+          source: "websocket",
+        });
+        this.showTypingIndicator();
+      }
     });
 
     // Set the send callback to process direct messages
@@ -119,7 +159,12 @@ export class ChatView extends ItemView {
     this.unsubscribe?.();
     this.unsubscribe = null;
 
+    // Clean up message received subscription
+    this.unsubscribeMessageReceived?.();
+    this.unsubscribeMessageReceived = null;
+
     this.messages = [];
+    this.renderedMessageIds.clear();
     this.messagesEl = null;
     this.inputEl = null;
     this.typingEl = null;
@@ -131,6 +176,12 @@ export class ChatView extends ItemView {
   }
 
   addMessage(message: ChatMessage): void {
+    // Deduplicate messages by ID
+    if (this.renderedMessageIds.has(message.id)) {
+      return;
+    }
+    this.renderedMessageIds.add(message.id);
+
     this.messages.push(message);
     this.renderMessage(message);
     this.scrollToBottom();
@@ -153,6 +204,7 @@ export class ChatView extends ItemView {
 
   clearMessages(): void {
     this.messages = [];
+    this.renderedMessageIds.clear();
     if (this.messagesEl) {
       this.messagesEl.empty();
     }
@@ -186,6 +238,12 @@ export class ChatView extends ItemView {
     // Content
     const contentEl = messageEl.createEl("div", { cls: "smarthole-chat-message-content" });
     contentEl.setText(message.content);
+
+    // Source indicator for user messages
+    if (message.role === "user" && message.source) {
+      const sourceEl = messageEl.createEl("div", { cls: "smarthole-chat-source" });
+      sourceEl.setText(message.source === "direct" ? "typed" : "voice");
+    }
 
     // Tool actions for assistant messages
     if (message.role === "assistant" && message.toolsUsed && message.toolsUsed.length > 0) {
