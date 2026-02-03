@@ -62,6 +62,7 @@ An Obsidian plugin that acts as a SmartHole client, receiving voice and text com
 - LLM service layer (Anthropic integration)
 - Tool implementations for vault operations
 - Inbox manager for message durability
+- Message processor for pipeline orchestration
 
 **Obsidian Vault**
 - Inbox folder for pending messages (location TBD, likely `.smarthole/inbox/`)
@@ -130,19 +131,19 @@ The information architecture prompt allows users to define their organizational 
 - [x] Information architecture prompt textarea (with sensible default)
 
 **Message Processing**
-- [ ] Incoming messages saved to inbox folder before processing
-- [ ] Messages sent to Claude with appropriate system prompt and tools
+- [x] Incoming messages saved to inbox folder before processing
+- [x] Messages sent to Claude with appropriate system prompt and tools
 - [x] LLM can create new notes in the vault
 - [x] LLM can modify existing notes
 - [x] LLM can search and read notes
 - [x] LLM can move/rename notes
-- [ ] Successful actions send notification via SmartHole
-- [ ] Failed actions notify user via SmartHole
+- [x] Successful actions send notification via SmartHole
+- [x] Failed actions notify user via SmartHole
 
 **Error Handling**
-- [ ] API failures trigger silent retry (2-3 attempts)
-- [ ] Persistent failures notify user via SmartHole
-- [ ] Failed messages remain in inbox for later processing
+- [x] API failures trigger silent retry (2-3 attempts)
+- [x] Persistent failures notify user via SmartHole
+- [x] Failed messages remain in inbox for later processing
 - [ ] Invalid API key produces clear error message in settings
 
 **Conversation Context**
@@ -234,6 +235,41 @@ The LLM uses these tools to manipulate the Obsidian vault:
 - Each factory function (e.g., `createCreateNoteTool(app)`) returns a `ToolHandler` with a tool definition and execute function
 - `createVaultTools(app)` returns an array of all instantiated tools for bulk registration with `LLMService`
 - All tools normalize paths to ensure `.md` extension and handle missing folders gracefully
+
+### Message Processor
+
+The MessageProcessor orchestrates the complete message processing pipeline, integrating the inbox, LLM, and notification systems.
+
+**Pipeline flow:**
+1. **Save to inbox** - Message persisted for durability before any processing
+2. **Send acknowledgment** - Notify SmartHole that message was received (skipped for reprocessing)
+3. **LLM processing** - Create LLMService instance, register vault tools, process message with retry
+4. **Send notification** - Success or error notification sent via SmartHole
+5. **Cleanup** - Remove message from inbox on success (kept on failure for reprocessing)
+
+**Retry logic:**
+- Maximum 3 retry attempts for transient LLM errors
+- Exponential backoff: 1s, 2s, 4s delays between retries
+- Only retryable errors (rate limits, network issues) trigger retry
+- Non-retryable errors (auth, invalid request) fail immediately
+
+**Startup recovery:**
+- `reprocessPending()` called on plugin load
+- Iterates through all messages in inbox folder
+- Reprocesses each with `skipAck=true` (original ack already sent)
+- Ensures no messages lost due to plugin crashes or Obsidian restarts
+
+**Error messages:**
+- User-friendly error messages mapped from LLMError codes
+- Auth errors: "API key is missing or invalid"
+- Rate limits: "Too many requests. Please try again in a moment."
+- Network errors: "Network error. Please check your internet connection."
+- Invalid requests: "Unable to process request. The message may be too long."
+
+**Implementation**: `src/processor/` contains:
+- `types.ts` - MessageProcessorConfig and ProcessResult interfaces
+- `MessageProcessor.ts` - Main orchestration class with process() and reprocessPending() methods
+- `index.ts` - Public exports for the module
 
 ---
 

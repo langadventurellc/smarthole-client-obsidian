@@ -103,19 +103,34 @@ export class InboxManager {
 
   /**
    * Ensures the inbox folder exists, creating it if necessary.
+   * Handles race conditions where getFolderByPath returns null but folder exists.
    */
   private async ensureInboxFolder(): Promise<void> {
     // First ensure .smarthole folder exists
     const smartholePath = ".smarthole";
     const smartholeFolder = this.vault.getFolderByPath(smartholePath);
     if (!smartholeFolder) {
-      await this.vault.createFolder(smartholePath);
+      try {
+        await this.vault.createFolder(smartholePath);
+      } catch (error) {
+        // Ignore "Folder already exists" - this can happen if getFolderByPath
+        // returns null before the vault has indexed the folder
+        if (!(error instanceof Error && error.message.includes("Folder already exists"))) {
+          throw error;
+        }
+      }
     }
 
     // Then ensure inbox subfolder exists
     const inboxFolder = this.vault.getFolderByPath(INBOX_PATH);
     if (!inboxFolder) {
-      await this.vault.createFolder(INBOX_PATH);
+      try {
+        await this.vault.createFolder(INBOX_PATH);
+      } catch (error) {
+        if (!(error instanceof Error && error.message.includes("Folder already exists"))) {
+          throw error;
+        }
+      }
     }
   }
 

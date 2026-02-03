@@ -15,6 +15,16 @@ affectedFiles:
     InboxManager class
   src/inbox/InboxManager.ts: Created InboxManager class with save, delete,
     listPending, and get methods for message durability
+  src/processor/types.ts: Created MessageProcessorConfig and ProcessResult type definitions
+  src/processor/MessageProcessor.ts: Created main orchestration class with
+    process(), reprocessPending(), and retry logic
+  src/processor/index.ts: Created module exports following codebase conventions
+  src/main.ts: Integrated InboxManager and MessageProcessor for full message
+    processing pipeline
+  CLAUDE.md: Added processor/ module to Project Structure section
+  docs/living-spec.md: Updated acceptance criteria for Message Processing and
+    Error Handling; added Message Processor technical documentation section;
+    added Message processor to Affected Areas
 log: []
 schema: v1.0
 childrenIds:

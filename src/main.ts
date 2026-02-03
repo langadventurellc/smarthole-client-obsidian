@@ -1,5 +1,7 @@
 import { Plugin } from "obsidian";
 
+import { InboxManager } from "./inbox";
+import { MessageProcessor } from "./processor";
 import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 import type { ConnectionStatus } from "./types";
 import { SmartHoleConnection } from "./websocket/SmartHoleConnection";
@@ -8,6 +10,8 @@ export default class SmartHolePlugin extends Plugin {
   settings!: SmartHoleSettings;
   private statusBarEl!: HTMLElement;
   private connection: SmartHoleConnection | null = null;
+  private inboxManager: InboxManager | null = null;
+  private messageProcessor: MessageProcessor | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -35,15 +39,33 @@ export default class SmartHolePlugin extends Plugin {
       this.updateStatusBar(state);
     };
 
-    // Placeholder for future message processing
-    this.connection.onMessage = (message) => {
-      console.log("SmartHole: Received message", message.payload.id);
-      // Future: pass to LLM processing layer
+    // Initialize InboxManager
+    this.inboxManager = new InboxManager(this.app.vault);
+
+    // Initialize MessageProcessor
+    this.messageProcessor = new MessageProcessor({
+      connection: this.connection,
+      inboxManager: this.inboxManager,
+      app: this.app,
+      settings: this.settings,
+    });
+
+    // Process incoming messages through the full pipeline
+    this.connection.onMessage = async (message) => {
+      const result = await this.messageProcessor!.process(message);
+      if (!result.success) {
+        console.error("SmartHole: Message processing failed", result.error);
+      }
     };
 
     // Enable reconnection and initiate connection
     this.connection.enableReconnection();
     this.connection.connect();
+
+    // Reprocess any pending messages from previous sessions
+    this.messageProcessor.reprocessPending().catch((error) => {
+      console.error("SmartHole: Failed to reprocess pending messages", error);
+    });
 
     console.log("SmartHole Client plugin loaded");
   }
@@ -55,6 +77,10 @@ export default class SmartHolePlugin extends Plugin {
       this.connection.disconnect();
       this.connection = null;
     }
+
+    // Clear processor references
+    this.inboxManager = null;
+    this.messageProcessor = null;
 
     console.log("SmartHole Client plugin unloaded");
   }

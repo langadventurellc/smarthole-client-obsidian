@@ -31,6 +31,7 @@ src/
 ├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
 │   └── tools/     # Vault manipulation tools (createNote, modifyNote, searchNotes, organizeNotes)
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
+├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
 └── context/       # (planned) Conversation context management
 ```
 
