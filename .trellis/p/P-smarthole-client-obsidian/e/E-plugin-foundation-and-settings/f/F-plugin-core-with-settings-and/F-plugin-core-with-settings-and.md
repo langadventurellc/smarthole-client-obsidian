@@ -1,15 +1,23 @@
 ---
 id: F-plugin-core-with-settings-and
 title: Plugin Core with Settings and Status Bar
-status: open
+status: in-progress
 priority: high
 parent: E-plugin-foundation-and-settings
 prerequisites:
   - F-project-scaffolding-and-build
-affectedFiles: {}
+affectedFiles:
+  src/types.ts: Created with ConnectionStatus type, CLAUDE_MODELS constant, and
+    ClaudeModelId type
+  src/settings.ts: Created with SmartHoleSettings interface and DEFAULT_SETTINGS
+    constant with default values from living spec
+  src/main.ts: Updated with settings property, loadSettings(), and saveSettings() methods
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-settings-tab-ui
+  - T-implement-status-bar
+  - T-implement-types-settings
 created: 2026-02-03T04:12:16.932Z
 updated: 2026-02-03T04:12:16.932Z
 ---
