@@ -127,7 +127,7 @@ The information architecture prompt allows users to define their organizational 
 - [x] Model selection dropdown (Haiku 4.5, Sonnet 4.5, Opus 4.5)
 - [x] Client name field (default: "Miss Simone")
 - [x] Routing description textarea (user-editable)
-- [x] "Generate description from IA" button (MVP placeholder - logs to console)
+- [x] "Generate description from IA" button (uses LLM to analyze IA and generate routing description)
 - [x] Information architecture prompt textarea (with sensible default)
 
 **Message Processing**
@@ -147,9 +147,9 @@ The information architecture prompt allows users to define their organizational 
 - [ ] Invalid API key produces clear error message in settings
 
 **Conversation Context**
-- [ ] Recent conversation history stored in plugin data
-- [ ] History available to LLM for context
-- [ ] Summaries maintained for older conversations
+- [x] Recent conversation history stored in plugin data (ConversationHistory class in src/context/)
+- [x] History available to LLM for context (via getContextPrompt() and LLMService.setConversationContext())
+- [x] Summaries maintained for older conversations (summarizeOld() with LLM-generated summaries)
 
 ---
 
@@ -162,6 +162,7 @@ The information architecture prompt allows users to define their organizational 
 | `clientName` | string | `Miss Simone` | Name for SmartHole registration |
 | `routingDescription` | textarea | (see below) | Description for SmartHole routing |
 | `informationArchitecture` | textarea | (see below) | Prompt defining vault organization |
+| `maxConversationHistory` | number | `50` | Maximum recent conversations to retain (older ones are summarized) |
 
 ### Default Routing Description
 ```
@@ -269,6 +270,36 @@ The MessageProcessor orchestrates the complete message processing pipeline, inte
 **Implementation**: `src/processor/` contains:
 - `types.ts` - MessageProcessorConfig and ProcessResult interfaces
 - `MessageProcessor.ts` - Main orchestration class with process() and reprocessPending() methods
+- `index.ts` - Public exports for the module
+
+### Conversation History
+
+The ConversationHistory class manages persistent conversation history across plugin restarts, providing context to the LLM for continuity.
+
+**Storage:**
+- Persisted in plugin data (via `saveData()`), NOT in vault files
+- Rolling window of recent conversations (configurable, default 50)
+- Older conversations summarized before removal to preserve context
+
+**Data model:**
+- `HistoryEntry` - Individual conversation with id, timestamp, userMessage, assistantResponse, toolsUsed
+- `ConversationSummary` - LLM-generated summary of a batch of older conversations
+- `PersistedHistory` - Container with recentConversations, summaries, and lastSummarized timestamp
+
+**Context injection:**
+- `getContextPrompt()` returns formatted context for inclusion in LLM system prompt
+- Includes up to 10 recent conversations in full detail
+- Includes summaries of older conversations for longer-term context
+- MessageProcessor records conversations after successful processing
+
+**Summarization:**
+- Triggered when conversation count exceeds `maxConversationHistory` setting
+- Summarizes batches of at least 10 conversations at a time
+- Uses LLM to generate concise summaries capturing key topics, files modified, user patterns
+
+**Implementation**: `src/context/` contains:
+- `types.ts` - HistoryEntry, ConversationSummary, PersistedHistory interfaces
+- `ConversationHistory.ts` - Main class with load(), addConversation(), getContextPrompt(), clear(), summarizeOld()
 - `index.ts` - Public exports for the module
 
 ---
