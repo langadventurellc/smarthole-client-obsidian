@@ -117,7 +117,7 @@ The information architecture prompt allows users to define their organizational 
 
 **Connection & Registration**
 - [ ] Plugin connects to SmartHole on load (or retries every 30s if unavailable)
-- [ ] Registers with configurable name and description
+- [x] Registers with configurable name and description (SmartHoleConnection class)
 - [x] Shows connection status indicator in Obsidian UI (status bar)
 - [ ] Cleanly disconnects on plugin unload
 
@@ -192,6 +192,8 @@ Refer to `/reference-docs/smarthole-client-docs/` for complete protocol document
 - Registration message with name, description, version
 - Receive `message` type with `id`, `text`, `timestamp`, `metadata`
 - Respond with `ack`, `reject`, or `notification` types
+
+**Implementation**: `src/websocket/` contains the SmartHoleConnection class and protocol types. The connection class handles registration, message parsing with type guards, and response methods (sendAck, sendReject, sendNotification).
 
 ### Obsidian APIs
 
