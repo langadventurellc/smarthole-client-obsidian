@@ -151,6 +151,15 @@ The information architecture prompt allows users to define their organizational 
 - [x] History available to LLM for context (via getContextPrompt() and LLMService.setConversationContext())
 - [x] Summaries maintained for older conversations (summarizeOld() with LLM-generated summaries)
 
+**Chat Sidebar UI**
+- [x] Chat sidebar accessible via ribbon icon or command palette
+- [x] Direct message input that bypasses WebSocket routing
+- [x] Message display with user/assistant distinction
+- [x] Collapsible tool actions display showing vault operations
+- [x] Conversation history loading when sidebar opens
+- [x] Real-time WebSocket message display in sidebar
+- [x] Source indicators ("typed"/"voice") for messages
+
 ---
 
 ## Settings Specification
@@ -298,9 +307,34 @@ The ConversationHistory class manages persistent conversation history across plu
 - Uses LLM to generate concise summaries capturing key topics, files modified, user patterns
 
 **Implementation**: `src/context/` contains:
-- `types.ts` - HistoryEntry, ConversationSummary, PersistedHistory interfaces
-- `ConversationHistory.ts` - Main class with load(), addConversation(), getContextPrompt(), clear(), summarizeOld()
+- `types.ts` - HistoryEntry, ConversationSummary, PersistedHistory interfaces (includes `source` field for tracking message origin)
+- `ConversationHistory.ts` - Main class with load(), addConversation(), getContextPrompt(), getRecentConversations(), clear(), summarizeOld()
 - `index.ts` - Public exports for the module
+
+### Chat Sidebar
+
+The ChatView provides an in-Obsidian interface for direct interaction with the agent, complementing the SmartHole voice/text routing.
+
+**Features:**
+- Sidebar view accessible via ribbon icon (message-circle) or command "SmartHole: Open Chat"
+- Direct message input that bypasses WebSocket (no SmartHole required)
+- Unified conversation display showing both WebSocket and direct messages
+- Tool usage display (collapsible per-message showing vault operations)
+- Source indicators distinguishing "typed" vs "voice" messages
+- Real-time updates when messages arrive via WebSocket
+
+**Implementation**: `src/views/` contains:
+- `ChatView.ts` - ItemView implementation with message display, input handling, typing indicator
+- `index.ts` - Public exports (ChatView, VIEW_TYPE_CHAT, ChatMessage)
+
+**Integration points:**
+- `SmartHolePlugin.processDirectMessage(text)` - Entry point for direct messages (creates synthetic RoutedMessage with `source: "direct"`)
+- `SmartHolePlugin.onMessageResponse(callback)` - Subscribe to LLM processing results
+- `SmartHolePlugin.onMessageReceived(callback)` - Subscribe to incoming WebSocket messages
+- `MessageProcessor` - Extended with response and message-received callback mechanisms
+- `ConversationHistory.getRecentConversations()` - Load history for display on sidebar open
+
+**Styling**: `styles.css` at project root contains all chat sidebar styles using Obsidian CSS variables for theme compatibility.
 
 ---
 
@@ -310,7 +344,6 @@ The ConversationHistory class manages persistent conversation history across plu
 - Additional LLM providers (OpenAI, local models)
 - Interactive clarification conversations
 - RAG/vector search
-- Advanced UI (chat panel, conversation view)
 - Obsidian mobile support (desktop only for WebSocket)
 
 ---

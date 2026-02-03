@@ -24,7 +24,7 @@ mise run type-check  # TypeScript only
 
 ```
 src/
-├── main.ts        # Main plugin class (Plugin lifecycle, status bar)
+├── main.ts        # Main plugin class (Plugin lifecycle, status bar, view registration)
 ├── settings.ts    # Settings interface, defaults, and tab UI
 ├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
@@ -32,7 +32,8 @@ src/
 │   └── tools/     # Vault manipulation tools (createNote, modifyNote, searchNotes, organizeNotes)
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
 ├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
-└── context/       # Conversation history persistence (ConversationHistory, stored in plugin data)
+├── context/       # Conversation history persistence (ConversationHistory, stored in plugin data)
+└── views/         # UI components (ChatView sidebar for direct interaction)
 ```
 
 ## Architecture Rules
