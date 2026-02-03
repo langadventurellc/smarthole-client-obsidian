@@ -1,13 +1,71 @@
 ---
 id: T-build-chat-message-display
 title: Build chat message display and input UI
-status: open
+status: done
 priority: high
 parent: F-chat-sidebar-ui
 prerequisites:
   - T-create-chatview-sidebar
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/views/ChatView.ts: "Complete rewrite: Added ChatMessage interface, message
+    rendering with user/assistant styling, collapsible tool actions using
+    details/summary, input handling with Enter to send, send button with Lucide
+    icon, typing indicator methods, auto-scroll, auto-resize textarea, and
+    public API for integration"
+  src/views/index.ts: Added ChatMessage type export for use by other modules
+  styles.css: Added comprehensive styling for messages area (scrollable flex
+    container), message bubbles (user right-aligned accent, assistant
+    left-aligned secondary), tool actions (collapsible details/summary), input
+    area (flex with textarea and button), send button (icon button with hover
+    states), and typing indicator
+log:
+  - Starting implementation - Research complete, verified file paths exist. Will
+    update ChatView.ts with message rendering, input handling, and typing
+    indicator, then update styles.css with complete styling.
+  - >-
+    Implemented complete chat message display and input UI for the SmartHole
+    Chat sidebar. The implementation includes:
+
+
+    1. **ChatMessage interface** - Defined with id, role (user/assistant),
+    content, timestamp, toolsUsed array, and source (direct/websocket)
+
+
+    2. **DOM structure** - Created proper hierarchy with
+    .smarthole-chat-container containing scrollable .smarthole-chat-messages and
+    fixed .smarthole-chat-input-area with textarea and send button
+
+
+    3. **Message rendering** - renderMessage() creates properly styled message
+    elements with user messages right-aligned (accent color) and assistant
+    messages left-aligned (secondary background)
+
+
+    4. **Tool actions display** - Uses collapsible <details>/<summary> pattern
+    showing "Tools used (N)" that expands to show bulleted list of tool names
+
+
+    5. **Input handling** - Enter sends message (Shift+Enter for newline), send
+    button with Lucide "send" icon, input clears after sending, auto-resize
+    textarea
+
+
+    6. **Typing indicator** - showTypingIndicator() and hideTypingIndicator()
+    public methods showing "Thinking..." in italics
+
+
+    7. **Scroll behavior** - Auto-scrolls to bottom on new messages using smooth
+    behavior
+
+
+    8. **Public API** - addMessage(), showTypingIndicator(),
+    hideTypingIndicator(), clearMessages(), setOnSendCallback() for external
+    integration
+
+
+    9. **Styling** - Complete CSS using Obsidian CSS variables for theme
+    compatibility (light/dark), proper spacing, border-radius, hover states, and
+    responsive layout
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T19:12:26.078Z
