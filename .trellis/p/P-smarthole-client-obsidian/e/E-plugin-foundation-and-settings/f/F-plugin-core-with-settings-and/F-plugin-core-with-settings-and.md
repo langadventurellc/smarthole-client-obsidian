@@ -1,7 +1,7 @@
 ---
 id: F-plugin-core-with-settings-and
 title: Plugin Core with Settings and Status Bar
-status: in-progress
+status: done
 priority: high
 parent: E-plugin-foundation-and-settings
 prerequisites:
@@ -17,8 +17,12 @@ affectedFiles:
     information architecture, and Generate button with MVP placeholder"
   src/main.ts: Updated with settings property, loadSettings(), and saveSettings()
     methods; Added import for SmartHoleSettingTab and registered the settings
-    tab in onload() using this.addSettingTab()
-log: []
+    tab in onload() using this.addSettingTab(); Added ConnectionStatus import,
+    statusBarEl property, status bar initialization in onload(), click handler
+    logging, and updateStatusBar() method with Record mapping all four
+    connection states
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-implement-settings-tab-ui

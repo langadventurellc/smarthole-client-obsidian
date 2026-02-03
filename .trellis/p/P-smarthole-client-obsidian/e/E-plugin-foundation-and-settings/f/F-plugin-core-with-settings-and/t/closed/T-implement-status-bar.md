@@ -1,13 +1,21 @@
 ---
 id: T-implement-status-bar
 title: Implement status bar indicator with connection states
-status: open
+status: done
 priority: high
 parent: F-plugin-core-with-settings-and
 prerequisites:
   - T-implement-types-settings
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/main.ts: Added ConnectionStatus import, statusBarEl property, status bar
+    initialization in onload(), click handler logging, and updateStatusBar()
+    method with Record mapping all four connection states
+log:
+  - "Implemented status bar indicator with connection states. Added private
+    statusBarEl property, initialized status bar in onload() using
+    addStatusBarItem(), implemented updateStatusBar(status: ConnectionStatus)
+    method that maps all four connection states to their display text, and added
+    click handler that logs to console for MVP."
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T04:46:05.827Z
