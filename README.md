@@ -1,0 +1,1 @@
+# smarthole-client-obsidian
