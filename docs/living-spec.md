@@ -212,6 +212,12 @@ Design the LLM integration layer with future extensibility:
 - Tool definitions separate from provider-specific formatting
 - Configuration for model selection within a provider
 
+**Implementation**: `src/llm/` contains the LLM service layer:
+- `types.ts` - Provider-agnostic type definitions (LLMProvider interface, LLMMessage, ContentBlock types, Tool/ToolCall/ToolResult, LLMError with error codes)
+- `AnthropicProvider.ts` - Claude API integration with retry logic (3 attempts, exponential backoff 1s/2s/4s), error classification (auth, rate limit, network, invalid request)
+- `LLMService.ts` - Main service orchestrating tool registration, conversation history (max 20 messages), system prompt construction with information architecture, and multi-turn tool use loop (max 10 iterations)
+- `index.ts` - Public exports for the module
+
 ---
 
 ## Out of Scope (Post-MVP)
