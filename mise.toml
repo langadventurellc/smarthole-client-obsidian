@@ -25,3 +25,13 @@ run = "npx prettier --check src"
 [tasks.type-check]
 description = "TypeScript type checking"
 run = "npx tsc --noEmit"
+
+[tasks.deploy]
+description = "Build and copy to Obsidian plugins folder"
+depends = ["build"]
+run = """
+PLUGIN_DIR="${OBSIDIAN_PLUGIN_DIR:-$HOME/Documents/Obsidian/the void/.obsidian/plugins/smarthole-client}"
+mkdir -p "$PLUGIN_DIR"
+cp main.js manifest.json "$PLUGIN_DIR/"
+echo "Deployed to: $PLUGIN_DIR"
+"""
