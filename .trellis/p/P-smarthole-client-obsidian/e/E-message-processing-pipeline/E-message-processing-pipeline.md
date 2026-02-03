@@ -15,6 +15,10 @@ affectedFiles:
     InboxManager class
   src/inbox/InboxManager.ts: Created InboxManager class with save, delete,
     listPending, and get methods for message durability
+  src/processor/types.ts: Created MessageProcessorConfig and ProcessResult type definitions
+  src/processor/MessageProcessor.ts: Created main orchestration class with
+    process(), reprocessPending(), and retry logic
+  src/processor/index.ts: Created module exports following codebase conventions
 log: []
 schema: v1.0
 childrenIds:
