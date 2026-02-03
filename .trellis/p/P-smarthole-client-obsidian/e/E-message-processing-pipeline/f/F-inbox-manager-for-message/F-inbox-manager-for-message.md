@@ -1,14 +1,24 @@
 ---
 id: F-inbox-manager-for-message
 title: Inbox Manager for Message Durability
-status: open
+status: done
 priority: high
 parent: E-message-processing-pipeline
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/inbox/types.ts: Created inbox message type definitions with InboxMessage
+    interface importing MessageMetadata from websocket types
+  src/inbox/index.ts: Created module public exports file with InboxMessage type
+    export and placeholder for InboxManager; Updated exports to include
+    InboxManager class
+  src/inbox/InboxManager.ts: Created InboxManager class with save, delete,
+    listPending, and get methods for message durability
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-create-inbox-module-type
+  - T-implement-inboxmanager-class
 created: 2026-02-03T14:51:39.400Z
 updated: 2026-02-03T14:51:39.400Z
 ---

@@ -1,16 +1,26 @@
 ---
 id: E-message-processing-pipeline
 title: Message Processing Pipeline
-status: open
+status: in-progress
 priority: medium
 parent: P-smarthole-client-obsidian
 prerequisites:
   - E-smarthole-websocket
   - E-llm-service-and-vault-tools
-affectedFiles: {}
+affectedFiles:
+  src/inbox/types.ts: Created inbox message type definitions with InboxMessage
+    interface importing MessageMetadata from websocket types
+  src/inbox/index.ts: Created module public exports file with InboxMessage type
+    export and placeholder for InboxManager; Updated exports to include
+    InboxManager class
+  src/inbox/InboxManager.ts: Created InboxManager class with save, delete,
+    listPending, and get methods for message durability
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - F-conversation-history
+  - F-inbox-manager-for-message
+  - F-message-processor-orchestratio
 created: 2026-02-03T03:40:43.280Z
 updated: 2026-02-03T03:40:43.280Z
 ---
