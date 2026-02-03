@@ -132,10 +132,10 @@ The information architecture prompt allows users to define their organizational 
 **Message Processing**
 - [ ] Incoming messages saved to inbox folder before processing
 - [ ] Messages sent to Claude with appropriate system prompt and tools
-- [ ] LLM can create new notes in the vault
-- [ ] LLM can modify existing notes
-- [ ] LLM can search and read notes
-- [ ] LLM can move/rename notes
+- [x] LLM can create new notes in the vault
+- [x] LLM can modify existing notes
+- [x] LLM can search and read notes
+- [x] LLM can move/rename notes
 - [ ] Successful actions send notification via SmartHole
 - [ ] Failed actions notify user via SmartHole
 
@@ -217,6 +217,23 @@ Design the LLM integration layer with future extensibility:
 - `AnthropicProvider.ts` - Claude API integration with retry logic (3 attempts, exponential backoff 1s/2s/4s), error classification (auth, rate limit, network, invalid request)
 - `LLMService.ts` - Main service orchestrating tool registration, conversation history (max 20 messages), system prompt construction with information architecture, and multi-turn tool use loop (max 10 iterations)
 - `index.ts` - Public exports for the module
+- `tools/` - Vault manipulation tools (see Vault Tools below)
+
+### Vault Tools
+
+The LLM uses these tools to manipulate the Obsidian vault:
+
+| Tool | Description |
+|------|-------------|
+| `create_note` | Create new markdown notes. Auto-generates filenames from H1 headings or content if path not specified. Creates parent folders automatically. |
+| `modify_note` | Modify existing notes with atomic operations. Supports `append`, `prepend`, and `replace` operations. Uses `vault.process()` for safe concurrent access. |
+| `search_notes` | Search notes using `prepareSimpleSearch()`. Returns up to 10 results with excerpts. Optional `read_content` parameter returns full file content. |
+| `organize_note` | Rename or move notes. Creates destination folders automatically. Validates against overwrites. |
+
+**Implementation**: `src/llm/tools/` contains factory functions for each tool:
+- Each factory function (e.g., `createCreateNoteTool(app)`) returns a `ToolHandler` with a tool definition and execute function
+- `createVaultTools(app)` returns an array of all instantiated tools for bulk registration with `LLMService`
+- All tools normalize paths to ensure `.md` extension and handle missing folders gracefully
 
 ---
 

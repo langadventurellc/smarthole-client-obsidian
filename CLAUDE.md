@@ -29,6 +29,7 @@ src/
 ├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
 ├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
+│   └── tools/     # Vault manipulation tools (createNote, modifyNote, searchNotes, organizeNotes)
 ├── inbox/         # (planned) Message durability layer
 └── context/       # (planned) Conversation context management
 ```

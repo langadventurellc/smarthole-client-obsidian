@@ -1,15 +1,48 @@
 ---
 id: F-vault-tools-for-llm-operations
 title: Vault Tools for LLM Operations
-status: open
+status: done
 priority: high
 parent: E-llm-service-and-vault-tools
 prerequisites:
   - F-llm-service-layer-with
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/createNote.ts: Created factory function createCreateNoteTool(app)
+    that returns a ToolHandler for the create_note tool. Supports optional path
+    parameter with auto-filename generation from H1 headings or content,
+    automatic parent folder creation, and validation to prevent overwriting
+    existing files.
+  src/llm/tools/modifyNote.ts: Created factory function createModifyNoteTool(app)
+    that returns a ToolHandler for the modify_note tool. Supports
+    append/prepend/replace operations with atomic vault.process() for safe
+    concurrent access, proper newline handling, and clear error messages for
+    missing files.
+  src/llm/tools/index.ts: Created barrel export file for the tools module,
+    exporting both createCreateNoteTool and createModifyNoteTool factory
+    functions.; Added export for createSearchNotesTool from the tools module.;
+    Added createVaultTools(app) function that returns an array of all
+    instantiated vault tools for bulk registration. Added export for
+    createOrganizeNoteTool.
+  src/llm/index.ts: Updated to export the new vault tools (createCreateNoteTool,
+    createModifyNoteTool) from the tools submodule.; Added createSearchNotesTool
+    to the Vault Tools exports.; Added exports for createVaultTools and
+    createOrganizeNoteTool from the tools module.
+  src/llm/tools/searchNotes.ts: Created factory function
+    createSearchNotesTool(app) that returns a ToolHandler for the search_notes
+    tool. Uses prepareSimpleSearch() for efficient plain text search, returns up
+    to 10 results with excerpts showing match context, supports optional
+    read_content parameter for full file content.
+  src/llm/tools/organizeNotes.ts: Created factory function
+    createOrganizeNoteTool(app) that returns a ToolHandler for the organize_note
+    tool. Supports renaming and moving notes with automatic destination folder
+    creation, conflict detection, and path normalization.
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-createnote-and
+  - T-implement-organizenotes-tool
+  - T-implement-searchnotes-tool
 created: 2026-02-03T06:20:22.210Z
 updated: 2026-02-03T06:20:22.210Z
 ---
