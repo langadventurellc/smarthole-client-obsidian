@@ -1,11 +1,17 @@
 ---
 id: P-smarthole-client-obsidian
 title: SmartHole Client Obsidian Plugin MVP
-status: open
+status: in-progress
 priority: medium
 parent: none
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  package.json: Created package.json with runtime dependency @anthropic-ai/sdk and
+    dev dependencies for TypeScript/Obsidian development
+  tsconfig.json: Created TypeScript configuration with strict mode, ES2018 target,
+    and source maps for Obsidian plugin development
+  manifest.json: "Created Obsidian plugin manifest with isDesktopOnly: true for
+    WebSocket support"
 log: []
 schema: v1.0
 childrenIds:
