@@ -1,13 +1,38 @@
 ---
 id: T-integrate-messageprocessor-in
 title: Integrate MessageProcessor in main.ts
-status: open
+status: done
 priority: high
 parent: F-message-processor-orchestratio
 prerequisites:
   - T-create-messageprocessor-class
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/main.ts: Integrated InboxManager and MessageProcessor for full message
+    processing pipeline
+log:
+  - >-
+    Integrated MessageProcessor into main.ts by:
+
+    1. Added imports for InboxManager and MessageProcessor
+
+    2. Added private member declarations for inboxManager and messageProcessor
+
+    3. Initialized InboxManager with app.vault in onload() after connection
+    setup
+
+    4. Initialized MessageProcessor with connection, inboxManager, app, and
+    settings
+
+    5. Replaced the placeholder onMessage callback with async handler that
+    processes messages through the full pipeline
+
+    6. Added reprocessPending() call after connect() with error handling to
+    recover pending messages from previous sessions
+
+    7. Clear inboxManager and messageProcessor references in onunload()
+
+
+    All quality checks pass (lint, format, type-check).
 schema: v1.0
 childrenIds: []
 created: 2026-02-03T15:15:51.768Z

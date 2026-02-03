@@ -19,6 +19,8 @@ affectedFiles:
   src/processor/MessageProcessor.ts: Created main orchestration class with
     process(), reprocessPending(), and retry logic
   src/processor/index.ts: Created module exports following codebase conventions
+  src/main.ts: Integrated InboxManager and MessageProcessor for full message
+    processing pipeline
 log: []
 schema: v1.0
 childrenIds:
