@@ -1,14 +1,21 @@
 ---
 id: F-get-file-info-tool
 title: Get File Info Tool
-status: open
+status: done
 priority: high
 parent: E-search-and-discovery-tools
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/getFileInfo.ts: Created new tool file with get_file_info
+    implementation including formatBytes() and formatDate() helper functions,
+    tool definition, and createGetFileInfoTool() factory function
+  src/llm/tools/index.ts: Added import, registration in createVaultTools() array,
+    and re-export for createGetFileInfoTool
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-get-file-info-tool
 created: 2026-02-04T04:20:00.423Z
 updated: 2026-02-04T04:20:00.423Z
 ---
