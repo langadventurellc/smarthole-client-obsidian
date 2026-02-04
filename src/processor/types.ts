@@ -58,3 +58,13 @@ export type MessageReceivedCallback = (message: {
     };
   };
 }) => void;
+
+/**
+ * Callback type for mid-execution messages from the agent.
+ * Used by send_message tool to deliver real-time updates during LLM processing.
+ */
+export type AgentMessageCallback = (message: {
+  content: string;
+  isQuestion: boolean;
+  timestamp: string;
+}) => void;

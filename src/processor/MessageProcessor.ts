@@ -16,6 +16,7 @@ import type {
   ProcessResult,
   ResponseCallback,
   MessageReceivedCallback,
+  AgentMessageCallback,
 } from "./types";
 
 /** Maximum number of retry attempts for transient LLM errors */
@@ -32,6 +33,7 @@ export class MessageProcessor {
   private conversationHistory: ConversationHistory;
   private responseCallbacks: ResponseCallback[] = [];
   private messageReceivedCallbacks: MessageReceivedCallback[] = [];
+  private agentMessageCallbacks: AgentMessageCallback[] = [];
 
   constructor(config: MessageProcessorConfig) {
     this.connection = config.connection;
@@ -64,6 +66,38 @@ export class MessageProcessor {
       const idx = this.messageReceivedCallbacks.indexOf(callback);
       if (idx >= 0) this.messageReceivedCallbacks.splice(idx, 1);
     };
+  }
+
+  /**
+   * Register a callback for mid-execution agent messages.
+   * Used by ChatView to receive real-time updates from send_message tool.
+   * Returns an unsubscribe function.
+   */
+  onAgentMessage(callback: AgentMessageCallback): () => void {
+    this.agentMessageCallbacks.push(callback);
+    return () => {
+      const idx = this.agentMessageCallbacks.indexOf(callback);
+      if (idx >= 0) this.agentMessageCallbacks.splice(idx, 1);
+    };
+  }
+
+  /**
+   * Notify listeners of a mid-execution agent message.
+   * Called by send_message tool context during LLM processing.
+   */
+  notifyAgentMessageCallbacks(content: string, isQuestion: boolean): void {
+    const message = {
+      content,
+      isQuestion,
+      timestamp: new Date().toISOString(),
+    };
+    for (const callback of this.agentMessageCallbacks) {
+      try {
+        callback(message);
+      } catch (err) {
+        console.error("MessageProcessor: Agent message callback error:", err);
+      }
+    }
   }
 
   private notifyMessageReceivedCallbacks(message: RoutedMessage): void {

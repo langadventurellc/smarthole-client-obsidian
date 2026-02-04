@@ -83,6 +83,20 @@ affectedFiles:
     case-insensitive file and folder lookup. Also added import for App, TFile,
     TFolder from 'obsidian'.; Added 'i' flag to RegExp constructor in
     globToRegex() function (line 66) to enable case-insensitive pattern matching
+  src/processor/types.ts: Added AgentMessageCallback type definition with JSDoc comment
+  src/processor/MessageProcessor.ts: Added agentMessageCallbacks array,
+    onAgentMessage() registration method, and notifyAgentMessageCallbacks()
+    notification method
+  src/processor/index.ts: Added AgentMessageCallback to module exports
+  src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
+    (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
+    interface (message, is_question properties). Includes comprehensive JSDoc
+    documentation explaining the purpose of each field.; Added imports for
+    ToolHandler and Tool types, added toolDefinition constant with name
+    'send_message', description, and inputSchema, and added
+    createSendMessageTool factory function that creates a ToolHandler with
+    validation, ChatView and SmartHole delivery logic, and appropriate return
+    messages
 log: []
 schema: v1.0
 childrenIds:
