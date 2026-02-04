@@ -16,8 +16,9 @@ import {
   extractTextContent,
   createVaultTools,
   createSendMessageTool,
+  createEndConversationTool,
 } from "../llm";
-import type { SendMessageContext } from "../llm";
+import type { SendMessageContext, EndConversationContext } from "../llm";
 import type {
   MessageProcessorConfig,
   ProcessResult,
@@ -299,6 +300,16 @@ export class MessageProcessor {
         const sendMessageTool = createSendMessageTool(sendMessageContext);
         llmService.registerTool(sendMessageTool);
         toolNames.push(sendMessageTool.definition.name);
+
+        // Create EndConversationContext and register end_conversation tool
+        const endConversationContext: EndConversationContext = {
+          conversationManager: this.conversationManager,
+          getLLMService: () => llmService,
+        };
+
+        const endConversationTool = createEndConversationTool(endConversationContext);
+        llmService.registerTool(endConversationTool);
+        toolNames.push(endConversationTool.definition.name);
 
         // Process the message
         const response = await llmService.processMessage(messageText);

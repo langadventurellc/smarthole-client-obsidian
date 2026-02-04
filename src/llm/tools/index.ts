@@ -51,3 +51,7 @@ export { createGetFileInfoTool } from "./getFileInfo";
 // Send Message Tool (separate from vault tools - requires runtime context)
 export { createSendMessageTool } from "./sendMessage";
 export type { SendMessageContext, SendMessageInput } from "./sendMessage";
+
+// End Conversation Tool (separate from vault tools - requires runtime context)
+export { createEndConversationTool } from "./endConversation";
+export type { EndConversationContext, EndConversationInput } from "./endConversation";
