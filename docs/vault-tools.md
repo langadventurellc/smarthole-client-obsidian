@@ -14,6 +14,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `edit_file` | Make targeted edits using search/replace or line operations |
 | `write_file` | Write content to files (create or overwrite) |
 | `create_folder` | Create folders in the vault |
+| `delete_file` | Soft-delete files or folders to trash |
 
 ## Usage
 
@@ -504,6 +505,70 @@ Error: Access denied: Cannot access files in '.obsidian/' directory (protected s
 - **Use `create_folder`** when you need to create an empty folder structure before adding files
 - **Use `create_note` or `write_file`** when creating files (they auto-create parent folders)
 
+## delete_file
+
+Soft-delete files or folders to Obsidian's trash. Respects user's trash settings.
+
+### Input Schema
+
+```typescript
+{
+  path: string  // Path to the file or folder to delete (required)
+}
+```
+
+### Behavior
+
+- Soft-deletes the file or folder to trash (not permanent deletion)
+- Respects user's Obsidian trash settings:
+  - `system`: Uses system trash (Recycle Bin / macOS Trash)
+  - `local`: Uses `.trash/` folder in vault
+  - `none`: Permanent deletion (based on Obsidian settings)
+- Deletes folders with all their contents
+- Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
+- Returns clear error for non-existent files/folders
+
+### Example
+
+```typescript
+// Delete a file
+{
+  name: "delete_file",
+  input: {
+    path: "notes/old-note.md"
+  }
+}
+
+// Delete a folder (and all contents)
+{
+  name: "delete_file",
+  input: {
+    path: "Archive/2024"
+  }
+}
+```
+
+### Response Format
+
+Success responses:
+```
+Deleted 'notes/old-note.md' to trash.
+Deleted 'Archive/2024' to trash.
+```
+
+Error responses:
+```
+Error: path is required and must be a non-empty string.
+Error: File or folder not found: "nonexistent.md"
+Error: Access denied: Cannot access files in '.obsidian/' directory (protected system folder)
+```
+
+### When to Use
+
+- **Use `delete_file`** when you need to remove files or folders from the vault
+- Files go to trash (recoverable) rather than being permanently deleted
+- The exact trash behavior depends on user's Obsidian settings
+
 ## Tool Handler Interface
 
 ```typescript
@@ -549,5 +614,6 @@ Located in `src/llm/tools/`:
 - `editFile.ts` - Targeted file editing factory
 - `writeFile.ts` - Full file write/overwrite factory
 - `createFolder.ts` - Folder creation factory
+- `deleteFile.ts` - File/folder deletion factory
 - `protected.ts` - Protected path validation utility
 - `index.ts` - `createVaultTools()` aggregator
