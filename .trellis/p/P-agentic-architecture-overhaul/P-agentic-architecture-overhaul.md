@@ -36,7 +36,8 @@ affectedFiles:
     re-export statement for selective use; Added import for createListFilesTool,
     added to createVaultTools() array, and added re-export; Added import,
     registration in createVaultTools() array, and re-export for
-    createGetFileInfoTool
+    createGetFileInfoTool; Added exports for createSendMessageTool,
+    SendMessageContext, and SendMessageInput from sendMessage module
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file
@@ -86,7 +87,9 @@ affectedFiles:
   src/processor/types.ts: Added AgentMessageCallback type definition with JSDoc comment
   src/processor/MessageProcessor.ts: Added agentMessageCallbacks array,
     onAgentMessage() registration method, and notifyAgentMessageCallbacks()
-    notification method
+    notification method; Added imports for createSendMessageTool and
+    SendMessageContext. In processWithRetry(), created SendMessageContext with
+    channel functions and registered the send_message tool with LLMService.
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -97,6 +100,8 @@ affectedFiles:
     createSendMessageTool factory function that creates a ToolHandler with
     validation, ChatView and SmartHole delivery logic, and appropriate return
     messages
+  src/llm/index.ts: Added re-exports for createSendMessageTool,
+    SendMessageContext, and SendMessageInput from tools module
 log: []
 schema: v1.0
 childrenIds:

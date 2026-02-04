@@ -45,3 +45,7 @@ export {
   createSearchNotesTool,
   createOrganizeNoteTool,
 } from "./tools";
+
+// Send Message Tool (separate from vault tools - requires runtime context)
+export { createSendMessageTool } from "./tools";
+export type { SendMessageContext, SendMessageInput } from "./tools";

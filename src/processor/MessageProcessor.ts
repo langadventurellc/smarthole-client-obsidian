@@ -10,7 +10,14 @@ import type { ConversationHistory, HistoryEntry } from "../context";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
 import type { InboxManager, InboxMessage } from "../inbox";
-import { LLMService, LLMError, extractTextContent, createVaultTools } from "../llm";
+import {
+  LLMService,
+  LLMError,
+  extractTextContent,
+  createVaultTools,
+  createSendMessageTool,
+} from "../llm";
+import type { SendMessageContext } from "../llm";
 import type {
   MessageProcessorConfig,
   ProcessResult,
@@ -274,6 +281,24 @@ export class MessageProcessor {
         for (const tool of tools) {
           llmService.registerTool(tool);
         }
+
+        // Create SendMessageContext and register send_message tool
+        const sendMessageContext: SendMessageContext = {
+          sendToSmartHole: (message: string, priority: "normal" | "high" = "normal") => {
+            this.connection.sendNotification(messageId, {
+              body: message,
+              priority,
+            });
+          },
+          sendToChatView: (message: string, isQuestion: boolean) => {
+            this.notifyAgentMessageCallbacks(message, isQuestion);
+          },
+          source,
+        };
+
+        const sendMessageTool = createSendMessageTool(sendMessageContext);
+        llmService.registerTool(sendMessageTool);
+        toolNames.push(sendMessageTool.definition.name);
 
         // Process the message
         const response = await llmService.processMessage(messageText);
