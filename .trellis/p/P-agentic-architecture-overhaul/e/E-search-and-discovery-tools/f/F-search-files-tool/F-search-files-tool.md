@@ -1,14 +1,20 @@
 ---
 id: F-search-files-tool
 title: Search Files Tool
-status: open
+status: in-progress
 priority: high
 parent: E-search-and-discovery-tools
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/searchFiles.ts: Created new search_files tool with regex-based
+    content search, line context extraction, protected path filtering, and
+    result formatting with line numbers
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-glob-based-file-filtering
+  - T-create-searchfiles-tool-with
+  - T-register-searchfiles-tool-in
 created: 2026-02-04T04:19:40.194Z
 updated: 2026-02-04T04:19:40.194Z
 ---

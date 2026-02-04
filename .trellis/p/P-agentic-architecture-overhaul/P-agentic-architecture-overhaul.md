@@ -46,6 +46,9 @@ affectedFiles:
     ensureParentFolder helper, input validation, protected path checking for
     both source and destination, existence checks, and the move operation using
     app.fileManager.renameFile()."
+  src/llm/tools/searchFiles.ts: Created new search_files tool with regex-based
+    content search, line context extraction, protected path filtering, and
+    result formatting with line numbers
 log: []
 schema: v1.0
 childrenIds:

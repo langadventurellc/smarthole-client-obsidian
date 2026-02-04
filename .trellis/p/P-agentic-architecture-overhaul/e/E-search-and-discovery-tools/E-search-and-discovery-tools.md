@@ -1,15 +1,21 @@
 ---
 id: E-search-and-discovery-tools
 title: Search and Discovery Tools
-status: open
+status: in-progress
 priority: high
 parent: P-agentic-architecture-overhaul
 prerequisites:
   - E-file-operation-tools
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/searchFiles.ts: Created new search_files tool with regex-based
+    content search, line context extraction, protected path filtering, and
+    result formatting with line numbers
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - F-get-file-info-tool
+  - F-list-files-tool
+  - F-search-files-tool
 created: 2026-02-04T01:57:52.844Z
 updated: 2026-02-04T01:57:52.844Z
 ---
