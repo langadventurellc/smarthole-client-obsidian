@@ -24,7 +24,8 @@ affectedFiles:
     triggerSummarization method and needsSummarization check; Added import for
     createEndConversationTool and EndConversationContext; registered the
     end_conversation tool in processWithRetry() after send_message tool
-    registration
+    registration; Added setWaitingForResponse callback to SendMessageContext
+    that delegates to llmService.setWaitingForResponse().
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -34,7 +35,9 @@ affectedFiles:
     'send_message', description, and inputSchema, and added
     createSendMessageTool factory function that creates a ToolHandler with
     validation, ChatView and SmartHole delivery logic, and appropriate return
-    messages
+    messages; Extended SendMessageContext interface with optional
+    setWaitingForResponse callback. Updated execute function to call
+    setWaitingForResponse when is_question=true.
   src/llm/tools/index.ts: Added exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from sendMessage module; Added
     exports for createEndConversationTool and related types
@@ -84,6 +87,11 @@ affectedFiles:
   src/llm/tools/endConversation.ts: Created new file implementing the
     end_conversation tool with EndConversationContext and EndConversationInput
     interfaces, tool definition, and createEndConversationTool factory function
+  src/llm/LLMService.ts: Added ConversationState import, state tracking properties
+    (waitingForResponse, lastQuestionMessage, toolCallsInSession), and
+    conversation state management methods (isWaitingForUserResponse,
+    getConversationState, restoreConversationState, setWaitingForResponse,
+    clearWaitingState). Updated executeToolCalls to track tool call count.
 log: []
 schema: v1.0
 childrenIds:

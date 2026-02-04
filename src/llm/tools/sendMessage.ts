@@ -42,6 +42,14 @@ export interface SendMessageContext {
    * - 'direct': Message came from ChatView direct input
    */
   source: "websocket" | "direct";
+
+  /**
+   * Signal that the agent is waiting for a user response.
+   * Called when is_question=true to update conversation state in LLMService.
+   *
+   * @param message - The question message being sent
+   */
+  setWaitingForResponse?: (message: string) => void;
 }
 
 // =============================================================================
@@ -113,6 +121,11 @@ export function createSendMessageTool(context: SendMessageContext): ToolHandler 
       if (context.source === "websocket") {
         const priority = isQuestion ? "high" : "normal";
         context.sendToSmartHole(message, priority);
+      }
+
+      // Signal waiting state to LLMService when asking a question
+      if (isQuestion && context.setWaitingForResponse) {
+        context.setWaitingForResponse(message);
       }
 
       // Return acknowledgment with waiting state info

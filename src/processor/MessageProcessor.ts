@@ -192,6 +192,7 @@ export class MessageProcessor {
         success: true,
         messageId,
         response: llmResult.response,
+        isWaitingForResponse: llmResult.isWaitingForResponse,
       };
     } else {
       // Step 4b: Send error notification (skip for direct messages, leave message in inbox)
@@ -263,7 +264,8 @@ export class MessageProcessor {
     messageId: string,
     source: "direct" | "websocket"
   ): Promise<
-    { success: true; response: string; toolsUsed: string[] } | { success: false; error: string }
+    | { success: true; response: string; toolsUsed: string[]; isWaitingForResponse: boolean }
+    | { success: false; error: string }
   > {
     let lastError: string | undefined;
 
@@ -295,6 +297,9 @@ export class MessageProcessor {
             this.notifyAgentMessageCallbacks(message, isQuestion);
           },
           source,
+          setWaitingForResponse: (message: string) => {
+            llmService.setWaitingForResponse(message, messageId);
+          },
         };
 
         const sendMessageTool = createSendMessageTool(sendMessageContext);
@@ -339,10 +344,14 @@ export class MessageProcessor {
         };
         await this.conversationManager.addMessage(assistantMessage);
 
+        // Check if agent is waiting for user response
+        const isWaitingForResponse = llmService.isWaitingForUserResponse();
+
         return {
           success: true,
           response: textContent,
           toolsUsed,
+          isWaitingForResponse,
         };
       } catch (error) {
         const isLLMError = error instanceof LLMError;

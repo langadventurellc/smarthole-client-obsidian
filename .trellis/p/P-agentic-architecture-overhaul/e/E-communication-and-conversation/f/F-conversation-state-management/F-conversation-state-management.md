@@ -11,13 +11,23 @@ affectedFiles:
     interface (isWaitingForResponse, pendingContext?)
   src/processor/types.ts: "Added isWaitingForResponse?: boolean field to ProcessResult interface"
   src/context/index.ts: Added exports for ConversationState and PendingContext types
+  src/llm/LLMService.ts: Added ConversationState import, state tracking properties
+    (waitingForResponse, lastQuestionMessage, toolCallsInSession), and
+    conversation state management methods (isWaitingForUserResponse,
+    getConversationState, restoreConversationState, setWaitingForResponse,
+    clearWaitingState). Updated executeToolCalls to track tool call count.
+  src/llm/tools/sendMessage.ts: Extended SendMessageContext interface with
+    optional setWaitingForResponse callback. Updated execute function to call
+    setWaitingForResponse when is_question=true.
+  src/processor/MessageProcessor.ts: Added setWaitingForResponse callback to
+    SendMessageContext that delegates to llmService.setWaitingForResponse().
 log: []
 schema: v1.0
 childrenIds:
-  - T-add-conversationstate-types
   - T-add-crash-recovery-and-stale
   - T-extend-llmservice-to-track
   - T-implement-conversation-state
+  - T-add-conversationstate-types
 created: 2026-02-04T06:03:35.444Z
 updated: 2026-02-04T06:03:35.444Z
 ---
