@@ -1,15 +1,24 @@
 ---
 id: F-move-tool
 title: Move Tool
-status: open
+status: done
 priority: medium
 parent: E-file-operation-tools
 prerequisites:
   - F-read-file-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/moveFile.ts: "Created new move_file tool with factory function
+    createMoveFileTool(app: App). Includes path normalization,
+    ensureParentFolder helper, input validation, protected path checking for
+    both source and destination, existence checks, and the move operation using
+    app.fileManager.renameFile()."
+  src/llm/tools/index.ts: Added import for createMoveFileTool, included it in the
+    createVaultTools() array, and added re-export for selective use.
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-move-tool-for
 created: 2026-02-04T02:04:03.333Z
 updated: 2026-02-04T02:04:03.333Z
 ---

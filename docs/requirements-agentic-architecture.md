@@ -196,11 +196,11 @@ Following patterns from successful coding agents:
 - [ ] Returns diff or summary of changes made
 
 **Move/Rename**
-- [ ] `move` renames files
-- [ ] `move` moves files to different folders
-- [ ] `move` works for folders too
-- [ ] Auto-creates destination parent directories
-- [ ] Clear error if source doesn't exist
+- [x] `move` renames files
+- [x] `move` moves files to different folders
+- [x] `move` works for folders too
+- [x] Auto-creates destination parent directories
+- [x] Clear error if source doesn't exist
 
 **Delete**
 - [ ] `delete` soft deletes to Obsidian trash
