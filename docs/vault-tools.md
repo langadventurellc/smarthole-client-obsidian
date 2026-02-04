@@ -13,6 +13,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `read_file` | Read file contents with optional line ranges |
 | `edit_file` | Make targeted edits using search/replace or line operations |
 | `write_file` | Write content to files (create or overwrite) |
+| `create_folder` | Create folders in the vault |
 
 ## Usage
 
@@ -437,6 +438,72 @@ Error: Failed to write file "invalid/path.md": <error details>
 - **Use `create_note`** when creating markdown notes with auto-generated filenames from content
 - **Use `edit_file`** when making targeted changes to existing files (search/replace, line operations)
 
+## create_folder
+
+Create folders in the vault, including nested folder structures.
+
+### Input Schema
+
+```typescript
+{
+  path: string  // Folder path to create (required)
+}
+```
+
+### Behavior
+
+- Creates the specified folder in the vault
+- Automatically creates parent directories if they don't exist
+- Returns informative message if folder already exists (not an error)
+- Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
+- Normalizes path (removes leading/trailing slashes)
+- Returns error for empty or root path
+
+### Example
+
+```typescript
+// Create a single folder
+{
+  name: "create_folder",
+  input: {
+    path: "Projects"
+  }
+}
+
+// Create nested folder structure
+{
+  name: "create_folder",
+  input: {
+    path: "Archive/2026/January"
+  }
+}
+```
+
+### Response Format
+
+Success responses:
+```
+Created folder "Projects".
+Created folder "Archive/2026/January".
+```
+
+If folder already exists:
+```
+Folder "Projects" already exists.
+```
+
+Error responses:
+```
+Error: path is required and must be a string.
+Error: path cannot be empty or root.
+Error: Access denied: Cannot access files in '.obsidian/' directory (protected system folder)
+```
+
+### When to Use
+
+- **Use `create_folder`** when you need to create an empty folder structure before adding files
+- **Use `create_note` or `write_file`** when creating files (they auto-create parent folders)
+
 ## Tool Handler Interface
 
 ```typescript
@@ -481,5 +548,6 @@ Located in `src/llm/tools/`:
 - `readFile.ts` - File reading factory
 - `editFile.ts` - Targeted file editing factory
 - `writeFile.ts` - Full file write/overwrite factory
+- `createFolder.ts` - Folder creation factory
 - `protected.ts` - Protected path validation utility
 - `index.ts` - `createVaultTools()` aggregator
