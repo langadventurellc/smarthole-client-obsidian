@@ -177,11 +177,11 @@ Following patterns from successful coding agents:
 ### Acceptance Criteria
 
 **File Reading**
-- [ ] `read_file` reads file contents
-- [ ] Supports optional `start_line` and `end_line` parameters
-- [ ] Returns line numbers with content
-- [ ] Handles large files with smart truncation (configurable limit)
-- [ ] Clear error for non-existent files
+- [x] `read_file` reads file contents
+- [x] Supports optional `start_line` and `end_line` parameters
+- [x] Returns line numbers with content
+- [x] Handles large files with smart truncation (configurable limit)
+- [x] Clear error for non-existent files
 
 **File Writing**
 - [ ] `write_file` creates new files
@@ -232,8 +232,8 @@ Following patterns from successful coding agents:
 - [ ] Returns confirmation or note if already exists
 
 **Protected Folders**
-- [ ] Operations on `.obsidian/` are blocked with clear error
-- [ ] Operations on `.smarthole/` are blocked with clear error
+- [x] Operations on `.obsidian/` are blocked with clear error
+- [x] Operations on `.smarthole/` are blocked with clear error
 - [ ] Protection applies to all file/folder tools
 
 **Communication**
