@@ -228,6 +228,85 @@ const endConversationTool = createEndConversationTool({
 llmService.registerTool(endConversationTool);
 ```
 
+## get_conversation Tool
+
+The plugin provides a `get_conversation` tool that allows the agent to retrieve past conversation details on demand:
+
+### Tool Definition
+
+```typescript
+{
+  name: "get_conversation",
+  description: "Retrieve past conversation details. Use with conversation_id to get a specific conversation's full history, or use list_recent to get summaries of recent conversations. Only completed conversations are accessible (not the current active one).",
+  inputSchema: {
+    type: "object",
+    properties: {
+      conversation_id: {
+        type: "string",
+        description: "The ID of a specific conversation to retrieve. Returns full conversation history with all messages."
+      },
+      list_recent: {
+        type: "number",
+        description: "Number of recent conversations to list (summaries only, no full message content). Defaults to 10."
+      }
+    },
+    required: []
+  }
+}
+```
+
+### Registration
+
+```typescript
+import { createGetConversationTool } from "./llm/tools/getConversation";
+
+const getConversationTool = createGetConversationTool({
+  conversationManager,
+});
+
+llmService.registerTool(getConversationTool);
+```
+
+### Response Formats
+
+**Single conversation (when `conversation_id` provided):**
+```typescript
+{
+  id: string;
+  title: string | null;
+  summary: string | null;
+  startedAt: string;
+  endedAt: string | null;
+  messages: Array<{
+    timestamp: string;
+    role: "user" | "assistant";
+    content: string;
+    toolsUsed?: string[];
+  }>;
+}
+```
+
+**Conversation list (when `list_recent` provided or no parameters):**
+```typescript
+{
+  conversations: Array<{
+    id: string;
+    title: string | null;
+    summary: string | null;
+    startedAt: string;
+    endedAt: string | null;
+    messageCount: number;
+  }>;
+}
+```
+
+### Use Cases
+
+- Agent needs to reference something from a previous conversation
+- User asks about what was discussed earlier
+- Agent needs to find related context from past interactions
+- Building continuity across conversation boundaries
+
 ## Legacy: ConversationHistory
 
 The original flat history system is retained for backward compatibility but is no longer the recommended approach.
