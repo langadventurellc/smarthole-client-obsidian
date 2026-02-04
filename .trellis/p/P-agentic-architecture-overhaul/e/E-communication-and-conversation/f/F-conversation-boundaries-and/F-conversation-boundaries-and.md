@@ -1,14 +1,69 @@
 ---
 id: F-conversation-boundaries-and
 title: Conversation Boundaries and Lifecycle
-status: open
+status: done
 priority: medium
 parent: E-communication-and-conversation
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/types.ts: Added ConversationMessage, Conversation, and
+    PersistedConversations interfaces for the new conversation-based data model
+  src/context/index.ts: Added exports for new types (Conversation,
+    ConversationMessage, PersistedConversations) while keeping legacy type
+    exports; Added export for ConversationManager class
+  src/settings.ts: Added conversationIdleTimeoutMinutes and
+    maxConversationsRetained to SmartHoleSettings interface and
+    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
+  src/context/ConversationManager.ts: "Created new ConversationManager class with
+    conversation lifecycle management (load/save, addMessage, endConversation,
+    getActiveConversation, getContextPrompt, getConversation,
+    getRecentConversations, idle timeout detection, rolling limit enforcement);
+    Added imports for LLMService type and extractTextContent utility from
+    '../llm'. Added generateConversationSummary() method for LLM-based
+    title/summary generation. Updated endConversation() to accept optional
+    llmService parameter and generate summaries. Updated addMessage() to accept
+    optional llmService parameter and pass it to endConversation() on idle
+    timeout.; Added migration logic: imported old format types
+    (PersistedHistory, HistoryEntry, ConversationSummary), added
+    HISTORY_DATA_KEY constant, updated load() to check for old format and run
+    migration, added migrateFromOldFormat(), convertOldEntriesToMessages(),
+    buildMigrationSummary(), toPersistedFormat(), and
+    loadFromPersistedConversations() methods"
+  src/processor/types.ts: Replaced ConversationHistory import with
+    ConversationManager; Changed conversationHistory property to
+    conversationManager in MessageProcessorConfig interface
+  src/processor/MessageProcessor.ts: Replaced ConversationHistory import with
+    ConversationManager and ConversationMessage; Changed private member to
+    conversationManager; Updated processWithRetry() to use
+    conversationManager.getContextPrompt() and record messages as separate
+    user/assistant ConversationMessage entries; Removed triggerSummarization
+    method and needsSummarization check; Added import for
+    createEndConversationTool and EndConversationContext; registered the
+    end_conversation tool in processWithRetry() after send_message tool
+    registration
+  src/main.ts: Replaced ConversationHistory import with ConversationManager;
+    Changed conversationHistory property to private conversationManager; Updated
+    initialization to use ConversationManager; Updated MessageProcessor config;
+    Added getConversationManager() accessor method
+  src/views/ChatView.ts: Updated onOpen() to use plugin.getConversationManager()
+    and load messages from active conversation using ConversationMessage format
+  src/llm/tools/endConversation.ts: Created new file implementing the
+    end_conversation tool with EndConversationContext and EndConversationInput
+    interfaces, tool definition, and createEndConversationTool factory function
+  src/llm/tools/index.ts: Added exports for createEndConversationTool and related
+    types (EndConversationContext, EndConversationInput)
+  src/llm/index.ts: Added re-exports for createEndConversationTool and related
+    types from tools module
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-conversation-data-types
+  - T-add-end-conversation-tool
+  - T-implement-conversation-1
+  - T-implement-conversationmanager
+  - T-integrate-conversationmanager
+  - T-migrate-existing-history-to
 created: 2026-02-04T06:03:55.794Z
 updated: 2026-02-04T06:03:55.794Z
 ---

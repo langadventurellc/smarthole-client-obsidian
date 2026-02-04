@@ -29,10 +29,10 @@ src/
 ├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
 ├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
-│   └── tools/     # Tools (vault: readFile, editFile, writeFile, createFolder, deleteFile, moveFile, searchFiles, listFiles, getFileInfo; communication: sendMessage; utils: pathUtils, protected)
+│   └── tools/     # Tools (vault: readFile, editFile, writeFile, createFolder, deleteFile, moveFile, searchFiles, listFiles, getFileInfo; communication: sendMessage, endConversation; utils: pathUtils, protected)
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
 ├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
-├── context/       # Conversation history persistence (ConversationHistory, stored in plugin data)
+├── context/       # Conversation management (ConversationManager for grouped conversations, ConversationHistory legacy)
 └── views/         # UI components (ChatView sidebar for direct interaction)
 ```
 
@@ -91,7 +91,7 @@ src/
 - [LLM Service](docs/llm-service.md) - Provider-agnostic LLM integration, tool registration, multi-turn processing
 - [Vault Tools](docs/vault-tools.md) - File operations, search, and vault management tools
 - [Message Processor](docs/message-processor.md) - Pipeline orchestration, retry logic, error handling
-- [Conversation History](docs/conversation-history.md) - Persistent history, context injection, summarization
+- [Conversation History](docs/conversation-history.md) - Conversation boundaries, message grouping, LLM summaries
 - [Inbox Manager](docs/inbox-manager.md) - Message durability, crash recovery
 - [Chat View](docs/chat-view.md) - Sidebar UI, direct messages, tool display
 - [Living Spec](docs/living-spec.md) - Product vision and requirements

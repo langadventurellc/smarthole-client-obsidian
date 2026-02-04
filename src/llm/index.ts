@@ -43,3 +43,7 @@ export { createVaultTools } from "./tools";
 // Send Message Tool (separate from vault tools - requires runtime context)
 export { createSendMessageTool } from "./tools";
 export type { SendMessageContext, SendMessageInput } from "./tools";
+
+// End Conversation Tool (separate from vault tools - requires runtime context)
+export { createEndConversationTool } from "./tools";
+export type { EndConversationContext, EndConversationInput } from "./tools";

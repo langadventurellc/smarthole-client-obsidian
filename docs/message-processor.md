@@ -13,7 +13,7 @@ const processor = new MessageProcessor({
   createLLMService: () => new LLMService(provider),
   app: obsidianApp,
   settings: pluginSettings,
-  conversationHistory: historyManager,
+  conversationManager: conversationManager,
 });
 ```
 
@@ -33,7 +33,7 @@ const processor = new MessageProcessor({
 2. **Send acknowledgment** - Notify SmartHole that message was received
 3. **LLM processing** - Create LLMService, register tools, process with retry
 4. **Send notification** - Success or error notification via SmartHole
-5. **Record history** - Add to conversation history for future context
+5. **Record history** - Add messages to active conversation via ConversationManager
 6. **Cleanup** - Remove message from inbox on success
 
 ## Usage
@@ -167,6 +167,15 @@ interface SendMessageContext {
 - Questions use high priority for SmartHole notifications
 - Supports `is_question` flag for conversational workflows
 
+## Conversation Management
+
+The processor integrates with `ConversationManager` for conversation lifecycle:
+
+- Messages are recorded to the active conversation via `addMessage()`
+- Conversation boundaries are detected automatically via idle timeout
+- The `end_conversation` tool is registered to allow explicit conversation ending
+- See [Conversation History](conversation-history.md) for detailed documentation
+
 ## Configuration
 
 ```typescript
@@ -176,7 +185,7 @@ interface MessageProcessorConfig {
   createLLMService: () => LLMService;
   app: App;
   settings: SmartHoleSettings;
-  conversationHistory: ConversationHistory;
+  conversationManager: ConversationManager;
 }
 ```
 

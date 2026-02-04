@@ -1,6 +1,6 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 
-import { ConversationHistory } from "./context";
+import { ConversationManager } from "./context";
 import { InboxManager } from "./inbox";
 import {
   MessageProcessor,
@@ -21,8 +21,8 @@ export default class SmartHolePlugin extends Plugin {
   private inboxManager: InboxManager | null = null;
   /** Exposed for ChatView to subscribe to response callbacks */
   messageProcessor: MessageProcessor | null = null;
-  /** Exposed for ChatView to load conversation history */
-  conversationHistory: ConversationHistory | null = null;
+  /** Manages conversation lifecycle and history */
+  private conversationManager: ConversationManager | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -68,9 +68,9 @@ export default class SmartHolePlugin extends Plugin {
     // Initialize InboxManager
     this.inboxManager = new InboxManager(this.app.vault);
 
-    // Initialize ConversationHistory and load persisted data
-    this.conversationHistory = new ConversationHistory(this);
-    await this.conversationHistory.load();
+    // Initialize ConversationManager and load persisted data
+    this.conversationManager = new ConversationManager(this);
+    await this.conversationManager.load();
 
     // Initialize MessageProcessor
     this.messageProcessor = new MessageProcessor({
@@ -78,7 +78,7 @@ export default class SmartHolePlugin extends Plugin {
       inboxManager: this.inboxManager,
       app: this.app,
       settings: this.settings,
-      conversationHistory: this.conversationHistory,
+      conversationManager: this.conversationManager,
     });
 
     // Process incoming messages through the full pipeline
@@ -112,9 +112,17 @@ export default class SmartHolePlugin extends Plugin {
     // Clear processor references
     this.inboxManager = null;
     this.messageProcessor = null;
-    this.conversationHistory = null;
+    this.conversationManager = null;
 
     console.log("SmartHole Client plugin unloaded");
+  }
+
+  /**
+   * Get the ConversationManager instance.
+   * Used by ChatView to access conversation history.
+   */
+  getConversationManager(): ConversationManager | null {
+    return this.conversationManager;
   }
 
   async loadSettings() {
@@ -148,6 +156,10 @@ export default class SmartHolePlugin extends Plugin {
       settings.informationArchitecture = d.informationArchitecture;
     if (typeof d.maxConversationHistory === "number")
       settings.maxConversationHistory = d.maxConversationHistory;
+    if (typeof d.conversationIdleTimeoutMinutes === "number")
+      settings.conversationIdleTimeoutMinutes = d.conversationIdleTimeoutMinutes;
+    if (typeof d.maxConversationsRetained === "number")
+      settings.maxConversationsRetained = d.maxConversationsRetained;
 
     return settings;
   }

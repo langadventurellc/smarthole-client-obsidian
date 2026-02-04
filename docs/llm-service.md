@@ -187,11 +187,34 @@ Tool input:
 }
 ```
 
+### end_conversation
+
+Allows the agent to explicitly end the current conversation, triggering summary generation and starting fresh context. See [Conversation History](conversation-history.md) for detailed documentation.
+
+```typescript
+import { createEndConversationTool, EndConversationContext } from "./llm/tools";
+
+const context: EndConversationContext = {
+  conversationManager,
+  getLLMService: () => llmService,
+};
+
+const tool = createEndConversationTool(context);
+service.registerTool(tool);
+```
+
+Tool input:
+```typescript
+{
+  reason?: string  // Optional reason for ending (e.g., "task completed")
+}
+```
+
 ## Implementation
 
 Located in `src/llm/`:
 - `types.ts` - Provider-agnostic type definitions
 - `LLMService.ts` - Main orchestration service
 - `AnthropicProvider.ts` - Claude API integration
-- `tools/` - Vault manipulation and communication tools
+- `tools/` - Vault manipulation, communication, and conversation tools
 - `index.ts` - Public exports

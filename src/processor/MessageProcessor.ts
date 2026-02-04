@@ -6,7 +6,7 @@
  */
 
 import type { App } from "obsidian";
-import type { ConversationHistory, HistoryEntry } from "../context";
+import type { ConversationManager, ConversationMessage } from "../context";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
 import type { InboxManager, InboxMessage } from "../inbox";
@@ -16,8 +16,9 @@ import {
   extractTextContent,
   createVaultTools,
   createSendMessageTool,
+  createEndConversationTool,
 } from "../llm";
-import type { SendMessageContext } from "../llm";
+import type { SendMessageContext, EndConversationContext } from "../llm";
 import type {
   MessageProcessorConfig,
   ProcessResult,
@@ -37,7 +38,7 @@ export class MessageProcessor {
   private inboxManager: InboxManager;
   private app: App;
   private settings: SmartHoleSettings;
-  private conversationHistory: ConversationHistory;
+  private conversationManager: ConversationManager;
   private responseCallbacks: ResponseCallback[] = [];
   private messageReceivedCallbacks: MessageReceivedCallback[] = [];
   private agentMessageCallbacks: AgentMessageCallback[] = [];
@@ -47,7 +48,7 @@ export class MessageProcessor {
     this.inboxManager = config.inboxManager;
     this.app = config.app;
     this.settings = config.settings;
-    this.conversationHistory = config.conversationHistory;
+    this.conversationManager = config.conversationManager;
   }
 
   /**
@@ -272,8 +273,8 @@ export class MessageProcessor {
         const llmService = new LLMService(this.app, this.settings);
         await llmService.initialize();
 
-        // Set conversation context from history
-        llmService.setConversationContext(this.conversationHistory.getContextPrompt());
+        // Set conversation context from ConversationManager
+        llmService.setConversationContext(this.conversationManager.getContextPrompt());
 
         // Register all vault tools and track their names
         const tools = createVaultTools(this.app);
@@ -300,6 +301,16 @@ export class MessageProcessor {
         llmService.registerTool(sendMessageTool);
         toolNames.push(sendMessageTool.definition.name);
 
+        // Create EndConversationContext and register end_conversation tool
+        const endConversationContext: EndConversationContext = {
+          conversationManager: this.conversationManager,
+          getLLMService: () => llmService,
+        };
+
+        const endConversationTool = createEndConversationTool(endConversationContext);
+        llmService.registerTool(endConversationTool);
+        toolNames.push(endConversationTool.definition.name);
+
         // Process the message
         const response = await llmService.processMessage(messageText);
         const textContent = extractTextContent(response);
@@ -307,23 +318,26 @@ export class MessageProcessor {
         // Determine which tools were actually used by examining the response history
         const toolsUsed = this.extractToolsUsed(llmService, toolNames);
 
-        // Record successful conversation in history
-        const historyEntry: HistoryEntry = {
-          id: messageId,
-          timestamp: new Date().toISOString(),
-          userMessage: messageText,
-          assistantResponse: textContent,
-          toolsUsed,
-          source,
+        // Record user message in conversation
+        const timestamp = new Date().toISOString();
+        const userMessage: ConversationMessage = {
+          id: `${messageId}-user`,
+          timestamp,
+          role: "user",
+          content: messageText,
         };
-        await this.conversationHistory.addConversation(historyEntry);
+        // Pass llmService to enable auto-summary generation on idle timeout
+        await this.conversationManager.addMessage(userMessage, llmService);
 
-        // Trigger summarization if needed (async, don't await)
-        if (this.conversationHistory.needsSummarization()) {
-          this.triggerSummarization().catch((err) => {
-            console.error("MessageProcessor: Failed to summarize old conversations:", err);
-          });
-        }
+        // Record assistant response in conversation
+        const assistantMessage: ConversationMessage = {
+          id: `${messageId}-assistant`,
+          timestamp,
+          role: "assistant",
+          content: textContent,
+          toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+        };
+        await this.conversationManager.addMessage(assistantMessage);
 
         return {
           success: true,
@@ -375,13 +389,6 @@ export class MessageProcessor {
     }
 
     return Array.from(toolsUsed);
-  }
-
-  private async triggerSummarization(): Promise<void> {
-    // Create a fresh LLM service for summarization
-    const llmService = new LLMService(this.app, this.settings);
-    await llmService.initialize();
-    await this.conversationHistory.summarizeOld(llmService);
   }
 
   private sendSuccessNotification(messageId: string, response: string): void {

@@ -49,3 +49,53 @@ export interface PersistedHistory {
   /** ISO timestamp of the last summarization operation */
   lastSummarized: string;
 }
+
+// =============================================================================
+// New Conversation-Based Data Model
+// =============================================================================
+
+/**
+ * A single message within a conversation.
+ */
+export interface ConversationMessage {
+  /** Unique identifier for this message */
+  id: string;
+  /** ISO 8601 timestamp when the message was created */
+  timestamp: string;
+  /** Role of the message sender */
+  role: "user" | "assistant";
+  /** Content of the message */
+  content: string;
+  /** Names of tools that were invoked during this message (assistant only) */
+  toolsUsed?: string[];
+}
+
+/**
+ * A discrete conversation session containing grouped messages.
+ * Conversations are bounded by idle timeouts or explicit endings.
+ */
+export interface Conversation {
+  /** Unique conversation ID (e.g., "conv-{timestamp}" or UUID) */
+  id: string;
+  /** ISO 8601 timestamp when the conversation started */
+  startedAt: string;
+  /** ISO 8601 timestamp when the conversation ended, null if active */
+  endedAt: string | null;
+  /** Auto-generated title for the conversation, null until ended */
+  title: string | null;
+  /** Auto-generated summary of the conversation, null until ended */
+  summary: string | null;
+  /** Messages in this conversation */
+  messages: ConversationMessage[];
+}
+
+/**
+ * Storage format for persisted conversations.
+ * Used for the new conversation-based history system.
+ */
+export interface PersistedConversations {
+  /** All stored conversations */
+  conversations: Conversation[];
+  /** ISO timestamp when migrated from old format, if applicable */
+  lastMigrated?: string;
+}

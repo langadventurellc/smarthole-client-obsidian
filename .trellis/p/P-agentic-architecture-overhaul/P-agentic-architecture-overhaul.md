@@ -40,7 +40,9 @@ affectedFiles:
     SendMessageContext, and SendMessageInput from sendMessage module; Removed
     imports for createCreateNoteTool, createModifyNoteTool,
     createSearchNotesTool, createOrganizeNoteTool; removed them from
-    createVaultTools() array; removed their re-export statements
+    createVaultTools() array; removed their re-export statements; Added exports
+    for createEndConversationTool and related types (EndConversationContext,
+    EndConversationInput)
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file
@@ -87,12 +89,23 @@ affectedFiles:
     case-insensitive file and folder lookup. Also added import for App, TFile,
     TFolder from 'obsidian'.; Added 'i' flag to RegExp constructor in
     globToRegex() function (line 66) to enable case-insensitive pattern matching
-  src/processor/types.ts: Added AgentMessageCallback type definition with JSDoc comment
+  src/processor/types.ts: Added AgentMessageCallback type definition with JSDoc
+    comment; Replaced ConversationHistory import with ConversationManager;
+    Changed conversationHistory property to conversationManager in
+    MessageProcessorConfig interface
   src/processor/MessageProcessor.ts: Added agentMessageCallbacks array,
     onAgentMessage() registration method, and notifyAgentMessageCallbacks()
     notification method; Added imports for createSendMessageTool and
     SendMessageContext. In processWithRetry(), created SendMessageContext with
-    channel functions and registered the send_message tool with LLMService.
+    channel functions and registered the send_message tool with LLMService.;
+    Replaced ConversationHistory import with ConversationManager and
+    ConversationMessage; Changed private member to conversationManager; Updated
+    processWithRetry() to use conversationManager.getContextPrompt() and record
+    messages as separate user/assistant ConversationMessage entries; Removed
+    triggerSummarization method and needsSummarization check; Added import for
+    createEndConversationTool and EndConversationContext; registered the
+    end_conversation tool in processWithRetry() after send_message tool
+    registration
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -106,17 +119,51 @@ affectedFiles:
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module; Removed
     re-exports for createCreateNoteTool, createModifyNoteTool,
-    createSearchNotesTool, createOrganizeNoteTool from the Vault Tools section
+    createSearchNotesTool, createOrganizeNoteTool from the Vault Tools section;
+    Added re-exports for createEndConversationTool and related types from tools
+    module
   src/main.ts: Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
-    for ChatView subscription
+    for ChatView subscription; Replaced ConversationHistory import with
+    ConversationManager; Changed conversationHistory property to private
+    conversationManager; Updated initialization to use ConversationManager;
+    Updated MessageProcessor config; Added getConversationManager() accessor
+    method
   src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
     agent messages in onOpen() to display mid-execution messages as assistant
-    messages, and added cleanup in onClose()
+    messages, and added cleanup in onClose(); Updated onOpen() to use
+    plugin.getConversationManager() and load messages from active conversation
+    using ConversationMessage format
   src/llm/tools/createNote.ts: DELETED - old MVP tool for creating notes
   src/llm/tools/modifyNote.ts: DELETED - old MVP tool for modifying notes
   src/llm/tools/searchNotes.ts: DELETED - old MVP tool for searching notes
   src/llm/tools/organizeNotes.ts: DELETED - old MVP tool for organizing notes
+  src/context/types.ts: Added ConversationMessage, Conversation, and
+    PersistedConversations interfaces for the new conversation-based data model
+  src/context/index.ts: Added exports for new types (Conversation,
+    ConversationMessage, PersistedConversations) while keeping legacy type
+    exports; Added export for ConversationManager class
+  src/settings.ts: Added conversationIdleTimeoutMinutes and
+    maxConversationsRetained to SmartHoleSettings interface and
+    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
+  src/context/ConversationManager.ts: "Created new ConversationManager class with
+    conversation lifecycle management (load/save, addMessage, endConversation,
+    getActiveConversation, getContextPrompt, getConversation,
+    getRecentConversations, idle timeout detection, rolling limit enforcement);
+    Added imports for LLMService type and extractTextContent utility from
+    '../llm'. Added generateConversationSummary() method for LLM-based
+    title/summary generation. Updated endConversation() to accept optional
+    llmService parameter and generate summaries. Updated addMessage() to accept
+    optional llmService parameter and pass it to endConversation() on idle
+    timeout.; Added migration logic: imported old format types
+    (PersistedHistory, HistoryEntry, ConversationSummary), added
+    HISTORY_DATA_KEY constant, updated load() to check for old format and run
+    migration, added migrateFromOldFormat(), convertOldEntriesToMessages(),
+    buildMigrationSummary(), toPersistedFormat(), and
+    loadFromPersistedConversations() methods"
+  src/llm/tools/endConversation.ts: Created new file implementing the
+    end_conversation tool with EndConversationContext and EndConversationInput
+    interfaces, tool definition, and createEndConversationTool factory function
 log: []
 schema: v1.0
 childrenIds:
