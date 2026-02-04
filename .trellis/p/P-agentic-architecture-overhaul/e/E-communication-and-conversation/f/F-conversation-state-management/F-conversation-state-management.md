@@ -1,7 +1,7 @@
 ---
 id: F-conversation-state-management
 title: Conversation State Management
-status: in-progress
+status: done
 priority: high
 parent: E-communication-and-conversation
 prerequisites: []
@@ -27,15 +27,23 @@ affectedFiles:
     CONVERSATION_STATES_KEY constant, plugin property, conversationStates Map,
     buildContinuationContext(), persistConversationStates(),
     loadConversationStates(), and updated processWithRetry() to restore/persist
-    conversation state
-  src/main.ts: "Added plugin: this to MessageProcessor config"
-log: []
+    conversation state; Added public initialize() method, public
+    cleanupStaleStates() method, made loadConversationStates() private with
+    error handling, removed constructor call to loadConversationStates()
+  src/main.ts: "Added plugin: this to MessageProcessor config; Added call to
+    messageProcessor.initialize() after construction, added periodic cleanup
+    interval (15 minutes), added extractSettings field for
+    conversationStateTimeoutMinutes"
+  src/settings.ts: "Added conversationStateTimeoutMinutes field to
+    SmartHoleSettings interface and DEFAULT_SETTINGS (default: 60)"
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
-  - T-add-crash-recovery-and-stale
-  - T-implement-conversation-state
   - T-add-conversationstate-types
+  - T-add-crash-recovery-and-stale
   - T-extend-llmservice-to-track
+  - T-implement-conversation-state
 created: 2026-02-04T06:03:35.444Z
 updated: 2026-02-04T06:03:35.444Z
 ---

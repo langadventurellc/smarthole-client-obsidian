@@ -31,7 +31,9 @@ affectedFiles:
     constant, plugin property, conversationStates Map,
     buildContinuationContext(), persistConversationStates(),
     loadConversationStates(), and updated processWithRetry() to restore/persist
-    conversation state
+    conversation state; Added public initialize() method, public
+    cleanupStaleStates() method, made loadConversationStates() private with
+    error handling, removed constructor call to loadConversationStates()
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -57,7 +59,10 @@ affectedFiles:
     ConversationManager; Changed conversationHistory property to private
     conversationManager; Updated initialization to use ConversationManager;
     Updated MessageProcessor config; Added getConversationManager() accessor
-    method; Added plugin: this to MessageProcessor config"
+    method; Added plugin: this to MessageProcessor config; Added call to
+    messageProcessor.initialize() after construction, added periodic cleanup
+    interval (15 minutes), added extractSettings field for
+    conversationStateTimeoutMinutes"
   src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
     agent messages in onOpen() to display mid-execution messages as assistant
     messages, and added cleanup in onClose(); Updated onOpen() to use
@@ -72,9 +77,11 @@ affectedFiles:
     ConversationMessage, PersistedConversations) while keeping legacy type
     exports; Added export for ConversationManager class; Added exports for
     ConversationState and PendingContext types
-  src/settings.ts: Added conversationIdleTimeoutMinutes and
+  src/settings.ts: "Added conversationIdleTimeoutMinutes and
     maxConversationsRetained to SmartHoleSettings interface and
-    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
+    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display(); Added
+    conversationStateTimeoutMinutes field to SmartHoleSettings interface and
+    DEFAULT_SETTINGS (default: 60)"
   src/context/ConversationManager.ts: "Created new ConversationManager class with
     conversation lifecycle management (load/save, addMessage, endConversation,
     getActiveConversation, getContextPrompt, getConversation,

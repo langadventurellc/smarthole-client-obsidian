@@ -1,13 +1,56 @@
 ---
 id: T-add-crash-recovery-and-stale
 title: Add crash recovery and stale state cleanup for conversation states
-status: open
+status: done
 priority: high
 parent: F-conversation-state-management
 prerequisites:
   - T-implement-conversation-state
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/settings.ts: "Added conversationStateTimeoutMinutes field to
+    SmartHoleSettings interface and DEFAULT_SETTINGS (default: 60)"
+  src/processor/MessageProcessor.ts: Added public initialize() method, public
+    cleanupStaleStates() method, made loadConversationStates() private with
+    error handling, removed constructor call to loadConversationStates()
+  src/main.ts: Added call to messageProcessor.initialize() after construction,
+    added periodic cleanup interval (15 minutes), added extractSettings field
+    for conversationStateTimeoutMinutes
+log:
+  - |-
+    Starting implementation. Plan:
+    1. Add conversationStateTimeoutMinutes to settings (default: 60)
+    2. Add public initialize() method to MessageProcessor
+    3. Add public cleanupStaleStates() method
+    4. Update main.ts to call initialize() and register periodic cleanup
+  - >-
+    Implemented crash recovery and stale state cleanup for conversation states:
+
+
+    1. Added `conversationStateTimeoutMinutes` setting (default: 60 minutes) to
+    control when pending conversation states are considered stale
+
+    2. Added public `initialize()` method to MessageProcessor that loads
+    persisted states and cleans up stale ones
+
+    3. Added public `cleanupStaleStates()` method that removes states older than
+    the configured timeout
+
+    4. Updated loadConversationStates() to be private and include try/catch
+    error handling
+
+    5. Updated main.ts to call `await this.messageProcessor.initialize()` after
+    construction
+
+    6. Added periodic cleanup interval using `this.registerInterval()` that runs
+    every 15 minutes
+
+    7. Added extractSettings field for conversationStateTimeoutMinutes in
+    main.ts
+
+
+    The implementation ensures conversation states survive plugin restarts and
+    automatically cleans up states that have been pending too long (user
+    abandoned the conversation).
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T17:50:16.553Z

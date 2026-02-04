@@ -58,9 +58,16 @@ export class MessageProcessor {
     this.settings = config.settings;
     this.conversationManager = config.conversationManager;
     this.plugin = config.plugin;
+  }
 
-    // Load persisted conversation states on initialization
-    this.loadConversationStates();
+  /**
+   * Initialize the MessageProcessor by loading persisted conversation states
+   * and cleaning up any stale states from previous sessions.
+   * Must be called after construction before processing messages.
+   */
+  async initialize(): Promise<void> {
+    await this.loadConversationStates();
+    await this.cleanupStaleStates();
   }
 
   /**
@@ -522,14 +529,47 @@ The message below is the user's response to your question. Continue the conversa
    * Load conversation states from plugin data storage.
    * Called on initialization to restore pending states from previous session.
    */
-  async loadConversationStates(): Promise<void> {
-    const data = await this.plugin.loadData();
-    if (data?.[CONVERSATION_STATES_KEY]) {
-      const persisted = data[CONVERSATION_STATES_KEY] as Record<string, ConversationState>;
-      this.conversationStates = new Map(Object.entries(persisted));
-      console.log(
-        `MessageProcessor: Loaded ${this.conversationStates.size} persisted conversation state(s)`
-      );
+  private async loadConversationStates(): Promise<void> {
+    try {
+      const data = await this.plugin.loadData();
+      if (data?.[CONVERSATION_STATES_KEY]) {
+        const persisted = data[CONVERSATION_STATES_KEY] as Record<string, ConversationState>;
+        this.conversationStates = new Map(Object.entries(persisted));
+        console.log(
+          `MessageProcessor: Loaded ${this.conversationStates.size} persisted conversation state(s)`
+        );
+      }
+    } catch (error) {
+      console.error("MessageProcessor: Failed to load conversation states:", error);
+      this.conversationStates = new Map();
+    }
+  }
+
+  /**
+   * Clean up conversation states that have exceeded the configured timeout.
+   * States are considered stale when their pendingContext.createdAt timestamp
+   * is older than conversationStateTimeoutMinutes.
+   * Called on initialization and periodically via registerInterval.
+   */
+  async cleanupStaleStates(): Promise<void> {
+    const timeoutMinutes = this.settings.conversationStateTimeoutMinutes ?? 60;
+    const timeoutMs = timeoutMinutes * 60 * 1000;
+    const now = Date.now();
+    let removed = 0;
+
+    for (const [conversationId, state] of this.conversationStates) {
+      if (state.pendingContext?.createdAt) {
+        const createdAt = new Date(state.pendingContext.createdAt).getTime();
+        if (now - createdAt > timeoutMs) {
+          this.conversationStates.delete(conversationId);
+          removed++;
+        }
+      }
+    }
+
+    if (removed > 0) {
+      console.log(`MessageProcessor: Cleaned up ${removed} stale conversation state(s)`);
+      await this.persistConversationStates();
     }
   }
 }
