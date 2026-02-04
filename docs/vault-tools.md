@@ -10,6 +10,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `modify_note` | Modify existing notes with atomic operations |
 | `search_notes` | Search notes using Obsidian's search API |
 | `search_files` | Search file contents using regex patterns with context |
+| `list_files` | List files and folders matching a glob pattern |
 | `organize_note` | Rename or move notes |
 | `read_file` | Read file contents with optional line ranges |
 | `edit_file` | Make targeted edits using search/replace or line operations |
@@ -235,6 +236,104 @@ Line 11:   following content
 | Context | Characters around match | Lines around match |
 | Use case | Natural language queries | Precise pattern matching |
 | File filtering | None (all notes) | Glob patterns |
+
+## list_files
+
+List files and folders matching a glob pattern. Returns paths sorted by modification time (most recent first).
+
+### Input Schema
+
+```typescript
+{
+  pattern?: string,      // Glob pattern to match (default: '*')
+  path?: string,         // Base path to search from (default: vault root)
+  max_results?: integer  // Maximum items to return (1-1000, default: 100)
+}
+```
+
+### Behavior
+
+- Returns files and folders matching the glob pattern
+- Sorts results by modification time (most recent first)
+- Folders with unknown modification time are sorted to the end
+- Excludes protected folders (`.obsidian/`, `.smarthole/`)
+- Validates base path exists before searching
+- Caps `max_results` at 1000 to prevent performance issues
+
+### Glob Pattern Support
+
+The `pattern` parameter supports common glob patterns:
+- `*` - Direct children of the base path (default)
+- `**` - All descendants recursively
+- `*.md` - Markdown files in base path
+- `**/*.md` - All markdown files (any depth)
+- `Projects/**` - All contents under Projects folder
+- `folder/*` - Direct children of folder
+- `?` - Match single character (except /)
+
+### Example
+
+```typescript
+// List all files in vault root (default pattern)
+{
+  name: "list_files",
+  input: {}
+}
+
+// List all markdown files
+{
+  name: "list_files",
+  input: {
+    pattern: "**/*.md"
+  }
+}
+
+// List contents of a specific folder
+{
+  name: "list_files",
+  input: {
+    pattern: "*",
+    path: "Projects"
+  }
+}
+
+// List all files under Projects recursively
+{
+  name: "list_files",
+  input: {
+    pattern: "**",
+    path: "Projects",
+    max_results: 50
+  }
+}
+```
+
+### Response Format
+
+```
+Found 5 item(s):
+
+[file] Projects/notes.md (modified: 2026-02-03)
+[file] Projects/todo.md (modified: 2026-02-01)
+[folder] Projects/Archive/
+[file] README.md (modified: 2026-01-30)
+[folder] Templates/
+```
+
+For no matches:
+```
+No files or folders match the pattern "*.xyz" in "Projects".
+```
+
+### Comparison with search_files
+
+| Feature | list_files | search_files |
+|---------|------------|--------------|
+| Purpose | Explore vault structure | Find content patterns |
+| Pattern type | Glob (path matching) | Regex (content matching) |
+| Returns | File/folder paths with types | File paths with content excerpts |
+| Sorting | By modification time | By match relevance |
+| Use case | Navigation, discovery | Content search |
 
 ## organize_note
 
@@ -786,6 +885,7 @@ Located in `src/llm/tools/`:
 - `modifyNote.ts` - Note modification factory
 - `searchNotes.ts` - Simple text search factory
 - `searchFiles.ts` - Regex content search factory
+- `listFiles.ts` - Glob-based file listing factory
 - `organizeNotes.ts` - Rename/move factory
 - `readFile.ts` - File reading factory
 - `editFile.ts` - Targeted file editing factory
@@ -793,5 +893,6 @@ Located in `src/llm/tools/`:
 - `createFolder.ts` - Folder creation factory
 - `deleteFile.ts` - File/folder deletion factory
 - `moveFile.ts` - File/folder move/rename factory
+- `pathUtils.ts` - Shared path normalization and glob matching utilities
 - `protected.ts` - Protected path validation utility
 - `index.ts` - `createVaultTools()` aggregator
