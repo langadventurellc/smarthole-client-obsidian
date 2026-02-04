@@ -1,15 +1,31 @@
 ---
 id: F-edit-file-tool
 title: Edit File Tool
-status: open
+status: done
 priority: high
 parent: E-file-operation-tools
 prerequisites:
   - F-read-file-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
+    functionality, supporting first occurrence or all occurrences replacement,
+    protected path validation, and atomic file operations; Extended edit_file
+    tool with line-based operations: insert_after_line, insert_before_line,
+    delete_lines parameters. Added determineOperationMode(),
+    executeSearchReplace(), executeLineBased(), executeInsertAfterLine(),
+    executeInsertBeforeLine(), and executeDeleteLines() functions. Updated tool
+    description and inputSchema to document new parameters."
+  src/llm/tools/index.ts: Added import and export for createEditFileTool, added to
+    createVaultTools array; Added import and export for createEditFileTool,
+    added to createVaultTools array (completed in
+    T-implement-edit-file-tool-with)
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-line-based-operations-to
+  - T-implement-edit-file-tool-with
+  - T-register-edit-file-tool-in
 created: 2026-02-04T02:03:57.093Z
 updated: 2026-02-04T02:03:57.093Z
 ---

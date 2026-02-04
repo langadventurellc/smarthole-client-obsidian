@@ -11,6 +11,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `search_notes` | Search notes using Obsidian's search API |
 | `organize_note` | Rename or move notes |
 | `read_file` | Read file contents with optional line ranges |
+| `edit_file` | Make targeted edits using search/replace or line operations |
 
 ## Usage
 
@@ -236,6 +237,141 @@ For truncated files:
 [... truncated, showing lines 1-2000, total lines in file: 5000]
 ```
 
+## edit_file
+
+Make targeted edits to files using search/replace or line-based operations.
+
+### Input Schema
+
+```typescript
+{
+  path: string,              // File path (required)
+
+  // Search/Replace mode (mutually exclusive with line operations)
+  old_text?: string,         // Text to search for and replace
+  new_text?: string,         // Text to replace old_text with
+  replace_all?: boolean,     // Replace all occurrences (default: false, first only)
+
+  // Line-based mode (mutually exclusive with search/replace)
+  insert_after_line?: integer,   // Line number after which to insert (0 = beginning)
+  insert_before_line?: integer,  // Line number before which to insert (1-indexed)
+  delete_lines?: {               // Line range to delete
+    start: integer,              // First line to delete (1-indexed)
+    end: integer                 // Last line to delete (1-indexed, inclusive)
+  },
+  content?: string           // Content to insert (required for insert operations)
+}
+```
+
+### Behavior
+
+- **Mutually exclusive modes**: Use either search/replace OR line-based operations, not both
+- Uses `vault.process()` for atomic operations
+- Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
+- Returns clear error messages with context (e.g., "Text 'foo' not found in file.md")
+- Returns summary of changes made (e.g., "Replaced 3 occurrences" or "Inserted 5 lines after line 42")
+
+### Search/Replace Mode
+
+Replace text patterns in a file:
+- `replace_all: false` (default): Replaces only the first occurrence
+- `replace_all: true`: Replaces all occurrences
+
+```typescript
+// Replace first occurrence
+{
+  name: "edit_file",
+  input: {
+    path: "notes/todo.md",
+    old_text: "[ ]",
+    new_text: "[x]"
+  }
+}
+
+// Replace all occurrences
+{
+  name: "edit_file",
+  input: {
+    path: "notes/document.md",
+    old_text: "2025",
+    new_text: "2026",
+    replace_all: true
+  }
+}
+```
+
+### Line-Based Operations
+
+Only one line operation can be specified at a time.
+
+**Insert after a line:**
+```typescript
+// Insert at the very beginning (line 0)
+{
+  name: "edit_file",
+  input: {
+    path: "notes/log.md",
+    insert_after_line: 0,
+    content: "# Header\n\nNew content at top"
+  }
+}
+
+// Insert after line 5
+{
+  name: "edit_file",
+  input: {
+    path: "notes/list.md",
+    insert_after_line: 5,
+    content: "- New item"
+  }
+}
+```
+
+**Insert before a line:**
+```typescript
+// Insert before line 10
+{
+  name: "edit_file",
+  input: {
+    path: "notes/document.md",
+    insert_before_line: 10,
+    content: "## New Section"
+  }
+}
+```
+
+**Delete lines:**
+```typescript
+// Delete lines 5-10 (inclusive)
+{
+  name: "edit_file",
+  input: {
+    path: "notes/document.md",
+    delete_lines: {
+      start: 5,
+      end: 10
+    }
+  }
+}
+```
+
+### Response Format
+
+Success responses indicate what was done:
+```
+Replaced 1 occurrence in "notes/todo.md".
+Replaced 3 occurrences in "notes/document.md".
+Inserted 5 lines after line 42 in "notes/log.md".
+Deleted lines 5-10 (6 lines) in "notes/document.md".
+```
+
+Error responses provide context:
+```
+Error: Text 'foo' not found in notes.md
+Error: Line 50 does not exist in file with 30 lines.
+Error: Cannot mix search/replace parameters with line-based parameters.
+```
+
 ## Tool Handler Interface
 
 ```typescript
@@ -278,5 +414,6 @@ Located in `src/llm/tools/`:
 - `searchNotes.ts` - Search factory
 - `organizeNotes.ts` - Rename/move factory
 - `readFile.ts` - File reading factory
+- `editFile.ts` - Targeted file editing factory
 - `protected.ts` - Protected path validation utility
 - `index.ts` - `createVaultTools()` aggregator

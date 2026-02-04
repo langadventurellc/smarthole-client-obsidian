@@ -13,7 +13,18 @@ affectedFiles:
     protected path checking, line number formatting, optional line range
     filtering, and smart truncation for large files
   src/llm/tools/index.ts: Added import and export for createReadFileTool, added to
-    createVaultTools() array
+    createVaultTools() array; Added import and export for createEditFileTool,
+    added to createVaultTools array; Added import and export for
+    createEditFileTool, added to createVaultTools array (completed in
+    T-implement-edit-file-tool-with)
+  src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
+    functionality, supporting first occurrence or all occurrences replacement,
+    protected path validation, and atomic file operations; Extended edit_file
+    tool with line-based operations: insert_after_line, insert_before_line,
+    delete_lines parameters. Added determineOperationMode(),
+    executeSearchReplace(), executeLineBased(), executeInsertAfterLine(),
+    executeInsertBeforeLine(), and executeDeleteLines() functions. Updated tool
+    description and inputSchema to document new parameters."
 log: []
 schema: v1.0
 childrenIds:
