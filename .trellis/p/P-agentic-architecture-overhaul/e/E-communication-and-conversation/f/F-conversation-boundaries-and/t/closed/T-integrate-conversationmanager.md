@@ -1,14 +1,94 @@
 ---
 id: T-integrate-conversationmanager
 title: Integrate ConversationManager with MessageProcessor
-status: open
+status: done
 priority: high
 parent: F-conversation-boundaries-and
 prerequisites:
   - T-implement-conversationmanager
   - T-implement-conversation-1
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/processor/types.ts: Replaced ConversationHistory import with
+    ConversationManager; Changed conversationHistory property to
+    conversationManager in MessageProcessorConfig interface
+  src/processor/MessageProcessor.ts: Replaced ConversationHistory import with
+    ConversationManager and ConversationMessage; Changed private member to
+    conversationManager; Updated processWithRetry() to use
+    conversationManager.getContextPrompt() and record messages as separate
+    user/assistant ConversationMessage entries; Removed triggerSummarization
+    method and needsSummarization check
+  src/main.ts: Replaced ConversationHistory import with ConversationManager;
+    Changed conversationHistory property to private conversationManager; Updated
+    initialization to use ConversationManager; Updated MessageProcessor config;
+    Added getConversationManager() accessor method
+  src/views/ChatView.ts: Updated onOpen() to use plugin.getConversationManager()
+    and load messages from active conversation using ConversationMessage format
+log:
+  - >-
+    Research phase complete. Reviewed:
+
+    - src/processor/types.ts - MessageProcessorConfig currently uses
+    ConversationHistory
+
+    - src/processor/MessageProcessor.ts - Uses
+    conversationHistory.getContextPrompt(), addConversation(),
+    needsSummarization(), summarizeOld()
+
+    - src/main.ts - Initializes ConversationHistory and passes to
+    MessageProcessor, exposes conversationHistory property
+
+    - src/context/ConversationManager.ts - Has addMessage(), getContextPrompt(),
+    getActiveConversation(), load(), endConversation()
+
+    - src/views/ChatView.ts - Uses
+    plugin.conversationHistory?.getRecentConversations() to load old
+    HistoryEntry format
+
+    - src/context/index.ts - Exports both ConversationHistory and
+    ConversationManager
+
+
+    Key findings:
+
+    1. ChatView.onOpen() loads history using getRecentConversations() which
+    returns HistoryEntry[]
+
+    2. ConversationManager has different method signatures than
+    ConversationHistory
+
+    3. Need to update MessageProcessor to use ConversationMessage instead of
+    HistoryEntry
+
+    4. ChatView needs to be updated to work with ConversationManager's
+    Conversation/ConversationMessage format
+  - >-
+    Integrated ConversationManager with MessageProcessor by replacing the old
+    ConversationHistory integration:
+
+
+    1. Updated MessageProcessorConfig in types.ts to use `conversationManager:
+    ConversationManager` instead of `conversationHistory: ConversationHistory`
+
+
+    2. Updated MessageProcessor:
+       - Changed private member from `conversationHistory` to `conversationManager`
+       - Updated `processWithRetry()` to use `conversationManager.getContextPrompt()`
+       - Changed message recording to add user and assistant messages as separate `ConversationMessage` entries
+       - Pass `llmService` to first `addMessage()` call to enable auto-summary generation on idle timeout
+       - Removed the old `triggerSummarization()` method and needsSummarization check
+
+    3. Updated main.ts plugin:
+       - Changed import from ConversationHistory to ConversationManager
+       - Replaced `conversationHistory` property with private `conversationManager`
+       - Updated initialization to create ConversationManager and call load()
+       - Updated MessageProcessor config to pass `conversationManager`
+       - Added `getConversationManager()` accessor method for ChatView access
+       - Updated onunload to clear conversationManager
+
+    4. Updated ChatView:
+       - Changed history loading to use `plugin.getConversationManager()` instead of `plugin.conversationHistory`
+       - Now loads messages from the active conversation using `getActiveConversation().messages`
+       - Adapted to work with ConversationMessage format instead of old HistoryEntry format
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T17:12:09.031Z

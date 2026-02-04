@@ -78,26 +78,19 @@ export class ChatView extends ItemView {
       this.autoResizeTextarea();
     });
 
-    // Load persisted conversation history
-    const history = this.plugin.conversationHistory?.getRecentConversations() ?? [];
-    for (const entry of history) {
-      // Render user message
-      this.addMessage({
-        id: `${entry.id}-user`,
-        role: "user",
-        content: entry.userMessage,
-        timestamp: entry.timestamp,
-        source: entry.source ?? "websocket",
-      });
-
-      // Render assistant response
-      this.addMessage({
-        id: `${entry.id}-assistant`,
-        role: "assistant",
-        content: entry.assistantResponse,
-        timestamp: entry.timestamp,
-        toolsUsed: entry.toolsUsed,
-      });
+    // Load persisted conversation history from active conversation
+    const conversationManager = this.plugin.getConversationManager();
+    const activeConversation = conversationManager?.getActiveConversation();
+    if (activeConversation) {
+      for (const message of activeConversation.messages) {
+        this.addMessage({
+          id: message.id,
+          role: message.role,
+          content: message.content,
+          timestamp: message.timestamp,
+          toolsUsed: message.toolsUsed,
+        });
+      }
     }
     this.scrollToBottom();
 

@@ -29,15 +29,30 @@ affectedFiles:
     migration, added migrateFromOldFormat(), convertOldEntriesToMessages(),
     buildMigrationSummary(), toPersistedFormat(), and
     loadFromPersistedConversations() methods"
+  src/processor/types.ts: Replaced ConversationHistory import with
+    ConversationManager; Changed conversationHistory property to
+    conversationManager in MessageProcessorConfig interface
+  src/processor/MessageProcessor.ts: Replaced ConversationHistory import with
+    ConversationManager and ConversationMessage; Changed private member to
+    conversationManager; Updated processWithRetry() to use
+    conversationManager.getContextPrompt() and record messages as separate
+    user/assistant ConversationMessage entries; Removed triggerSummarization
+    method and needsSummarization check
+  src/main.ts: Replaced ConversationHistory import with ConversationManager;
+    Changed conversationHistory property to private conversationManager; Updated
+    initialization to use ConversationManager; Updated MessageProcessor config;
+    Added getConversationManager() accessor method
+  src/views/ChatView.ts: Updated onOpen() to use plugin.getConversationManager()
+    and load messages from active conversation using ConversationMessage format
 log: []
 schema: v1.0
 childrenIds:
   - T-add-end-conversation-tool
   - T-integrate-conversationmanager
-  - T-migrate-existing-history-to
   - T-add-conversation-data-types
   - T-implement-conversation-1
   - T-implement-conversationmanager
+  - T-migrate-existing-history-to
 created: 2026-02-04T06:03:55.794Z
 updated: 2026-02-04T06:03:55.794Z
 ---

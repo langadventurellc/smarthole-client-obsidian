@@ -6,7 +6,7 @@
  */
 
 import type { App } from "obsidian";
-import type { ConversationHistory } from "../context";
+import type { ConversationManager } from "../context";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection } from "../websocket";
 import type { InboxManager } from "../inbox";
@@ -16,7 +16,7 @@ export interface MessageProcessorConfig {
   inboxManager: InboxManager;
   app: App;
   settings: SmartHoleSettings;
-  conversationHistory: ConversationHistory;
+  conversationManager: ConversationManager;
 }
 
 export interface ProcessResult {
