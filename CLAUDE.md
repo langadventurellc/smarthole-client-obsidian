@@ -29,7 +29,7 @@ src/
 ├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
 ├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
-│   └── tools/     # Vault manipulation tools (createNote, modifyNote, searchNotes, organizeNotes, readFile, editFile, writeFile, createFolder, deleteFile, moveFile, protected)
+│   └── tools/     # Vault manipulation tools (createNote, modifyNote, searchNotes, searchFiles, organizeNotes, readFile, editFile, writeFile, createFolder, deleteFile, moveFile, protected)
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
 ├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
 ├── context/       # Conversation history persistence (ConversationHistory, stored in plugin data)
