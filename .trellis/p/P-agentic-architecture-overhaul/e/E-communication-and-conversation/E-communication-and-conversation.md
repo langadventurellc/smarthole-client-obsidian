@@ -11,7 +11,8 @@ affectedFiles:
     comment; Replaced ConversationHistory import with ConversationManager;
     Changed conversationHistory property to conversationManager in
     MessageProcessorConfig interface; Added isWaitingForResponse?: boolean field
-    to ProcessResult interface"
+    to ProcessResult interface; Added SmartHolePlugin import and plugin property
+    to MessageProcessorConfig interface for persistence access"
   src/processor/MessageProcessor.ts: Added agentMessageCallbacks array,
     onAgentMessage() registration method, and notifyAgentMessageCallbacks()
     notification method; Added imports for createSendMessageTool and
@@ -25,7 +26,12 @@ affectedFiles:
     createEndConversationTool and EndConversationContext; registered the
     end_conversation tool in processWithRetry() after send_message tool
     registration; Added setWaitingForResponse callback to SendMessageContext
-    that delegates to llmService.setWaitingForResponse().
+    that delegates to llmService.setWaitingForResponse().; Added
+    ConversationState import, SmartHolePlugin import, CONVERSATION_STATES_KEY
+    constant, plugin property, conversationStates Map,
+    buildContinuationContext(), persistConversationStates(),
+    loadConversationStates(), and updated processWithRetry() to restore/persist
+    conversation state
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -45,13 +51,13 @@ affectedFiles:
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module; Added re-exports
     for createEndConversationTool and related types from tools module
-  src/main.ts: Added import for AgentMessageCallback type and added
+  src/main.ts: "Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
     for ChatView subscription; Replaced ConversationHistory import with
     ConversationManager; Changed conversationHistory property to private
     conversationManager; Updated initialization to use ConversationManager;
     Updated MessageProcessor config; Added getConversationManager() accessor
-    method
+    method; Added plugin: this to MessageProcessor config"
   src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
     agent messages in onOpen() to display mid-execution messages as assistant
     messages, and added cleanup in onClose(); Updated onOpen() to use

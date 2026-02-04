@@ -9,7 +9,9 @@ affectedFiles:
   src/context/types.ts: Added PendingContext interface (originalMessageId,
     toolCallsCompleted, lastAgentMessage, createdAt) and ConversationState
     interface (isWaitingForResponse, pendingContext?)
-  src/processor/types.ts: "Added isWaitingForResponse?: boolean field to ProcessResult interface"
+  src/processor/types.ts: "Added isWaitingForResponse?: boolean field to
+    ProcessResult interface; Added SmartHolePlugin import and plugin property to
+    MessageProcessorConfig interface for persistence access"
   src/context/index.ts: Added exports for ConversationState and PendingContext types
   src/llm/LLMService.ts: Added ConversationState import, state tracking properties
     (waitingForResponse, lastQuestionMessage, toolCallsInSession), and
@@ -20,14 +22,20 @@ affectedFiles:
     optional setWaitingForResponse callback. Updated execute function to call
     setWaitingForResponse when is_question=true.
   src/processor/MessageProcessor.ts: Added setWaitingForResponse callback to
-    SendMessageContext that delegates to llmService.setWaitingForResponse().
+    SendMessageContext that delegates to llmService.setWaitingForResponse().;
+    Added ConversationState import, SmartHolePlugin import,
+    CONVERSATION_STATES_KEY constant, plugin property, conversationStates Map,
+    buildContinuationContext(), persistConversationStates(),
+    loadConversationStates(), and updated processWithRetry() to restore/persist
+    conversation state
+  src/main.ts: "Added plugin: this to MessageProcessor config"
 log: []
 schema: v1.0
 childrenIds:
   - T-add-crash-recovery-and-stale
-  - T-extend-llmservice-to-track
   - T-implement-conversation-state
   - T-add-conversationstate-types
+  - T-extend-llmservice-to-track
 created: 2026-02-04T06:03:35.444Z
 updated: 2026-02-04T06:03:35.444Z
 ---

@@ -79,6 +79,7 @@ export default class SmartHolePlugin extends Plugin {
       app: this.app,
       settings: this.settings,
       conversationManager: this.conversationManager,
+      plugin: this,
     });
 
     // Process incoming messages through the full pipeline

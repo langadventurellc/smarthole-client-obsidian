@@ -6,7 +6,8 @@
  */
 
 import type { App } from "obsidian";
-import type { ConversationManager, ConversationMessage } from "../context";
+import type { ConversationManager, ConversationMessage, ConversationState } from "../context";
+import type SmartHolePlugin from "../main";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
 import type { InboxManager, InboxMessage } from "../inbox";
@@ -33,15 +34,22 @@ const MAX_RETRY_ATTEMPTS = 3;
 /** Base delay in milliseconds for exponential backoff */
 const RETRY_BASE_DELAY = 1000;
 
+/** Data key for persisting conversation states in plugin data */
+const CONVERSATION_STATES_KEY = "conversationStates";
+
 export class MessageProcessor {
   private connection: SmartHoleConnection;
   private inboxManager: InboxManager;
   private app: App;
   private settings: SmartHoleSettings;
   private conversationManager: ConversationManager;
+  private plugin: SmartHolePlugin;
   private responseCallbacks: ResponseCallback[] = [];
   private messageReceivedCallbacks: MessageReceivedCallback[] = [];
   private agentMessageCallbacks: AgentMessageCallback[] = [];
+
+  /** Map of conversation ID to active conversation state */
+  private conversationStates: Map<string, ConversationState> = new Map();
 
   constructor(config: MessageProcessorConfig) {
     this.connection = config.connection;
@@ -49,6 +57,10 @@ export class MessageProcessor {
     this.app = config.app;
     this.settings = config.settings;
     this.conversationManager = config.conversationManager;
+    this.plugin = config.plugin;
+
+    // Load persisted conversation states on initialization
+    this.loadConversationStates();
   }
 
   /**
@@ -275,8 +287,31 @@ export class MessageProcessor {
         const llmService = new LLMService(this.app, this.settings);
         await llmService.initialize();
 
-        // Set conversation context from ConversationManager
-        llmService.setConversationContext(this.conversationManager.getContextPrompt());
+        // Check if this is a continuation of a pending conversation
+        const activeConversation = this.conversationManager.getActiveConversation();
+        let conversationContext = this.conversationManager.getContextPrompt();
+
+        if (activeConversation) {
+          const pendingState = this.conversationStates.get(activeConversation.id);
+          if (pendingState?.isWaitingForResponse) {
+            // Restore LLM context for continuation
+            llmService.restoreConversationState({
+              isWaitingForResponse: false, // Clear since we're resuming
+              pendingContext: pendingState.pendingContext,
+            });
+
+            // Inject context about the pending question into system prompt
+            const continuationContext = this.buildContinuationContext(pendingState);
+            conversationContext = conversationContext + "\n\n" + continuationContext;
+
+            // Clear the pending state since we're processing the response
+            this.conversationStates.delete(activeConversation.id);
+            await this.persistConversationStates();
+          }
+        }
+
+        // Set conversation context from ConversationManager (with continuation context if applicable)
+        llmService.setConversationContext(conversationContext);
 
         // Register all vault tools and track their names
         const tools = createVaultTools(this.app);
@@ -346,6 +381,20 @@ export class MessageProcessor {
 
         // Check if agent is waiting for user response
         const isWaitingForResponse = llmService.isWaitingForUserResponse();
+
+        // Persist conversation state if agent is waiting for a response
+        if (isWaitingForResponse) {
+          const conversationState = llmService.getConversationState();
+          const currentConversation = this.conversationManager.getActiveConversation();
+
+          if (currentConversation && conversationState.isWaitingForResponse) {
+            this.conversationStates.set(currentConversation.id, conversationState);
+            await this.persistConversationStates();
+            console.log(
+              `MessageProcessor: Persisted waiting state for conversation ${currentConversation.id}`
+            );
+          }
+        }
 
         return {
           success: true,
@@ -440,5 +489,47 @@ export class MessageProcessor {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // ===========================================================================
+  // Conversation State Persistence
+  // ===========================================================================
+
+  /**
+   * Build context prompt for continuing a pending conversation.
+   * Injects information about the agent's previous question into the system prompt.
+   */
+  private buildContinuationContext(state: ConversationState): string {
+    if (!state.pendingContext) return "";
+
+    return `## Pending Context
+You previously asked a question and are awaiting the user's response.
+Your question was: "${state.pendingContext.lastAgentMessage}"
+The message below is the user's response to your question. Continue the conversation accordingly.`;
+  }
+
+  /**
+   * Persist conversation states to plugin data storage.
+   * Called after state changes to ensure durability across restarts.
+   */
+  private async persistConversationStates(): Promise<void> {
+    const data = (await this.plugin.loadData()) || {};
+    data[CONVERSATION_STATES_KEY] = Object.fromEntries(this.conversationStates);
+    await this.plugin.saveData(data);
+  }
+
+  /**
+   * Load conversation states from plugin data storage.
+   * Called on initialization to restore pending states from previous session.
+   */
+  async loadConversationStates(): Promise<void> {
+    const data = await this.plugin.loadData();
+    if (data?.[CONVERSATION_STATES_KEY]) {
+      const persisted = data[CONVERSATION_STATES_KEY] as Record<string, ConversationState>;
+      this.conversationStates = new Map(Object.entries(persisted));
+      console.log(
+        `MessageProcessor: Loaded ${this.conversationStates.size} persisted conversation state(s)`
+      );
+    }
   }
 }
