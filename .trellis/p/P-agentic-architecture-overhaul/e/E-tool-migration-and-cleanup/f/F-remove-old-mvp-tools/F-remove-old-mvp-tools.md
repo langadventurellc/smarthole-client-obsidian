@@ -1,14 +1,26 @@
 ---
 id: F-remove-old-mvp-tools
 title: Remove Old MVP Tools
-status: open
+status: done
 priority: medium
 parent: E-tool-migration-and-cleanup
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/index.ts: Removed imports for createCreateNoteTool,
+    createModifyNoteTool, createSearchNotesTool, createOrganizeNoteTool; removed
+    them from createVaultTools() array; removed their re-export statements
+  src/llm/index.ts: Removed re-exports for createCreateNoteTool,
+    createModifyNoteTool, createSearchNotesTool, createOrganizeNoteTool from the
+    Vault Tools section
+  src/llm/tools/createNote.ts: DELETED - old MVP tool for creating notes
+  src/llm/tools/modifyNote.ts: DELETED - old MVP tool for modifying notes
+  src/llm/tools/searchNotes.ts: DELETED - old MVP tool for searching notes
+  src/llm/tools/organizeNotes.ts: DELETED - old MVP tool for organizing notes
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-remove-old-mvp-tools-from
 created: 2026-02-04T06:44:28.506Z
 updated: 2026-02-04T06:44:28.506Z
 ---

@@ -286,8 +286,8 @@ Following patterns from successful coding agents:
 - [ ] Current conversation only in LLM context (not full history)
 
 **Cleanup**
-- [ ] Old MVP tools removed (createNote, modifyNote, searchNotes, organizeNotes)
-- [ ] No references to removed tools in codebase
+- [x] Old MVP tools removed (createNote, modifyNote, searchNotes, organizeNotes)
+- [x] No references to removed tools in codebase
 - [ ] Tests updated for new tool set
 
 ---

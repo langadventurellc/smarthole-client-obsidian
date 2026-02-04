@@ -37,7 +37,10 @@ affectedFiles:
     added to createVaultTools() array, and added re-export; Added import,
     registration in createVaultTools() array, and re-export for
     createGetFileInfoTool; Added exports for createSendMessageTool,
-    SendMessageContext, and SendMessageInput from sendMessage module
+    SendMessageContext, and SendMessageInput from sendMessage module; Removed
+    imports for createCreateNoteTool, createModifyNoteTool,
+    createSearchNotesTool, createOrganizeNoteTool; removed them from
+    createVaultTools() array; removed their re-export statements
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file
@@ -101,13 +104,19 @@ affectedFiles:
     validation, ChatView and SmartHole delivery logic, and appropriate return
     messages
   src/llm/index.ts: Added re-exports for createSendMessageTool,
-    SendMessageContext, and SendMessageInput from tools module
+    SendMessageContext, and SendMessageInput from tools module; Removed
+    re-exports for createCreateNoteTool, createModifyNoteTool,
+    createSearchNotesTool, createOrganizeNoteTool from the Vault Tools section
   src/main.ts: Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
     for ChatView subscription
   src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
     agent messages in onOpen() to display mid-execution messages as assistant
     messages, and added cleanup in onClose()
+  src/llm/tools/createNote.ts: DELETED - old MVP tool for creating notes
+  src/llm/tools/modifyNote.ts: DELETED - old MVP tool for modifying notes
+  src/llm/tools/searchNotes.ts: DELETED - old MVP tool for searching notes
+  src/llm/tools/organizeNotes.ts: DELETED - old MVP tool for organizing notes
 log: []
 schema: v1.0
 childrenIds:

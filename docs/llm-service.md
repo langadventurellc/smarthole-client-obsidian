@@ -64,7 +64,7 @@ interface ToolHandler {
 service.registerTool(toolHandler);
 
 // Get registered tool names
-const tools = service.getRegisteredTools(); // ["create_note", "search_notes", ...]
+const tools = service.getRegisteredTools(); // ["read_file", "edit_file", "write_file", ...]
 ```
 
 ## Processing Messages

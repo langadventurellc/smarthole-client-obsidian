@@ -7,10 +7,6 @@
 
 import type { App } from "obsidian";
 import type { ToolHandler } from "../LLMService";
-import { createCreateNoteTool } from "./createNote";
-import { createModifyNoteTool } from "./modifyNote";
-import { createSearchNotesTool } from "./searchNotes";
-import { createOrganizeNoteTool } from "./organizeNotes";
 import { createReadFileTool } from "./readFile";
 import { createEditFileTool } from "./editFile";
 import { createWriteFileTool } from "./writeFile";
@@ -29,10 +25,6 @@ import { createGetFileInfoTool } from "./getFileInfo";
  */
 export function createVaultTools(app: App): ToolHandler[] {
   return [
-    createCreateNoteTool(app),
-    createModifyNoteTool(app),
-    createSearchNotesTool(app),
-    createOrganizeNoteTool(app),
     createReadFileTool(app),
     createEditFileTool(app),
     createWriteFileTool(app),
@@ -46,10 +38,6 @@ export function createVaultTools(app: App): ToolHandler[] {
 }
 
 // Re-export individual factory functions for selective use
-export { createCreateNoteTool } from "./createNote";
-export { createModifyNoteTool } from "./modifyNote";
-export { createSearchNotesTool } from "./searchNotes";
-export { createOrganizeNoteTool } from "./organizeNotes";
 export { createReadFileTool } from "./readFile";
 export { createEditFileTool } from "./editFile";
 export { createWriteFileTool } from "./writeFile";
