@@ -1,13 +1,26 @@
 ---
 id: T-subscribe-chatview-to-mid
 title: Subscribe ChatView to mid-execution agent messages
-status: open
+status: done
 priority: medium
 parent: F-send-message-tool
 prerequisites:
   - T-integrate-send-message-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/main.ts: Added import for AgentMessageCallback type and added
+    onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
+    for ChatView subscription
+  src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
+    agent messages in onOpen() to display mid-execution messages as assistant
+    messages, and added cleanup in onClose()
+log:
+  - Implemented ChatView subscription to mid-execution agent messages. Added the
+    `onAgentMessage()` method to the plugin class that exposes the
+    MessageProcessor's agent message callback registration. Updated ChatView to
+    subscribe to these messages in `onOpen()` and properly clean up the
+    subscription in `onClose()`. Mid-execution messages from the send_message
+    tool will now appear as assistant messages in the chat sidebar in real-time,
+    before the LLM processing completes.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T06:08:10.470Z

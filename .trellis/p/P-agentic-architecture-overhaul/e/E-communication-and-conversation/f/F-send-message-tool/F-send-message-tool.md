@@ -1,7 +1,7 @@
 ---
 id: F-send-message-tool
 title: Send Message Tool
-status: in-progress
+status: done
 priority: high
 parent: E-communication-and-conversation
 prerequisites: []
@@ -26,14 +26,21 @@ affectedFiles:
     SendMessageContext, and SendMessageInput from sendMessage module
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module
-log: []
+  src/main.ts: Added import for AgentMessageCallback type and added
+    onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
+    for ChatView subscription
+  src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
+    agent messages in onOpen() to display mid-execution messages as assistant
+    messages, and added cleanup in onClose()
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
-  - T-integrate-send-message-tool
-  - T-subscribe-chatview-to-mid
   - T-add-mid-execution-message
   - T-create-sendmessagecontext
   - T-implement-send-message-tool
+  - T-integrate-send-message-tool
+  - T-subscribe-chatview-to-mid
 created: 2026-02-04T06:03:20.173Z
 updated: 2026-02-04T06:03:20.173Z
 ---

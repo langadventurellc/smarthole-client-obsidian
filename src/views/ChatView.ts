@@ -21,6 +21,7 @@ export class ChatView extends ItemView {
   private onSendCallback: ((text: string) => void) | null = null;
   private unsubscribe: (() => void) | null = null;
   private unsubscribeMessageReceived: (() => void) | null = null;
+  private unsubscribeAgentMessage: (() => void) | null = null;
   private renderedMessageIds = new Set<string>();
 
   constructor(leaf: WorkspaceLeaf, plugin: SmartHolePlugin) {
@@ -127,6 +128,16 @@ export class ChatView extends ItemView {
       }
     });
 
+    // Subscribe to mid-execution agent messages (from send_message tool)
+    this.unsubscribeAgentMessage = this.plugin.onAgentMessage((msg) => {
+      this.addMessage({
+        id: `agent-${crypto.randomUUID()}`,
+        role: "assistant",
+        content: msg.content,
+        timestamp: msg.timestamp,
+      });
+    });
+
     // Set the send callback to process direct messages
     this.setOnSendCallback(async (text) => {
       // Add user message immediately (optimistic UI)
@@ -162,6 +173,10 @@ export class ChatView extends ItemView {
     // Clean up message received subscription
     this.unsubscribeMessageReceived?.();
     this.unsubscribeMessageReceived = null;
+
+    // Clean up agent message subscription
+    this.unsubscribeAgentMessage?.();
+    this.unsubscribeAgentMessage = null;
 
     this.messages = [];
     this.renderedMessageIds.clear();

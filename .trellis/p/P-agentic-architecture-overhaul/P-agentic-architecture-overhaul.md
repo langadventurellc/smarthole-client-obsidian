@@ -102,6 +102,12 @@ affectedFiles:
     messages
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module
+  src/main.ts: Added import for AgentMessageCallback type and added
+    onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
+    for ChatView subscription
+  src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
+    agent messages in onOpen() to display mid-execution messages as assistant
+    messages, and added cleanup in onClose()
 log: []
 schema: v1.0
 childrenIds:
