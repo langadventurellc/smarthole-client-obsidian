@@ -11,6 +11,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `search_notes` | Search notes using Obsidian's search API |
 | `search_files` | Search file contents using regex patterns with context |
 | `list_files` | List files and folders matching a glob pattern |
+| `get_file_info` | Get file/folder metadata (dates, size) |
 | `organize_note` | Rename or move notes |
 | `read_file` | Read file contents with optional line ranges |
 | `edit_file` | Make targeted edits using search/replace or line operations |
@@ -334,6 +335,77 @@ No files or folders match the pattern "*.xyz" in "Projects".
 | Returns | File/folder paths with types | File paths with content excerpts |
 | Sorting | By modification time | By match relevance |
 | Use case | Navigation, discovery | Content search |
+
+## get_file_info
+
+Get metadata about a file or folder without reading its contents.
+
+### Input Schema
+
+```typescript
+{
+  path: string  // Path to the file or folder (required)
+}
+```
+
+### Behavior
+
+- Returns creation date, modification date, and size (for files)
+- Works for both files and folders
+- Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
+- Returns clear error for non-existent paths
+- Formats dates in human-readable format (YYYY-MM-DD HH:MM:SS)
+- Formats sizes in human-readable format (bytes, KB, MB)
+
+### Example
+
+```typescript
+// Get info about a file
+{
+  name: "get_file_info",
+  input: {
+    path: "Projects/project-a.md"
+  }
+}
+
+// Get info about a folder
+{
+  name: "get_file_info",
+  input: {
+    path: "Projects"
+  }
+}
+```
+
+### Response Format
+
+For a file:
+```
+File: Projects/project-a.md
+Type: file
+Size: 2.4 KB (2,456 bytes)
+Created: 2026-01-15 10:30:22
+Modified: 2026-02-03 14:22:45
+```
+
+For a folder:
+```
+Folder: Projects/
+Type: folder
+Created: 2026-01-10 09:00:00
+Modified: 2026-02-03 14:22:45
+```
+
+For non-existent path:
+```
+Error: Path not found: "nonexistent/file.md"
+```
+
+### When to Use
+
+- **Use `get_file_info`** when you need file metadata without reading content
+- Useful for queries like "find recent files" or "find largest files"
+- Use with `list_files` to get details about files in a directory
 
 ## organize_note
 
@@ -886,6 +958,7 @@ Located in `src/llm/tools/`:
 - `searchNotes.ts` - Simple text search factory
 - `searchFiles.ts` - Regex content search factory
 - `listFiles.ts` - Glob-based file listing factory
+- `getFileInfo.ts` - File/folder metadata retrieval factory
 - `organizeNotes.ts` - Rename/move factory
 - `readFile.ts` - File reading factory
 - `editFile.ts` - Targeted file editing factory
