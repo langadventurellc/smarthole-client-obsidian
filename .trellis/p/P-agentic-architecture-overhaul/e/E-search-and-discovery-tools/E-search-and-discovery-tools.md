@@ -1,7 +1,7 @@
 ---
 id: E-search-and-discovery-tools
 title: Search and Discovery Tools
-status: in-progress
+status: done
 priority: high
 parent: P-agentic-architecture-overhaul
 prerequisites:
@@ -21,11 +21,32 @@ affectedFiles:
     re-export for createGetFileInfoTool
   src/llm/tools/listFiles.ts: Created new tool file with glob matching (reused
     pattern from searchFiles.ts), path normalization, modification time sorting,
-    and formatted output with type indicators
+    and formatted output with type indicators; Added import for
+    findFolderInsensitive from pathUtils. Replaced direct folder lookup with
+    case-insensitive version that handles ambiguous paths (multiple
+    case-insensitive matches) with a helpful error message.
   src/llm/tools/getFileInfo.ts: Created new tool file with get_file_info
     implementation including formatBytes() and formatDate() helper functions,
-    tool definition, and createGetFileInfoTool() factory function
-log: []
+    tool definition, and createGetFileInfoTool() factory function; Added imports
+    for findFileInsensitive and findFolderInsensitive from pathUtils. Replaced
+    direct adapter.stat() call with case-insensitive file/folder lookup pattern.
+    Now tries file lookup first, then folder lookup, with proper ambiguity
+    handling and resolved path display in output.
+  src/llm/tools/pathUtils.ts: Added InsensitiveLookupResult<T> interface,
+    findFileInsensitive(), and findFolderInsensitive() helper functions for
+    case-insensitive file and folder lookup. Also added import for App, TFile,
+    TFolder from 'obsidian'.; Added 'i' flag to RegExp constructor in
+    globToRegex() function (line 66) to enable case-insensitive pattern matching
+  src/llm/tools/protected.ts: Added case-insensitive comparison by normalizing
+    paths to lowercase before checking against PROTECTED_FOLDERS. Updated
+    isProtectedPath() and assertNotProtected() functions. Enhanced docstring
+    examples to document case-insensitive behavior.
+  src/llm/tools/readFile.ts: Added import for findFileInsensitive from
+    pathUtils.ts. Replaced app.vault.getFileByPath() with findFileInsensitive()
+    for case-insensitive file lookup. Added handling for ambiguous paths
+    (multiple case-insensitive matches) with a helpful error message.
+log:
+  - "Auto-completed: All child features are complete"
 schema: v1.0
 childrenIds:
   - F-case-insensitive-path

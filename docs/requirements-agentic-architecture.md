@@ -40,9 +40,11 @@ Replace Obsidian API-based tools with purpose-built tools designed for LLM agent
 
 | Tool | Description |
 |------|-------------|
-| `search_files` | Regex content search across files. Supports file pattern filtering, context lines, match limits. |
-| `list_files` | Glob-based file listing. Works for both finding files and exploring folder contents. Sorted by modification time. |
-| `get_file_info` | Retrieve file metadata: created date, modified date, size. Useful for "recent files" queries. |
+| `search_files` | Regex content search across files. Supports file pattern filtering (case-insensitive), context lines, match limits. |
+| `list_files` | Glob-based file listing (case-insensitive path and pattern matching). Works for both finding files and exploring folder contents. Sorted by modification time. |
+| `get_file_info` | Retrieve file metadata: created date, modified date, size. Case-insensitive path lookup. Useful for "recent files" queries. |
+
+Note: Read operations (`read_file`, `list_files`, `get_file_info`) use case-insensitive path resolution to improve usability with speech-to-text input. If the user says "list files in projects", it will find "Projects" even if the exact casing differs.
 
 **Folder Operations:**
 
@@ -260,25 +262,25 @@ Following patterns from successful coding agents:
 
 ### Protected Folder Check
 
-Shared utility for all tools:
+Shared utility for all tools. Protection is case-insensitive to prevent bypassing via `.Obsidian/` or `.SMARTHOLE/`:
 
 ```typescript
 // src/llm/tools/protected.ts
 const PROTECTED_FOLDERS = ['.obsidian', '.smarthole'];
 
 export function isProtectedPath(relativePath: string): boolean {
-  const normalized = relativePath.replace(/\\/g, '/');
+  const normalized = normalizePath(relativePath);
+  const normalizedLower = normalized.toLowerCase();
   return PROTECTED_FOLDERS.some(folder =>
-    normalized === folder ||
-    normalized.startsWith(`${folder}/`)
+    normalizedLower === folder ||
+    normalizedLower.startsWith(`${folder}/`)
   );
 }
 
 export function assertNotProtected(relativePath: string): void {
   if (isProtectedPath(relativePath)) {
     throw new Error(
-      `Access denied: "${relativePath}" is in a protected folder. ` +
-      `The agent cannot access .obsidian or .smarthole directories.`
+      `Access denied: Cannot access files in '${folder}/' directory (protected system folder)`
     );
   }
 }

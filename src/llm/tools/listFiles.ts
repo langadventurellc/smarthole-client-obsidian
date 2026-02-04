@@ -8,7 +8,7 @@
 import type { App, TFile } from "obsidian";
 import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
-import { matchGlob, normalizePath } from "./pathUtils";
+import { findFolderInsensitive, matchGlob, normalizePath } from "./pathUtils";
 import { isProtectedPath } from "./protected";
 
 /** Default pattern when none specified */
@@ -134,10 +134,13 @@ export function createListFilesTool(app: App): ToolHandler {
         maxResults = Math.min(maxResultsInput, MAX_RESULTS_CAP);
       }
 
-      // Validate base path exists if provided
+      // Validate base path exists if provided (case-insensitive lookup)
       if (basePath.length > 0) {
-        const folder = app.vault.getFolderByPath(basePath);
-        if (!folder) {
+        const result = findFolderInsensitive(app, basePath);
+        if (result.ambiguous) {
+          return `Error: Multiple folders match "${basePath}" with different casing. Please specify the exact path.`;
+        }
+        if (!result.item) {
           return `Error: Path "${basePath}" does not exist or is not a folder.`;
         }
       }

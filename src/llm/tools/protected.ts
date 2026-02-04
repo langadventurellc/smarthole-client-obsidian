@@ -16,7 +16,7 @@ import { normalizePath } from "./pathUtils";
 const PROTECTED_FOLDERS = [".obsidian", ".smarthole"] as const;
 
 /**
- * Checks if a path is within a protected directory.
+ * Checks if a path is within a protected directory (case-insensitive).
  * Protected directories are .obsidian/ and .smarthole/ at the vault root.
  *
  * @param relativePath - Path relative to the vault root
@@ -24,17 +24,21 @@ const PROTECTED_FOLDERS = [".obsidian", ".smarthole"] as const;
  *
  * @example
  * isProtectedPath('.obsidian/config') // true
+ * isProtectedPath('.Obsidian/config') // true (case-insensitive)
+ * isProtectedPath('.OBSIDIAN') // true (case-insensitive)
  * isProtectedPath('.obsidian') // true
  * isProtectedPath('.smarthole/inbox/msg.json') // true
+ * isProtectedPath('.SmartHole/inbox') // true (case-insensitive)
  * isProtectedPath('notes/.obsidian/file.md') // false (not at root)
  * isProtectedPath('my.obsidian.notes/file.md') // false (not the folder)
  * isProtectedPath('folder/file.md') // false
  */
 export function isProtectedPath(relativePath: string): boolean {
   const normalized = normalizePath(relativePath);
+  const normalizedLower = normalized.toLowerCase();
 
   return PROTECTED_FOLDERS.some(
-    (folder) => normalized === folder || normalized.startsWith(`${folder}/`)
+    (folder) => normalizedLower === folder || normalizedLower.startsWith(`${folder}/`)
   );
 }
 
@@ -53,8 +57,9 @@ export function isProtectedPath(relativePath: string): boolean {
 export function assertNotProtected(path: string): void {
   if (isProtectedPath(path)) {
     const normalized = normalizePath(path);
+    const normalizedLower = normalized.toLowerCase();
     const folder = PROTECTED_FOLDERS.find(
-      (f) => normalized === f || normalized.startsWith(`${f}/`)
+      (f) => normalizedLower === f || normalizedLower.startsWith(`${f}/`)
     );
     throw new Error(
       `Access denied: Cannot access files in '${folder}/' directory (protected system folder)`

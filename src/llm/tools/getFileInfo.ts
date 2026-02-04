@@ -8,6 +8,7 @@
 import type { App } from "obsidian";
 import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
+import { findFileInsensitive, findFolderInsensitive } from "./pathUtils";
 import { assertNotProtected } from "./protected";
 
 const toolDefinition: Tool = {
@@ -81,31 +82,47 @@ export function createGetFileInfoTool(app: App): ToolHandler {
         return error instanceof Error ? `Error: ${error.message}` : "Error: Access denied.";
       }
 
-      // Get file/folder metadata using adapter.stat()
-      const stat = await app.vault.adapter.stat(targetPath);
-
-      if (!stat) {
-        return `Error: Path not found: "${targetPath}"`;
+      // Try case-insensitive file lookup first
+      const fileResult = findFileInsensitive(app, targetPath);
+      if (fileResult.ambiguous) {
+        return `Error: Multiple files match "${targetPath}" with different casing. Please specify the exact path.`;
+      }
+      if (fileResult.item) {
+        const resolvedPath = fileResult.item.path;
+        const stat = await app.vault.adapter.stat(resolvedPath);
+        if (!stat) {
+          return `Error: Unable to read file metadata: "${resolvedPath}"`;
+        }
+        return [
+          `File: ${resolvedPath}`,
+          `Type: file`,
+          `Size: ${formatBytes(stat.size)}`,
+          `Created: ${formatDate(stat.ctime)}`,
+          `Modified: ${formatDate(stat.mtime)}`,
+        ].join("\n");
       }
 
-      // Format output based on type
-      if (stat.type === "folder") {
+      // Try case-insensitive folder lookup
+      const folderResult = findFolderInsensitive(app, targetPath);
+      if (folderResult.ambiguous) {
+        return `Error: Multiple folders match "${targetPath}" with different casing. Please specify the exact path.`;
+      }
+      if (folderResult.item) {
+        const resolvedPath = folderResult.item.path;
+        const stat = await app.vault.adapter.stat(resolvedPath);
+        if (!stat) {
+          return `Error: Unable to read folder metadata: "${resolvedPath}"`;
+        }
         return [
-          `Folder: ${targetPath}/`,
+          `Folder: ${resolvedPath}/`,
           `Type: folder`,
           `Created: ${formatDate(stat.ctime)}`,
           `Modified: ${formatDate(stat.mtime)}`,
         ].join("\n");
       }
 
-      // File
-      return [
-        `File: ${targetPath}`,
-        `Type: file`,
-        `Size: ${formatBytes(stat.size)}`,
-        `Created: ${formatDate(stat.ctime)}`,
-        `Modified: ${formatDate(stat.mtime)}`,
-      ].join("\n");
+      // Neither file nor folder found
+      return `Error: Path not found: "${targetPath}"`;
     },
   };
 }

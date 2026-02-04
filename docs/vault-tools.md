@@ -173,10 +173,10 @@ Search file contents using regex patterns. Provides powerful pattern matching wi
 
 ### Glob Pattern Support
 
-The `file_pattern` parameter supports common glob patterns:
+The `file_pattern` parameter supports common glob patterns (case-insensitive matching):
 - `*.md` - Markdown files in root
 - `**/*.md` - All markdown files (any depth)
-- `Projects/**` - All files under Projects folder
+- `Projects/**` - All files under Projects folder (matches "projects/**" too)
 - `**/*.txt` - All text files
 - `folder/*` - Direct children of folder
 - `folder/**` - Recursive contents of folder
@@ -240,7 +240,7 @@ Line 11:   following content
 
 ## list_files
 
-List files and folders matching a glob pattern. Returns paths sorted by modification time (most recent first).
+List files and folders matching a glob pattern. Returns paths sorted by modification time (most recent first). Uses case-insensitive path resolution for the base path.
 
 ### Input Schema
 
@@ -258,12 +258,13 @@ List files and folders matching a glob pattern. Returns paths sorted by modifica
 - Sorts results by modification time (most recent first)
 - Folders with unknown modification time are sorted to the end
 - Excludes protected folders (`.obsidian/`, `.smarthole/`)
-- Validates base path exists before searching
+- Validates base path exists before searching (case-insensitive lookup)
+- Returns clear error if multiple folders match with different casing (ambiguous path)
 - Caps `max_results` at 1000 to prevent performance issues
 
 ### Glob Pattern Support
 
-The `pattern` parameter supports common glob patterns:
+The `pattern` parameter supports common glob patterns (case-insensitive matching):
 - `*` - Direct children of the base path (default)
 - `**` - All descendants recursively
 - `*.md` - Markdown files in base path
@@ -338,7 +339,7 @@ No files or folders match the pattern "*.xyz" in "Projects".
 
 ## get_file_info
 
-Get metadata about a file or folder without reading its contents.
+Get metadata about a file or folder without reading its contents. Uses case-insensitive path resolution.
 
 ### Input Schema
 
@@ -352,6 +353,8 @@ Get metadata about a file or folder without reading its contents.
 
 - Returns creation date, modification date, and size (for files)
 - Works for both files and folders
+- Uses case-insensitive path resolution (e.g., "projects" finds "Projects")
+- Returns clear error if multiple files/folders match with different casing (ambiguous path)
 - Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
 - Returns clear error for non-existent paths
 - Formats dates in human-readable format (YYYY-MM-DD HH:MM:SS)
@@ -442,7 +445,7 @@ Rename or move notes within the vault.
 
 ## read_file
 
-Read file contents from the vault with optional line range filtering.
+Read file contents from the vault with optional line range filtering. Uses case-insensitive path resolution for improved usability with speech-to-text input.
 
 ### Input Schema
 
@@ -458,6 +461,8 @@ Read file contents from the vault with optional line range filtering.
 
 - Returns content with line numbers prefixed (e.g., "1: First line\n2: Second line")
 - Supports optional `start_line` and `end_line` for partial reads
+- Uses case-insensitive path resolution (e.g., "projects/readme.md" finds "Projects/README.md")
+- Returns clear error if multiple files match with different casing (ambiguous path)
 - Handles large files with smart truncation (~100KB or 2000 lines)
 - Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
 - Returns clear error for non-existent files
@@ -945,6 +950,8 @@ All file operation tools share protected path validation via `src/llm/tools/prot
 - `.obsidian/` - Obsidian configuration (could break the app)
 - `.smarthole/` - Internal storage (inbox, trash, etc.)
 
+Protection is case-insensitive, so `.Obsidian/`, `.OBSIDIAN/`, and `.obsidian/` are all blocked.
+
 Operations targeting these folders return a clear error:
 ```
 Error: Access denied: Cannot access files in '.obsidian/' directory (protected system folder)
@@ -966,6 +973,6 @@ Located in `src/llm/tools/`:
 - `createFolder.ts` - Folder creation factory
 - `deleteFile.ts` - File/folder deletion factory
 - `moveFile.ts` - File/folder move/rename factory
-- `pathUtils.ts` - Shared path normalization and glob matching utilities
-- `protected.ts` - Protected path validation utility
+- `pathUtils.ts` - Shared path normalization, glob matching (case-insensitive), and case-insensitive file/folder lookup utilities
+- `protected.ts` - Protected path validation utility (case-insensitive)
 - `index.ts` - `createVaultTools()` aggregator
