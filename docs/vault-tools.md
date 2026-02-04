@@ -9,6 +9,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `create_note` | Create new markdown notes |
 | `modify_note` | Modify existing notes with atomic operations |
 | `search_notes` | Search notes using Obsidian's search API |
+| `search_files` | Search file contents using regex patterns with context |
 | `organize_note` | Rename or move notes |
 | `read_file` | Read file contents with optional line ranges |
 | `edit_file` | Make targeted edits using search/replace or line operations |
@@ -143,6 +144,97 @@ Search notes using Obsidian's `prepareSimpleSearch()` API.
   ]
 }
 ```
+
+## search_files
+
+Search file contents using regex patterns. Provides powerful pattern matching with contextual excerpts around each match.
+
+### Input Schema
+
+```typescript
+{
+  pattern: string,           // Regex pattern to search for (required)
+  file_pattern?: string,     // Glob pattern to filter files (optional)
+  context_lines?: integer,   // Lines before/after match (default: 2)
+  max_results?: integer      // Maximum files to return (default: 10)
+}
+```
+
+### Behavior
+
+- Uses JavaScript `RegExp` for pattern matching on each line
+- When `file_pattern` is provided, searches all matching files
+- When `file_pattern` is omitted, searches only markdown files
+- Returns up to 5 excerpts per file to prevent overwhelming output
+- Excludes protected folders (`.obsidian/`, `.smarthole/`)
+- Handles invalid regex gracefully with clear error message
+
+### Glob Pattern Support
+
+The `file_pattern` parameter supports common glob patterns:
+- `*.md` - Markdown files in root
+- `**/*.md` - All markdown files (any depth)
+- `Projects/**` - All files under Projects folder
+- `**/*.txt` - All text files
+- `folder/*` - Direct children of folder
+- `folder/**` - Recursive contents of folder
+
+### Example
+
+```typescript
+// Search for TODO patterns in markdown files
+{
+  name: "search_files",
+  input: {
+    pattern: "TODO|FIXME|XXX",
+    file_pattern: "**/*.md",
+    context_lines: 1,
+    max_results: 20
+  }
+}
+
+// Search for function definitions in all files
+{
+  name: "search_files",
+  input: {
+    pattern: "function\\s+\\w+\\s*\\(",
+    file_pattern: "**/*.js"
+  }
+}
+
+// Default: search markdown files only
+{
+  name: "search_files",
+  input: {
+    pattern: "meeting notes"
+  }
+}
+```
+
+### Response Format
+
+```
+Found 3 matching file(s):
+
+## Projects/Alpha.md
+Line 41:   some context before
+Line 42: > the matching line with TODO
+Line 43:   some context after
+
+## Notes/daily.md
+Line 10: > FIXME: needs review
+Line 11:   following content
+```
+
+### Comparison with search_notes
+
+| Feature | search_notes | search_files |
+|---------|--------------|--------------|
+| Pattern type | Simple text | Regex |
+| Matching | Obsidian API | Line-by-line |
+| Context | Characters around match | Lines around match |
+| Use case | Natural language queries | Precise pattern matching |
+| File filtering | None (all notes) | Glob patterns |
 
 ## organize_note
 
@@ -692,7 +784,8 @@ Error: Access denied: Cannot access files in '.obsidian/' directory (protected s
 Located in `src/llm/tools/`:
 - `createNote.ts` - Note creation factory
 - `modifyNote.ts` - Note modification factory
-- `searchNotes.ts` - Search factory
+- `searchNotes.ts` - Simple text search factory
+- `searchFiles.ts` - Regex content search factory
 - `organizeNotes.ts` - Rename/move factory
 - `readFile.ts` - File reading factory
 - `editFile.ts` - Targeted file editing factory
