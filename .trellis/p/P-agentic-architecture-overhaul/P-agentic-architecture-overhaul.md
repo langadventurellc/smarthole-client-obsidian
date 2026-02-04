@@ -9,6 +9,11 @@ affectedFiles:
   src/llm/tools/protected.ts: Created new protected path utility with
     isProtectedPath(), assertNotProtected(), and internal normalizePath()
     functions
+  src/llm/tools/readFile.ts: Created new read_file tool with path validation,
+    protected path checking, line number formatting, optional line range
+    filtering, and smart truncation for large files
+  src/llm/tools/index.ts: Added import and export for createReadFileTool, added to
+    createVaultTools() array
 log: []
 schema: v1.0
 childrenIds:
