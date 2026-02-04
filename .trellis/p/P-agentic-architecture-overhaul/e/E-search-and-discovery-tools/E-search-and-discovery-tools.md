@@ -15,7 +15,12 @@ affectedFiles:
     the file_pattern parameter description to reflect the implemented behavior.
   src/llm/tools/index.ts: Added import for createSearchFilesTool from
     ./searchFiles, added createSearchFilesTool(app) to the createVaultTools()
-    return array, and added re-export statement for selective use
+    return array, and added re-export statement for selective use; Added import
+    for createListFilesTool, added to createVaultTools() array, and added
+    re-export
+  src/llm/tools/listFiles.ts: Created new tool file with glob matching (reused
+    pattern from searchFiles.ts), path normalization, modification time sorting,
+    and formatted output with type indicators
 log: []
 schema: v1.0
 childrenIds:

@@ -26,7 +26,8 @@ affectedFiles:
     createVaultTools() array, and added re-export for selective use.; Added
     import for createSearchFilesTool from ./searchFiles, added
     createSearchFilesTool(app) to the createVaultTools() return array, and added
-    re-export statement for selective use
+    re-export statement for selective use; Added import for createListFilesTool,
+    added to createVaultTools() array, and added re-export
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file
@@ -55,6 +56,9 @@ affectedFiles:
     glob patterns to RegExp, matchGlob() function to test file paths against
     patterns, and integrated glob filtering into the execute function. Updated
     the file_pattern parameter description to reflect the implemented behavior.
+  src/llm/tools/listFiles.ts: Created new tool file with glob matching (reused
+    pattern from searchFiles.ts), path normalization, modification time sorting,
+    and formatted output with type indicators
 log: []
 schema: v1.0
 childrenIds:

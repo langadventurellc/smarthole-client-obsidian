@@ -6,28 +6,14 @@
  * which contain configuration and internal storage.
  */
 
+import { normalizePath } from "./pathUtils";
+
 /**
  * Folders that are protected from agent file operations.
  * - .obsidian/: Obsidian configuration (could break the app)
  * - .smarthole/: Internal storage (inbox, trash, etc.)
  */
 const PROTECTED_FOLDERS = [".obsidian", ".smarthole"] as const;
-
-/**
- * Normalizes a file path for consistent comparison.
- * - Converts backslashes to forward slashes
- * - Removes trailing slashes
- * - Removes leading slashes (paths should be relative to vault root)
- *
- * @param path - The path to normalize
- * @returns Normalized path string
- */
-function normalizePath(path: string): string {
-  let normalized = path.replace(/\\/g, "/");
-  normalized = normalized.replace(/\/+$/, "");
-  normalized = normalized.replace(/^\/+/, "");
-  return normalized;
-}
 
 /**
  * Checks if a path is within a protected directory.

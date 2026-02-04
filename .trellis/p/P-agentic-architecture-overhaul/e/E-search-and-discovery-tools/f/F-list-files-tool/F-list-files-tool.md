@@ -1,14 +1,21 @@
 ---
 id: F-list-files-tool
 title: List Files Tool
-status: open
+status: done
 priority: high
 parent: E-search-and-discovery-tools
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/listFiles.ts: Created new tool file with glob matching (reused
+    pattern from searchFiles.ts), path normalization, modification time sorting,
+    and formatted output with type indicators
+  src/llm/tools/index.ts: Added import for createListFilesTool, added to
+    createVaultTools() array, and added re-export
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-list-files-tool
 created: 2026-02-04T04:19:51.965Z
 updated: 2026-02-04T04:19:51.965Z
 ---

@@ -8,6 +8,7 @@
 import type { App, TFile } from "obsidian";
 import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
+import { matchGlob } from "./pathUtils";
 import { isProtectedPath } from "./protected";
 
 /** Default number of lines to show before/after a match */
@@ -18,61 +19,6 @@ const DEFAULT_MAX_RESULTS = 10;
 
 /** Maximum excerpts per file to prevent overwhelming output */
 const MAX_EXCERPTS_PER_FILE = 5;
-
-/**
- * Converts a glob pattern to a RegExp for matching file paths.
- *
- * Supported patterns: "*.ext" (root files), "**\/*.ext" (any directory),
- * "folder/*" (direct children), "folder/**" (recursive), "**" (any path).
- */
-function globToRegex(globPattern: string): RegExp {
-  // Normalize pattern: remove leading/trailing slashes, convert backslashes
-  let pattern = globPattern.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
-
-  // Escape regex special characters except * and ?
-  pattern = pattern.replace(/[.+^${}()|[\]]/g, "\\$&");
-
-  // Handle ** (match any path segment including slashes)
-  // Replace **/ with a placeholder first to handle it separately
-  pattern = pattern.replace(/\*\*\//g, "{{GLOBSTAR_SLASH}}");
-  // Replace remaining ** (at end or standalone)
-  pattern = pattern.replace(/\*\*/g, "{{GLOBSTAR}}");
-
-  // Handle * (match anything except /)
-  pattern = pattern.replace(/\*/g, "[^/]*");
-
-  // Handle ? (match single character except /)
-  pattern = pattern.replace(/\?/g, "[^/]");
-
-  // Replace placeholders with actual regex
-  // **/ matches zero or more path segments
-  pattern = pattern.replace(/\{\{GLOBSTAR_SLASH\}\}/g, "(?:.*?/)?");
-  // ** at end matches anything including nested paths
-  pattern = pattern.replace(/\{\{GLOBSTAR\}\}/g, ".*");
-
-  // Anchor the pattern to match the full path
-  return new RegExp(`^${pattern}$`);
-}
-
-/**
- * Tests if a file path matches a glob pattern.
- *
- * @param filePath - The file path to test (relative to vault root)
- * @param globPattern - The glob pattern to match against
- * @returns true if the path matches the pattern
- */
-function matchGlob(filePath: string, globPattern: string): boolean {
-  // Normalize the file path
-  const normalizedPath = filePath.replace(/\\/g, "/").replace(/^\/+/, "");
-
-  try {
-    const regex = globToRegex(globPattern);
-    return regex.test(normalizedPath);
-  } catch {
-    // Invalid glob pattern - return false rather than throwing
-    return false;
-  }
-}
 
 interface FileMatch {
   path: string;
