@@ -19,7 +19,8 @@ affectedFiles:
     T-implement-edit-file-tool-with); Added import, registration in
     createVaultTools(), and re-export for createWriteFileTool; Already modified
     in T-implement-write-file-tool - contains import, array registration, and
-    re-export for createWriteFileTool
+    re-export for createWriteFileTool; Added import for createCreateFolderTool,
+    added it to createVaultTools() array, and added re-export
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file
@@ -31,6 +32,9 @@ affectedFiles:
   src/llm/tools/writeFile.ts: Created new write_file tool implementation with
     factory function createWriteFileTool(app), formatSize() helper for size
     display, and ensureParentFolder() for directory creation
+  src/llm/tools/createFolder.ts: Created new file implementing the create_folder
+    tool with path validation, normalization, protected path blocking, and
+    folder creation via Obsidian vault API
 log: []
 schema: v1.0
 childrenIds:
