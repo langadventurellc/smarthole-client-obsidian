@@ -31,6 +31,9 @@ affectedFiles:
   src/llm/tools/writeFile.ts: Created new write_file tool implementation with
     factory function createWriteFileTool(app), formatSize() helper for size
     display, and ensureParentFolder() for directory creation
+  src/llm/tools/createFolder.ts: Created new file implementing the create_folder
+    tool with path validation, normalization, protected path blocking, and
+    folder creation via Obsidian vault API
 log: []
 schema: v1.0
 childrenIds:

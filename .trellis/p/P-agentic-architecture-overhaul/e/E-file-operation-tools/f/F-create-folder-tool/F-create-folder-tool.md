@@ -1,15 +1,20 @@
 ---
 id: F-create-folder-tool
 title: Create Folder Tool
-status: open
+status: in-progress
 priority: medium
 parent: E-file-operation-tools
 prerequisites:
   - F-read-file-tool
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/createFolder.ts: Created new file implementing the create_folder
+    tool with path validation, normalization, protected path blocking, and
+    folder creation via Obsidian vault API
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-createfolder-tool
+  - T-register-createfolder-tool-in
 created: 2026-02-04T02:04:18.851Z
 updated: 2026-02-04T02:04:18.851Z
 ---
