@@ -1,17 +1,29 @@
 ---
 id: E-tool-migration-and-cleanup
 title: Tool Migration and Cleanup
-status: open
+status: in-progress
 priority: medium
 parent: P-agentic-architecture-overhaul
 prerequisites:
   - E-file-operation-tools
   - E-search-and-discovery-tools
   - E-communication-and-conversation
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/index.ts: Removed imports for createCreateNoteTool,
+    createModifyNoteTool, createSearchNotesTool, createOrganizeNoteTool; removed
+    them from createVaultTools() array; removed their re-export statements
+  src/llm/index.ts: Removed re-exports for createCreateNoteTool,
+    createModifyNoteTool, createSearchNotesTool, createOrganizeNoteTool from the
+    Vault Tools section
+  src/llm/tools/createNote.ts: DELETED - old MVP tool for creating notes
+  src/llm/tools/modifyNote.ts: DELETED - old MVP tool for modifying notes
+  src/llm/tools/searchNotes.ts: DELETED - old MVP tool for searching notes
+  src/llm/tools/organizeNotes.ts: DELETED - old MVP tool for organizing notes
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - F-remove-old-mvp-tools
+  - F-update-tool-documentation
 created: 2026-02-04T01:58:26.761Z
 updated: 2026-02-04T01:58:26.761Z
 ---

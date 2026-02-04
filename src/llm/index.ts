@@ -38,13 +38,7 @@ export {
 } from "./types";
 
 // Vault Tools
-export {
-  createVaultTools,
-  createCreateNoteTool,
-  createModifyNoteTool,
-  createSearchNotesTool,
-  createOrganizeNoteTool,
-} from "./tools";
+export { createVaultTools } from "./tools";
 
 // Send Message Tool (separate from vault tools - requires runtime context)
 export { createSendMessageTool } from "./tools";
