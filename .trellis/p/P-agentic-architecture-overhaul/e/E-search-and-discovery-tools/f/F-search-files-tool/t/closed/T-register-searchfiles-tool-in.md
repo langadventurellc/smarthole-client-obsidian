@@ -1,13 +1,19 @@
 ---
 id: T-register-searchfiles-tool-in
 title: Register searchFiles tool in index.ts
-status: open
+status: done
 priority: high
 parent: F-search-files-tool
 prerequisites:
   - T-add-glob-based-file-filtering
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/index.ts: Added import for createSearchFilesTool from
+    ./searchFiles, added createSearchFilesTool(app) to the createVaultTools()
+    return array, and added re-export statement for selective use
+log:
+  - Registered the searchFiles tool in index.ts by adding the import, including
+    it in the createVaultTools() array, and adding the re-export. All quality
+    checks (lint, format, type-check) pass.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T04:24:48.841Z

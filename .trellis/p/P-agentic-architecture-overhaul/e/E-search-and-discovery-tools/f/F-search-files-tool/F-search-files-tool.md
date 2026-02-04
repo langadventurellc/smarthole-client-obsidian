@@ -1,7 +1,7 @@
 ---
 id: F-search-files-tool
 title: Search Files Tool
-status: in-progress
+status: done
 priority: high
 parent: E-search-and-discovery-tools
 prerequisites: []
@@ -12,12 +12,16 @@ affectedFiles:
     glob patterns to RegExp, matchGlob() function to test file paths against
     patterns, and integrated glob filtering into the execute function. Updated
     the file_pattern parameter description to reflect the implemented behavior.
-log: []
+  src/llm/tools/index.ts: Added import for createSearchFilesTool from
+    ./searchFiles, added createSearchFilesTool(app) to the createVaultTools()
+    return array, and added re-export statement for selective use
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-add-glob-based-file-filtering
-  - T-register-searchfiles-tool-in
   - T-create-searchfiles-tool-with
+  - T-register-searchfiles-tool-in
 created: 2026-02-04T04:19:40.194Z
 updated: 2026-02-04T04:19:40.194Z
 ---

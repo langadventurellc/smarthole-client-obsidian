@@ -23,7 +23,10 @@ affectedFiles:
     added it to createVaultTools() array, and added re-export; Added import for
     createDeleteFileTool, added to createVaultTools() array, and added
     re-export; Added import for createMoveFileTool, included it in the
-    createVaultTools() array, and added re-export for selective use.
+    createVaultTools() array, and added re-export for selective use.; Added
+    import for createSearchFilesTool from ./searchFiles, added
+    createSearchFilesTool(app) to the createVaultTools() return array, and added
+    re-export statement for selective use
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file

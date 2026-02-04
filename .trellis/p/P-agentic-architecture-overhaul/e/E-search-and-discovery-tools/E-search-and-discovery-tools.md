@@ -13,6 +13,9 @@ affectedFiles:
     glob patterns to RegExp, matchGlob() function to test file paths against
     patterns, and integrated glob filtering into the execute function. Updated
     the file_pattern parameter description to reflect the implemented behavior.
+  src/llm/tools/index.ts: Added import for createSearchFilesTool from
+    ./searchFiles, added createSearchFilesTool(app) to the createVaultTools()
+    return array, and added re-export statement for selective use
 log: []
 schema: v1.0
 childrenIds:
