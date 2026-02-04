@@ -1,7 +1,7 @@
 ---
 id: F-case-insensitive-path
 title: Case-Insensitive Path Resolution
-status: in-progress
+status: done
 priority: medium
 parent: E-search-and-discovery-tools
 prerequisites:
@@ -24,14 +24,20 @@ affectedFiles:
     pathUtils. Replaced direct folder lookup with case-insensitive version that
     handles ambiguous paths (multiple case-insensitive matches) with a helpful
     error message.
-log: []
+  src/llm/tools/getFileInfo.ts: Added imports for findFileInsensitive and
+    findFolderInsensitive from pathUtils. Replaced direct adapter.stat() call
+    with case-insensitive file/folder lookup pattern. Now tries file lookup
+    first, then folder lookup, with proper ambiguity handling and resolved path
+    display in output.
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
-  - T-update-get-file-info-tool-to
-  - T-update-list-files-tool-to-use
   - T-add-case-insensitive-path
   - T-make-glob-matching-case
   - T-make-protected-path-checking
+  - T-update-get-file-info-tool-to
+  - T-update-list-files-tool-to-use
   - T-update-read-file-tool-to-use
 created: 2026-02-04T05:07:02.971Z
 updated: 2026-02-04T05:07:02.971Z

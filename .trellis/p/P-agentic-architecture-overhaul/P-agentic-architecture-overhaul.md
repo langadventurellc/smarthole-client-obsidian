@@ -73,7 +73,11 @@ affectedFiles:
     case-insensitive matches) with a helpful error message.
   src/llm/tools/getFileInfo.ts: Created new tool file with get_file_info
     implementation including formatBytes() and formatDate() helper functions,
-    tool definition, and createGetFileInfoTool() factory function
+    tool definition, and createGetFileInfoTool() factory function; Added imports
+    for findFileInsensitive and findFolderInsensitive from pathUtils. Replaced
+    direct adapter.stat() call with case-insensitive file/folder lookup pattern.
+    Now tries file lookup first, then folder lookup, with proper ambiguity
+    handling and resolved path display in output.
   src/llm/tools/pathUtils.ts: Added InsensitiveLookupResult<T> interface,
     findFileInsensitive(), and findFolderInsensitive() helper functions for
     case-insensitive file and folder lookup. Also added import for App, TFile,
