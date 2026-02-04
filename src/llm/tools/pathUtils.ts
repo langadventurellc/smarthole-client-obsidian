@@ -62,8 +62,8 @@ export function globToRegex(globPattern: string): RegExp {
   // ** at end matches anything including nested paths
   pattern = pattern.replace(/\{\{GLOBSTAR\}\}/g, ".*");
 
-  // Anchor the pattern to match the full path
-  return new RegExp(`^${pattern}$`);
+  // Anchor the pattern to match the full path (case-insensitive for better usability)
+  return new RegExp(`^${pattern}$`, "i");
 }
 
 /**

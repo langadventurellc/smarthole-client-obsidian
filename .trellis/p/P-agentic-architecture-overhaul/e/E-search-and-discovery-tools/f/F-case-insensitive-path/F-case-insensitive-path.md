@@ -10,16 +10,17 @@ affectedFiles:
   src/llm/tools/pathUtils.ts: Added InsensitiveLookupResult<T> interface,
     findFileInsensitive(), and findFolderInsensitive() helper functions for
     case-insensitive file and folder lookup. Also added import for App, TFile,
-    TFolder from 'obsidian'.
+    TFolder from 'obsidian'.; Added 'i' flag to RegExp constructor in
+    globToRegex() function (line 66) to enable case-insensitive pattern matching
 log: []
 schema: v1.0
 childrenIds:
-  - T-add-case-insensitive-path
   - T-make-glob-matching-case
   - T-make-protected-path-checking
   - T-update-get-file-info-tool-to
   - T-update-list-files-tool-to-use
   - T-update-read-file-tool-to-use
+  - T-add-case-insensitive-path
 created: 2026-02-04T05:07:02.971Z
 updated: 2026-02-04T05:07:02.971Z
 ---

@@ -1,12 +1,18 @@
 ---
 id: T-make-glob-matching-case
 title: Make glob matching case-insensitive in pathUtils.ts
-status: open
+status: done
 priority: high
 parent: F-case-insensitive-path
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/pathUtils.ts: Added 'i' flag to RegExp constructor in
+    globToRegex() function (line 66) to enable case-insensitive pattern matching
+log:
+  - Added the 'i' flag to the RegExp constructor in globToRegex() to make glob
+    pattern matching case-insensitive. This enables patterns like "*.MD" to
+    match files like "note.md", improving usability with speech-to-text input.
+    The change affects list_files and search_files tools that use matchGlob().
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T05:22:46.894Z
