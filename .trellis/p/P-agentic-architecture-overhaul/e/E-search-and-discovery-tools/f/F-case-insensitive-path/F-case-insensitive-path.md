@@ -20,15 +20,19 @@ affectedFiles:
     pathUtils.ts. Replaced app.vault.getFileByPath() with findFileInsensitive()
     for case-insensitive file lookup. Added handling for ambiguous paths
     (multiple case-insensitive matches) with a helpful error message.
+  src/llm/tools/listFiles.ts: Added import for findFolderInsensitive from
+    pathUtils. Replaced direct folder lookup with case-insensitive version that
+    handles ambiguous paths (multiple case-insensitive matches) with a helpful
+    error message.
 log: []
 schema: v1.0
 childrenIds:
   - T-update-get-file-info-tool-to
   - T-update-list-files-tool-to-use
-  - T-update-read-file-tool-to-use
   - T-add-case-insensitive-path
   - T-make-glob-matching-case
   - T-make-protected-path-checking
+  - T-update-read-file-tool-to-use
 created: 2026-02-04T05:07:02.971Z
 updated: 2026-02-04T05:07:02.971Z
 ---

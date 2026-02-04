@@ -21,7 +21,10 @@ affectedFiles:
     re-export for createGetFileInfoTool
   src/llm/tools/listFiles.ts: Created new tool file with glob matching (reused
     pattern from searchFiles.ts), path normalization, modification time sorting,
-    and formatted output with type indicators
+    and formatted output with type indicators; Added import for
+    findFolderInsensitive from pathUtils. Replaced direct folder lookup with
+    case-insensitive version that handles ambiguous paths (multiple
+    case-insensitive matches) with a helpful error message.
   src/llm/tools/getFileInfo.ts: Created new tool file with get_file_info
     implementation including formatBytes() and formatDate() helper functions,
     tool definition, and createGetFileInfoTool() factory function
