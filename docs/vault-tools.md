@@ -12,6 +12,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `organize_note` | Rename or move notes |
 | `read_file` | Read file contents with optional line ranges |
 | `edit_file` | Make targeted edits using search/replace or line operations |
+| `write_file` | Write content to files (create or overwrite) |
 
 ## Usage
 
@@ -372,6 +373,70 @@ Error: Line 50 does not exist in file with 30 lines.
 Error: Cannot mix search/replace parameters with line-based parameters.
 ```
 
+## write_file
+
+Write content to a file, creating it if it doesn't exist or overwriting if it does.
+
+### Input Schema
+
+```typescript
+{
+  path: string,      // File path (required)
+  content: string    // Content to write (required)
+}
+```
+
+### Behavior
+
+- Creates the file if it doesn't exist
+- Overwrites the file if it already exists
+- Auto-creates parent directories as needed
+- Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
+- Returns confirmation with file path and size
+
+### Example
+
+```typescript
+// Create a new file
+{
+  name: "write_file",
+  input: {
+    path: "Projects/new-project.md",
+    content: "# New Project\n\nProject description here..."
+  }
+}
+
+// Overwrite an existing file
+{
+  name: "write_file",
+  input: {
+    path: "notes/draft.md",
+    content: "# Updated Content\n\nCompletely new content."
+  }
+}
+```
+
+### Response Format
+
+Success responses indicate the action taken:
+```
+Created file "Projects/new-project.md" (156 bytes).
+Overwrote file "notes/draft.md" (2.3 KB).
+```
+
+Error responses:
+```
+Error: path is required and must be a non-empty string.
+Error: Access denied: Cannot access files in '.obsidian/' directory (protected system folder)
+Error: Failed to write file "invalid/path.md": <error details>
+```
+
+### When to Use
+
+- **Use `write_file`** when you need to completely replace file contents or create a new file with known content
+- **Use `create_note`** when creating markdown notes with auto-generated filenames from content
+- **Use `edit_file`** when making targeted changes to existing files (search/replace, line operations)
+
 ## Tool Handler Interface
 
 ```typescript
@@ -415,5 +480,6 @@ Located in `src/llm/tools/`:
 - `organizeNotes.ts` - Rename/move factory
 - `readFile.ts` - File reading factory
 - `editFile.ts` - Targeted file editing factory
+- `writeFile.ts` - Full file write/overwrite factory
 - `protected.ts` - Protected path validation utility
 - `index.ts` - `createVaultTools()` aggregator
