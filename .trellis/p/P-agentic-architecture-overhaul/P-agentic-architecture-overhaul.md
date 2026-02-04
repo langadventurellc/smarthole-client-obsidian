@@ -64,6 +64,10 @@ affectedFiles:
   src/llm/tools/getFileInfo.ts: Created new tool file with get_file_info
     implementation including formatBytes() and formatDate() helper functions,
     tool definition, and createGetFileInfoTool() factory function
+  src/llm/tools/pathUtils.ts: Added InsensitiveLookupResult<T> interface,
+    findFileInsensitive(), and findFolderInsensitive() helper functions for
+    case-insensitive file and folder lookup. Also added import for App, TFile,
+    TFolder from 'obsidian'.
 log: []
 schema: v1.0
 childrenIds:

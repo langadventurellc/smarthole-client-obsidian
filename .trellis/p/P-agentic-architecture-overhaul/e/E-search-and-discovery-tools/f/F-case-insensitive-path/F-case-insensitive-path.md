@@ -1,15 +1,25 @@
 ---
 id: F-case-insensitive-path
 title: Case-Insensitive Path Resolution
-status: open
+status: in-progress
 priority: medium
 parent: E-search-and-discovery-tools
 prerequisites:
   - F-get-file-info-tool
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/pathUtils.ts: Added InsensitiveLookupResult<T> interface,
+    findFileInsensitive(), and findFolderInsensitive() helper functions for
+    case-insensitive file and folder lookup. Also added import for App, TFile,
+    TFolder from 'obsidian'.
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-case-insensitive-path
+  - T-make-glob-matching-case
+  - T-make-protected-path-checking
+  - T-update-get-file-info-tool-to
+  - T-update-list-files-tool-to-use
+  - T-update-read-file-tool-to-use
 created: 2026-02-04T05:07:02.971Z
 updated: 2026-02-04T05:07:02.971Z
 ---

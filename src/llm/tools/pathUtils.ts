@@ -5,6 +5,8 @@
  * Used by multiple vault tools for consistent path handling.
  */
 
+import type { App, TFile, TFolder } from "obsidian";
+
 /**
  * Normalizes a file path for consistent comparison.
  * - Converts backslashes to forward slashes
@@ -82,4 +84,136 @@ export function matchGlob(filePath: string, globPattern: string): boolean {
     // Invalid glob pattern - return false rather than throwing
     return false;
   }
+}
+
+/**
+ * Result of a case-insensitive file/folder lookup.
+ */
+export interface InsensitiveLookupResult<T> {
+  /** The matched file/folder, or null if not found or ambiguous */
+  item: T | null;
+  /** True if multiple case-insensitive matches exist (ambiguous) */
+  ambiguous: boolean;
+}
+
+/**
+ * Finds a file by path, case-insensitively.
+ * Prefers exact match (fast path), falls back to case-insensitive enumeration.
+ *
+ * @param app - The Obsidian App instance for vault access
+ * @param path - The file path to look up (relative to vault root)
+ * @returns Lookup result with the matched file and ambiguity indicator
+ *
+ * @example
+ * // Exact match exists
+ * findFileInsensitive(app, 'Projects/note.md') // { item: TFile, ambiguous: false }
+ *
+ * // Case-insensitive match
+ * findFileInsensitive(app, 'projects/note.md') // { item: TFile for 'Projects/note.md', ambiguous: false }
+ *
+ * // Multiple matches (e.g., 'Projects/note.md' and 'PROJECTS/note.md' both exist)
+ * findFileInsensitive(app, 'projects/note.md') // { item: null, ambiguous: true }
+ *
+ * // No match
+ * findFileInsensitive(app, 'nonexistent.md') // { item: null, ambiguous: false }
+ */
+export function findFileInsensitive(app: App, path: string): InsensitiveLookupResult<TFile> {
+  // Handle empty path
+  if (!path || path.trim().length === 0) {
+    return { item: null, ambiguous: false };
+  }
+
+  const normalizedPath = normalizePath(path);
+
+  // Fast path: try exact match first
+  const exactMatch = app.vault.getFileByPath(normalizedPath);
+  if (exactMatch) {
+    return { item: exactMatch, ambiguous: false };
+  }
+
+  // Slow path: enumerate all files and find case-insensitive matches
+  const normalizedLower = normalizedPath.toLowerCase();
+  const matches: TFile[] = [];
+
+  for (const file of app.vault.getFiles()) {
+    if (file.path.toLowerCase() === normalizedLower) {
+      matches.push(file);
+    }
+  }
+
+  // No matches found
+  if (matches.length === 0) {
+    return { item: null, ambiguous: false };
+  }
+
+  // Exactly one case-insensitive match
+  if (matches.length === 1) {
+    return { item: matches[0], ambiguous: false };
+  }
+
+  // Multiple matches - ambiguous
+  return { item: null, ambiguous: true };
+}
+
+/**
+ * Finds a folder by path, case-insensitively.
+ * Prefers exact match (fast path), falls back to case-insensitive enumeration.
+ *
+ * @param app - The Obsidian App instance for vault access
+ * @param path - The folder path to look up (relative to vault root)
+ * @returns Lookup result with the matched folder and ambiguity indicator
+ *
+ * @example
+ * // Exact match exists
+ * findFolderInsensitive(app, 'Projects') // { item: TFolder, ambiguous: false }
+ *
+ * // Case-insensitive match
+ * findFolderInsensitive(app, 'projects') // { item: TFolder for 'Projects', ambiguous: false }
+ *
+ * // Multiple matches (e.g., 'Projects' and 'PROJECTS' both exist)
+ * findFolderInsensitive(app, 'projects') // { item: null, ambiguous: true }
+ *
+ * // No match
+ * findFolderInsensitive(app, 'nonexistent') // { item: null, ambiguous: false }
+ */
+export function findFolderInsensitive(app: App, path: string): InsensitiveLookupResult<TFolder> {
+  // Handle empty path
+  if (!path || path.trim().length === 0) {
+    return { item: null, ambiguous: false };
+  }
+
+  const normalizedPath = normalizePath(path);
+
+  // Fast path: try exact match first
+  const exactMatch = app.vault.getFolderByPath(normalizedPath);
+  if (exactMatch) {
+    return { item: exactMatch, ambiguous: false };
+  }
+
+  // Slow path: enumerate all loaded files and find case-insensitive folder matches
+  const normalizedLower = normalizedPath.toLowerCase();
+  const matches: TFolder[] = [];
+
+  for (const item of app.vault.getAllLoadedFiles()) {
+    // TFolder does not have an 'extension' property, TFile does
+    // Check if it's a folder by verifying it's not a file
+    const isFolder = !("extension" in item);
+
+    if (isFolder && item.path.toLowerCase() === normalizedLower) {
+      matches.push(item as TFolder);
+    }
+  }
+
+  // No matches found
+  if (matches.length === 0) {
+    return { item: null, ambiguous: false };
+  }
+
+  // Exactly one case-insensitive match
+  if (matches.length === 1) {
+    return { item: matches[0], ambiguous: false };
+  }
+
+  // Multiple matches - ambiguous
+  return { item: null, ambiguous: true };
 }
