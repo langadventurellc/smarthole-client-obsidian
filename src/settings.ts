@@ -11,6 +11,10 @@ export interface SmartHoleSettings {
   routingDescription: string;
   informationArchitecture: string;
   maxConversationHistory: number;
+  /** Minutes of inactivity before a conversation is considered ended */
+  conversationIdleTimeoutMinutes: number;
+  /** Maximum number of conversations to retain (oldest deleted when exceeded) */
+  maxConversationsRetained: number;
 }
 
 const DEFAULT_ROUTING_DESCRIPTION = `Miss Simone - I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.`;
@@ -33,6 +37,8 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   routingDescription: DEFAULT_ROUTING_DESCRIPTION,
   informationArchitecture: DEFAULT_INFORMATION_ARCHITECTURE,
   maxConversationHistory: 50,
+  conversationIdleTimeoutMinutes: 30,
+  maxConversationsRetained: 1000,
 };
 
 export class SmartHoleSettingTab extends PluginSettingTab {
@@ -228,6 +234,44 @@ Generate only the routing description text, nothing else. Do not include any pre
             const parsed = parseInt(value, 10);
             if (!isNaN(parsed) && parsed > 0) {
               this.plugin.settings.maxConversationHistory = parsed;
+              await this.plugin.saveSettings();
+            }
+          })
+      );
+
+    // Conversation Idle Timeout setting
+    new Setting(containerEl)
+      .setName("Conversation Idle Timeout (minutes)")
+      .setDesc(
+        "Minutes of inactivity before a conversation is considered ended and a new one begins"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("30")
+          .setValue(String(this.plugin.settings.conversationIdleTimeoutMinutes))
+          .onChange(async (value) => {
+            const parsed = parseInt(value, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+              this.plugin.settings.conversationIdleTimeoutMinutes = parsed;
+              await this.plugin.saveSettings();
+            }
+          })
+      );
+
+    // Max Conversations Retained setting
+    new Setting(containerEl)
+      .setName("Max Conversations Retained")
+      .setDesc(
+        "Maximum number of conversations to keep (oldest are deleted when this limit is exceeded)"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("1000")
+          .setValue(String(this.plugin.settings.maxConversationsRetained))
+          .onChange(async (value) => {
+            const parsed = parseInt(value, 10);
+            if (!isNaN(parsed) && parsed >= 1) {
+              this.plugin.settings.maxConversationsRetained = parsed;
               await this.plugin.saveSettings();
             }
           })

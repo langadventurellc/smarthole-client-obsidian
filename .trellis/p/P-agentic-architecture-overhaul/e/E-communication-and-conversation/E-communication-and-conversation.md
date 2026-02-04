@@ -33,6 +33,14 @@ affectedFiles:
   src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
     agent messages in onOpen() to display mid-execution messages as assistant
     messages, and added cleanup in onClose()
+  src/context/types.ts: Added ConversationMessage, Conversation, and
+    PersistedConversations interfaces for the new conversation-based data model
+  src/context/index.ts: Added exports for new types (Conversation,
+    ConversationMessage, PersistedConversations) while keeping legacy type
+    exports
+  src/settings.ts: Added conversationIdleTimeoutMinutes and
+    maxConversationsRetained to SmartHoleSettings interface and
+    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
 log: []
 schema: v1.0
 childrenIds:

@@ -1,14 +1,28 @@
 ---
 id: F-conversation-boundaries-and
 title: Conversation Boundaries and Lifecycle
-status: open
+status: in-progress
 priority: medium
 parent: E-communication-and-conversation
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/context/types.ts: Added ConversationMessage, Conversation, and
+    PersistedConversations interfaces for the new conversation-based data model
+  src/context/index.ts: Added exports for new types (Conversation,
+    ConversationMessage, PersistedConversations) while keeping legacy type
+    exports
+  src/settings.ts: Added conversationIdleTimeoutMinutes and
+    maxConversationsRetained to SmartHoleSettings interface and
+    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-conversation-data-types
+  - T-add-end-conversation-tool
+  - T-implement-conversation-1
+  - T-implement-conversationmanager
+  - T-integrate-conversationmanager
+  - T-migrate-existing-history-to
 created: 2026-02-04T06:03:55.794Z
 updated: 2026-02-04T06:03:55.794Z
 ---

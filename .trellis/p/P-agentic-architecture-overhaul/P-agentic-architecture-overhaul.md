@@ -117,6 +117,14 @@ affectedFiles:
   src/llm/tools/modifyNote.ts: DELETED - old MVP tool for modifying notes
   src/llm/tools/searchNotes.ts: DELETED - old MVP tool for searching notes
   src/llm/tools/organizeNotes.ts: DELETED - old MVP tool for organizing notes
+  src/context/types.ts: Added ConversationMessage, Conversation, and
+    PersistedConversations interfaces for the new conversation-based data model
+  src/context/index.ts: Added exports for new types (Conversation,
+    ConversationMessage, PersistedConversations) while keeping legacy type
+    exports
+  src/settings.ts: Added conversationIdleTimeoutMinutes and
+    maxConversationsRetained to SmartHoleSettings interface and
+    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
 log: []
 schema: v1.0
 childrenIds:
