@@ -16,6 +16,7 @@ import { createEditFileTool } from "./editFile";
 import { createWriteFileTool } from "./writeFile";
 import { createCreateFolderTool } from "./createFolder";
 import { createDeleteFileTool } from "./deleteFile";
+import { createMoveFileTool } from "./moveFile";
 
 /**
  * Creates all vault tools for registration with LLMService.
@@ -34,6 +35,7 @@ export function createVaultTools(app: App): ToolHandler[] {
     createWriteFileTool(app),
     createCreateFolderTool(app),
     createDeleteFileTool(app),
+    createMoveFileTool(app),
   ];
 }
 
@@ -47,3 +49,4 @@ export { createEditFileTool } from "./editFile";
 export { createWriteFileTool } from "./writeFile";
 export { createCreateFolderTool } from "./createFolder";
 export { createDeleteFileTool } from "./deleteFile";
+export { createMoveFileTool } from "./moveFile";

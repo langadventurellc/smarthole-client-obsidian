@@ -21,7 +21,9 @@ affectedFiles:
     in T-implement-write-file-tool - contains import, array registration, and
     re-export for createWriteFileTool; Added import for createCreateFolderTool,
     added it to createVaultTools() array, and added re-export; Added import for
-    createDeleteFileTool, added to createVaultTools() array, and added re-export
+    createDeleteFileTool, added to createVaultTools() array, and added
+    re-export; Added import for createMoveFileTool, included it in the
+    createVaultTools() array, and added re-export for selective use.
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file
@@ -39,6 +41,11 @@ affectedFiles:
   src/llm/tools/deleteFile.ts: Created new delete_file tool that soft-deletes
     files and folders to Obsidian's trash, following the existing tool pattern
     from writeFile.ts
+  src/llm/tools/moveFile.ts: "Created new move_file tool with factory function
+    createMoveFileTool(app: App). Includes path normalization,
+    ensureParentFolder helper, input validation, protected path checking for
+    both source and destination, existence checks, and the move operation using
+    app.fileManager.renameFile()."
 log: []
 schema: v1.0
 childrenIds:
