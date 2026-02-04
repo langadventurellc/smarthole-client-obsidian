@@ -10,6 +10,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `modify_note` | Modify existing notes with atomic operations |
 | `search_notes` | Search notes using Obsidian's search API |
 | `organize_note` | Rename or move notes |
+| `read_file` | Read file contents with optional line ranges |
 
 ## Usage
 
@@ -171,6 +172,70 @@ Rename or move notes within the vault.
 }
 ```
 
+## read_file
+
+Read file contents from the vault with optional line range filtering.
+
+### Input Schema
+
+```typescript
+{
+  path: string,         // File path (required)
+  start_line?: integer, // First line to read, 1-indexed (optional)
+  end_line?: integer    // Last line to read, 1-indexed (optional)
+}
+```
+
+### Behavior
+
+- Returns content with line numbers prefixed (e.g., "1: First line\n2: Second line")
+- Supports optional `start_line` and `end_line` for partial reads
+- Handles large files with smart truncation (~100KB or 2000 lines)
+- Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
+- Returns clear error for non-existent files
+
+### Example
+
+```typescript
+// Read entire file
+{
+  name: "read_file",
+  input: {
+    path: "Projects/notes.md"
+  }
+}
+
+// Read specific line range
+{
+  name: "read_file",
+  input: {
+    path: "Projects/long-document.md",
+    start_line: 50,
+    end_line: 100
+  }
+}
+```
+
+### Response Format
+
+```
+1: # Document Title
+2:
+3: First paragraph content...
+4: More content here...
+
+[Showing lines 1-4 of 4 total]
+```
+
+For truncated files:
+```
+1: First line...
+...
+2000: Last shown line...
+
+[... truncated, showing lines 1-2000, total lines in file: 5000]
+```
+
 ## Tool Handler Interface
 
 ```typescript
@@ -193,6 +258,18 @@ All tools normalize paths consistently:
 - Handle leading/trailing slashes
 - Create missing parent directories
 
+## Protected Paths
+
+All file operation tools share protected path validation via `src/llm/tools/protected.ts`. The following directories are protected and cannot be accessed:
+
+- `.obsidian/` - Obsidian configuration (could break the app)
+- `.smarthole/` - Internal storage (inbox, trash, etc.)
+
+Operations targeting these folders return a clear error:
+```
+Error: Access denied: Cannot access files in '.obsidian/' directory (protected system folder)
+```
+
 ## Implementation
 
 Located in `src/llm/tools/`:
@@ -200,4 +277,6 @@ Located in `src/llm/tools/`:
 - `modifyNote.ts` - Note modification factory
 - `searchNotes.ts` - Search factory
 - `organizeNotes.ts` - Rename/move factory
+- `readFile.ts` - File reading factory
+- `protected.ts` - Protected path validation utility
 - `index.ts` - `createVaultTools()` aggregator
