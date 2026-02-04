@@ -8,14 +8,19 @@ Orchestrates the complete message processing pipeline from inbox persistence thr
 import { MessageProcessor } from "./processor";
 
 const processor = new MessageProcessor({
-  inbox: inboxManager,
   connection: smartHoleConnection,
-  createLLMService: () => new LLMService(provider),
+  inboxManager: inboxManager,
   app: obsidianApp,
   settings: pluginSettings,
   conversationManager: conversationManager,
+  plugin: pluginInstance,  // Required for conversation state persistence
 });
+
+// Initialize must be called after construction
+await processor.initialize();
 ```
+
+The `initialize()` method loads any persisted conversation states from the previous session and cleans up stale states that have exceeded the configured timeout.
 
 ## Pipeline Flow
 
@@ -85,11 +90,14 @@ processor.onAgentMessage((message) => {
 interface ProcessResult {
   success: boolean;
   messageId: string;
-  response?: string;      // LLM's text response
-  toolsUsed?: string[];   // Tools invoked during processing
-  error?: string;         // Error message if failed
+  response?: string;            // LLM's text response
+  toolsUsed?: string[];         // Tools invoked during processing
+  error?: string;               // Error message if failed
+  isWaitingForResponse?: boolean; // Agent expects follow-up message
 }
 ```
+
+When `isWaitingForResponse` is `true`, the agent has asked a question and is waiting for the user's reply. The next message in the same conversation will continue with the pending context.
 
 ## Retry Logic
 
@@ -176,16 +184,59 @@ The processor integrates with `ConversationManager` for conversation lifecycle:
 - The `end_conversation` tool is registered to allow explicit conversation ending
 - See [Conversation History](conversation-history.md) for detailed documentation
 
+## Conversation State Persistence
+
+The processor tracks active conversation states to enable multi-turn interactions where the agent asks questions and waits for user responses:
+
+### How It Works
+
+1. When the agent calls `send_message` with `is_question=true`, the LLMService signals a waiting state
+2. The processor persists this state to plugin data storage, keyed by conversation ID
+3. When the next message arrives in the same conversation, the pending context is restored
+4. The system prompt is augmented with continuation context about the pending question
+5. Stale states (older than `conversationStateTimeoutMinutes`) are cleaned up periodically
+
+### State Lifecycle
+
+```
+User message → Agent processes → Agent asks question (is_question=true)
+                                         ↓
+                              State persisted (waiting)
+                                         ↓
+                              User replies
+                                         ↓
+                              State restored, continuation context injected
+                                         ↓
+                              Agent continues conversation
+                                         ↓
+                              State cleared (no longer waiting)
+```
+
+### Crash Recovery
+
+On plugin restart, `initialize()` loads persisted conversation states. If the plugin crashed while waiting for a user response, that state is preserved and the conversation can continue naturally.
+
+### Stale State Cleanup
+
+States are considered stale when `pendingContext.createdAt` is older than `conversationStateTimeoutMinutes` (default: 60 minutes). Cleanup runs:
+- Once during `initialize()`
+- Every 15 minutes via a registered interval
+
+```typescript
+// Manual cleanup if needed
+await processor.cleanupStaleStates();
+```
+
 ## Configuration
 
 ```typescript
 interface MessageProcessorConfig {
-  inbox: InboxManager;
   connection: SmartHoleConnection;
-  createLLMService: () => LLMService;
+  inboxManager: InboxManager;
   app: App;
   settings: SmartHoleSettings;
   conversationManager: ConversationManager;
+  plugin: SmartHolePlugin;  // For loadData/saveData persistence
 }
 ```
 

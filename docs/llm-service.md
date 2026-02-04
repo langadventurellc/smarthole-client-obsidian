@@ -115,6 +115,49 @@ service.clearConversation();
 // - Max 20 messages retained in working memory
 ```
 
+## Conversation State Management
+
+The service tracks conversation state for multi-turn interactions where the agent may ask questions and wait for user responses:
+
+```typescript
+// Check if agent is waiting for user response
+const isWaiting = service.isWaitingForUserResponse();
+
+// Get current state for persistence
+const state = service.getConversationState();
+// Returns: { isWaitingForResponse: boolean, pendingContext?: PendingContext }
+
+// Restore state from persistence (e.g., after restart)
+service.restoreConversationState(persistedState);
+
+// Signal waiting state (called by send_message tool when is_question=true)
+service.setWaitingForResponse(questionMessage, messageId);
+
+// Clear waiting state when conversation continues or completes
+service.clearWaitingState();
+```
+
+### State Types
+
+```typescript
+interface ConversationState {
+  isWaitingForResponse: boolean;
+  pendingContext?: PendingContext;
+}
+
+interface PendingContext {
+  originalMessageId: string;   // Message that initiated the pending state
+  toolCallsCompleted: number;  // Tool calls completed before asking
+  lastAgentMessage: string;    // The question sent to user
+  createdAt: string;           // ISO 8601 timestamp
+}
+```
+
+The state is automatically updated when:
+- The `send_message` tool is called with `is_question=true`
+- Tool calls are executed (increments `toolCallsInSession`)
+- The conversation is cleared via `clearWaitingState()`
+
 ## Error Handling
 
 ```typescript
@@ -186,6 +229,8 @@ Tool input:
   is_question?: boolean // Whether waiting for user response
 }
 ```
+
+When `is_question=true`, the tool signals to LLMService that the agent is waiting for a user response, enabling conversation state tracking and persistence.
 
 ### end_conversation
 
