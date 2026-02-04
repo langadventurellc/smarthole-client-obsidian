@@ -7,10 +7,11 @@ parent: P-agentic-architecture-overhaul
 prerequisites:
   - E-file-operation-tools
 affectedFiles:
-  src/processor/types.ts: Added AgentMessageCallback type definition with JSDoc
+  src/processor/types.ts: "Added AgentMessageCallback type definition with JSDoc
     comment; Replaced ConversationHistory import with ConversationManager;
     Changed conversationHistory property to conversationManager in
-    MessageProcessorConfig interface
+    MessageProcessorConfig interface; Added isWaitingForResponse?: boolean field
+    to ProcessResult interface"
   src/processor/MessageProcessor.ts: Added agentMessageCallbacks array,
     onAgentMessage() registration method, and notifyAgentMessageCallbacks()
     notification method; Added imports for createSendMessageTool and
@@ -54,10 +55,14 @@ affectedFiles:
     plugin.getConversationManager() and load messages from active conversation
     using ConversationMessage format
   src/context/types.ts: Added ConversationMessage, Conversation, and
-    PersistedConversations interfaces for the new conversation-based data model
+    PersistedConversations interfaces for the new conversation-based data model;
+    Added PendingContext interface (originalMessageId, toolCallsCompleted,
+    lastAgentMessage, createdAt) and ConversationState interface
+    (isWaitingForResponse, pendingContext?)
   src/context/index.ts: Added exports for new types (Conversation,
     ConversationMessage, PersistedConversations) while keeping legacy type
-    exports; Added export for ConversationManager class
+    exports; Added export for ConversationManager class; Added exports for
+    ConversationState and PendingContext types
   src/settings.ts: Added conversationIdleTimeoutMinutes and
     maxConversationsRetained to SmartHoleSettings interface and
     DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()

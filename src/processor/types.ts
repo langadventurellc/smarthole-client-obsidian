@@ -24,6 +24,8 @@ export interface ProcessResult {
   messageId: string;
   response?: string;
   error?: string;
+  /** Signals that the agent expects a follow-up message from the user */
+  isWaitingForResponse?: boolean;
 }
 
 /**

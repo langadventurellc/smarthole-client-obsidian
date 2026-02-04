@@ -99,3 +99,33 @@ export interface PersistedConversations {
   /** ISO timestamp when migrated from old format, if applicable */
   lastMigrated?: string;
 }
+
+// =============================================================================
+// Conversation State Tracking
+// =============================================================================
+
+/**
+ * Context stored when the agent is waiting for a user response.
+ * Enables conversation continuation after user replies.
+ */
+export interface PendingContext {
+  /** ID of the message that initiated this pending state */
+  originalMessageId: string;
+  /** Number of tool calls completed before asking the question */
+  toolCallsCompleted: number;
+  /** The last message sent by the agent (usually the question) */
+  lastAgentMessage: string;
+  /** ISO 8601 timestamp when the pending state was created */
+  createdAt: string;
+}
+
+/**
+ * Tracks the current state of an active conversation.
+ * Used to determine if the agent is waiting for a user response.
+ */
+export interface ConversationState {
+  /** Whether the agent is currently waiting for user response */
+  isWaitingForResponse: boolean;
+  /** Context when waiting for a response, undefined when not waiting */
+  pendingContext?: PendingContext;
+}

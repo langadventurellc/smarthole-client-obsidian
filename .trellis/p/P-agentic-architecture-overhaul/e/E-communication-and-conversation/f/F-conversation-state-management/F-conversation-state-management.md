@@ -1,14 +1,23 @@
 ---
 id: F-conversation-state-management
 title: Conversation State Management
-status: open
+status: in-progress
 priority: high
 parent: E-communication-and-conversation
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/context/types.ts: Added PendingContext interface (originalMessageId,
+    toolCallsCompleted, lastAgentMessage, createdAt) and ConversationState
+    interface (isWaitingForResponse, pendingContext?)
+  src/processor/types.ts: "Added isWaitingForResponse?: boolean field to ProcessResult interface"
+  src/context/index.ts: Added exports for ConversationState and PendingContext types
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-conversationstate-types
+  - T-add-crash-recovery-and-stale
+  - T-extend-llmservice-to-track
+  - T-implement-conversation-state
 created: 2026-02-04T06:03:35.444Z
 updated: 2026-02-04T06:03:35.444Z
 ---
