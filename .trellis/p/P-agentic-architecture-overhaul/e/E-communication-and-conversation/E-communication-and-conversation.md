@@ -1,7 +1,7 @@
 ---
 id: E-communication-and-conversation
 title: Communication and Conversation State
-status: in-progress
+status: done
 priority: high
 parent: P-agentic-architecture-overhaul
 prerequisites:
@@ -33,7 +33,11 @@ affectedFiles:
     loadConversationStates(), and updated processWithRetry() to restore/persist
     conversation state; Added public initialize() method, public
     cleanupStaleStates() method, made loadConversationStates() private with
-    error handling, removed constructor call to loadConversationStates()
+    error handling, removed constructor call to loadConversationStates();
+    Imported createGetConversationTool and GetConversationContext. Added
+    registration of get_conversation tool in processWithRetry() method, creating
+    GetConversationContext with conversationManager and registering the tool
+    with llmService.
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -55,7 +59,10 @@ affectedFiles:
     existing pattern for context-dependent tools.
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module; Added re-exports
-    for createEndConversationTool and related types from tools module
+    for createEndConversationTool and related types from tools module; Added
+    exports for createGetConversationTool factory function and
+    GetConversationContext, GetConversationInput types to the public LLM module
+    API.
   src/main.ts: "Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
     for ChatView subscription; Replaced ConversationHistory import with
@@ -112,7 +119,8 @@ affectedFiles:
     GetConversationContext interface, GetConversationInput type, tool
     definition, and createGetConversationTool factory function. Supports
     get-by-ID and list-recent modes with proper validation and error handling.
-log: []
+log:
+  - "Auto-completed: All child features are complete"
 schema: v1.0
 childrenIds:
   - F-conversation-boundaries-and

@@ -118,7 +118,11 @@ affectedFiles:
     loadConversationStates(), and updated processWithRetry() to restore/persist
     conversation state; Added public initialize() method, public
     cleanupStaleStates() method, made loadConversationStates() private with
-    error handling, removed constructor call to loadConversationStates()
+    error handling, removed constructor call to loadConversationStates();
+    Imported createGetConversationTool and GetConversationContext. Added
+    registration of get_conversation tool in processWithRetry() method, creating
+    GetConversationContext with conversationManager and registering the tool
+    with llmService.
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -136,7 +140,9 @@ affectedFiles:
     re-exports for createCreateNoteTool, createModifyNoteTool,
     createSearchNotesTool, createOrganizeNoteTool from the Vault Tools section;
     Added re-exports for createEndConversationTool and related types from tools
-    module
+    module; Added exports for createGetConversationTool factory function and
+    GetConversationContext, GetConversationInput types to the public LLM module
+    API.
   src/main.ts: "Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
     for ChatView subscription; Replaced ConversationHistory import with

@@ -47,3 +47,7 @@ export type { SendMessageContext, SendMessageInput } from "./tools";
 // End Conversation Tool (separate from vault tools - requires runtime context)
 export { createEndConversationTool } from "./tools";
 export type { EndConversationContext, EndConversationInput } from "./tools";
+
+// Get Conversation Tool (separate from vault tools - requires runtime context)
+export { createGetConversationTool } from "./tools";
+export type { GetConversationContext, GetConversationInput } from "./tools";

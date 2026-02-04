@@ -1,13 +1,27 @@
 ---
 id: T-register-get-conversation
 title: Register get_conversation tool with LLMService
-status: open
+status: done
 priority: medium
 parent: F-get-conversation-tool
 prerequisites:
   - T-export-get-conversation-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/index.ts: Added exports for createGetConversationTool factory function
+    and GetConversationContext, GetConversationInput types to the public LLM
+    module API.
+  src/processor/MessageProcessor.ts: Imported createGetConversationTool and
+    GetConversationContext. Added registration of get_conversation tool in
+    processWithRetry() method, creating GetConversationContext with
+    conversationManager and registering the tool with llmService.
+log:
+  - Registered the get_conversation tool with LLMService during message
+    processing. The tool is now available to the agent alongside other
+    context-dependent tools (sendMessage, endConversation). Added exports to
+    src/llm/index.ts and registered the tool in
+    MessageProcessor.processWithRetry() with the ConversationManager instance
+    passed via GetConversationContext. All quality checks pass (lint, format,
+    type-check) and the build succeeds.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T18:39:57.923Z
