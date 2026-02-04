@@ -56,6 +56,53 @@ interface ConversationState {
 - Track pending conversations per message source
 - Persist conversation state for crash recovery
 
+### 5. Conversation Boundaries (`src/context/ConversationManager.ts`)
+
+Group message exchanges into discrete conversations based on time proximity and explicit endings.
+
+**Conversation lifecycle:**
+- New conversation starts when: (a) no active conversation exists, (b) idle timeout exceeded, or (c) previous conversation explicitly ended
+- Conversation ends when: (a) agent explicitly ends it, (b) user requests agent to end it, or (c) idle timeout triggers on next message
+- Immediate summary generation when conversation ends (using user's configured model)
+
+**Data model:**
+```typescript
+interface Conversation {
+  id: string;                    // Unique conversation ID
+  startedAt: string;             // ISO 8601 timestamp
+  endedAt: string | null;        // null if active
+  title: string | null;          // Auto-generated title (null until ended)
+  summary: string | null;        // Auto-generated summary (null until ended)
+  messages: ConversationMessage[];
+}
+
+interface ConversationMessage {
+  id: string;
+  timestamp: string;
+  role: 'user' | 'assistant';
+  content: string;
+  toolsUsed?: string[];
+}
+```
+
+**Context injection changes:**
+- Only current conversation's messages included in LLM context
+- Past conversations NOT in system prompt (reduces token usage)
+- Agent retrieves past conversations via `get_conversation` tool when needed
+
+### 6. Get Conversation Tool (`src/llm/tools/getConversation.ts`)
+
+Allow agent to retrieve past conversation details when context is needed.
+
+```typescript
+interface GetConversationInput {
+  conversation_id?: string;      // Specific conversation to retrieve
+  list_recent?: number;          // List N most recent conversations (summaries only)
+}
+```
+
+Returns full conversation history if ID provided, or list of conversation summaries with IDs.
+
 ## Acceptance Criteria
 
 ### Communication
@@ -70,6 +117,23 @@ interface ConversationState {
 - [ ] Next user message continues existing conversation context
 - [ ] Clear distinction between "task complete" and "awaiting response"
 - [ ] Safety limit on tool iterations remains in place (MAX_TOOL_ITERATIONS = 10)
+
+### Conversation Boundaries
+- [ ] Messages within idle timeout belong to same conversation
+- [ ] Idle timeout is configurable (setting in plugin settings)
+- [ ] Agent can explicitly end a conversation
+- [ ] User can request agent to end conversation
+- [ ] Summary generated immediately when conversation ends
+- [ ] Summary uses user's configured model
+- [ ] New conversations start silently (no notification to user)
+- [ ] Rolling limit of 1000 conversations retained (configurable)
+- [ ] Oldest conversations deleted when limit exceeded
+
+### Conversation Retrieval
+- [ ] `get_conversation` tool retrieves full conversation by ID
+- [ ] `get_conversation` can list recent conversations with summaries
+- [ ] Agent only sees current conversation in system prompt
+- [ ] Past conversations accessible only via tool
 
 ## Technical Considerations
 

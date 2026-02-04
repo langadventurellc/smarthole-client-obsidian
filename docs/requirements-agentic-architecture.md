@@ -57,6 +57,7 @@ Note: Read operations (`read_file`, `list_files`, `get_file_info`) use case-inse
 | Tool | Description |
 |------|-------------|
 | `send_message` | Send message to user via SmartHole or ChatView. Can be called multiple times during execution. |
+| `get_conversation` | Retrieve past conversation details by ID, or list recent conversations with summaries. |
 
 ### 3. Protected Folders
 
@@ -96,6 +97,31 @@ Enable fully autonomous multi-step execution with conversational state.
 **Message flow changes:**
 - Current: Message in → LLM processes → Response out (one-shot)
 - New: Message in → LLM processes → (may ask question) → User responds → LLM continues → ... → Task complete
+
+### 6. Conversation Boundaries
+
+Group message exchanges into discrete conversations to manage context efficiently.
+
+**Conversation lifecycle:**
+- Messages within an idle timeout window belong to the same conversation
+- Agent can explicitly end a conversation (task complete, topic change)
+- User can request the agent end a conversation
+- New conversations start automatically after timeout or explicit ending
+
+**Context management:**
+- Only the current conversation's full history is included in LLM context
+- Past conversations appear as summaries accessible via tool, not in system prompt
+- Reduces token usage for long-term users with extensive history
+
+**Summary generation:**
+- When a conversation ends, a title and summary are generated immediately
+- Uses the user's configured model for consistency
+- Summaries capture key topics, actions taken, and outcomes
+
+**Retention:**
+- Rolling limit of conversations retained (default: 1000)
+- Oldest conversations deleted when limit exceeded
+- Configurable via plugin settings
 
 ---
 
@@ -250,6 +276,14 @@ Following patterns from successful coding agents:
 - [ ] Next user message continues existing conversation context
 - [ ] Clear distinction between "task complete" and "awaiting response"
 - [ ] Safety limit on tool iterations remains in place
+
+**Conversation Boundaries**
+- [ ] Configurable idle timeout for conversation boundaries
+- [ ] Agent can explicitly end conversations
+- [ ] Immediate summary generation on conversation end
+- [ ] Rolling retention limit (default 1000, configurable)
+- [ ] `get_conversation` tool for retrieving past conversations
+- [ ] Current conversation only in LLM context (not full history)
 
 **Cleanup**
 - [ ] Old MVP tools removed (createNote, modifyNote, searchNotes, organizeNotes)

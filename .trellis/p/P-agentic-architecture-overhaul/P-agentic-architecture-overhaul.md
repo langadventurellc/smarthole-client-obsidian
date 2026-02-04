@@ -228,6 +228,8 @@ src/llm/tools/getFileInfo.ts   # File metadata retrieval
 src/llm/tools/createFolder.ts  # Create folder structure
 src/llm/tools/sendMessage.ts   # User communication tool
 src/llm/tools/protected.ts     # Shared logic for protected folder checks
+src/llm/tools/getConversation.ts  # Past conversation retrieval tool
+src/context/ConversationManager.ts  # Conversation lifecycle and boundaries
 ```
 
 ### Files to Modify
@@ -237,7 +239,8 @@ src/llm/tools/index.ts         # Update exports for new tools
 src/llm/LLMService.ts          # Handle conversation state, sendMessage integration
 src/processor/MessageProcessor.ts  # Support ongoing conversations
 src/processor/types.ts         # Add conversation state types
-src/context/types.ts           # Add conversation state to persisted data
+src/context/types.ts           # Add Conversation, ConversationMessage types
+src/context/ConversationHistory.ts  # Refactor to use ConversationManager
 ```
 
 ### Key Technical Patterns
@@ -273,6 +276,33 @@ interface SendMessageContext {
   sendToSmartHole: (message: string, priority?: 'normal' | 'high') => void;
   sendToChatView: (message: string) => void;
   source: 'websocket' | 'direct';
+}
+```
+
+**Conversation Boundaries:**
+```typescript
+interface Conversation {
+  id: string;
+  startedAt: string;
+  endedAt: string | null;
+  title: string | null;
+  summary: string | null;
+  messages: ConversationMessage[];
+}
+
+interface ConversationMessage {
+  id: string;
+  timestamp: string;
+  role: 'user' | 'assistant';
+  content: string;
+  toolsUsed?: string[];
+}
+
+// Idle timeout check
+function isConversationExpired(conversation: Conversation, timeoutMs: number): boolean {
+  if (!conversation.messages.length) return false;
+  const lastMessage = conversation.messages[conversation.messages.length - 1];
+  return Date.now() - new Date(lastMessage.timestamp).getTime() > timeoutMs;
 }
 ```
 
@@ -366,6 +396,14 @@ interface SendMessageContext {
 - [ ] Next user message continues existing conversation context
 - [ ] Clear distinction between "task complete" and "awaiting response"
 - [ ] Safety limit on tool iterations remains in place
+
+### Conversation Boundaries
+- [ ] Configurable idle timeout for conversation boundaries
+- [ ] Agent can explicitly end conversations
+- [ ] Immediate summary generation on conversation end
+- [ ] Rolling retention limit (default 1000, configurable)
+- [ ] `get_conversation` tool for retrieving past conversations
+- [ ] Current conversation only in LLM context (not full history)
 
 ### Cleanup
 - [ ] Old MVP tools removed (createNote, modifyNote, searchNotes, organizeNotes)
