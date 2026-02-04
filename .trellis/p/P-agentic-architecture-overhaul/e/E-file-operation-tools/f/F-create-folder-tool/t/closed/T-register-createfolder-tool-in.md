@@ -1,13 +1,18 @@
 ---
 id: T-register-createfolder-tool-in
 title: Register createFolder tool in index.ts
-status: open
+status: done
 priority: medium
 parent: F-create-folder-tool
 prerequisites:
   - T-implement-createfolder-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/index.ts: Added import for createCreateFolderTool, added it to
+    createVaultTools() array, and added re-export
+log:
+  - Registered the createFolder tool in index.ts by adding the import, including
+    it in the createVaultTools() array, and re-exporting the factory function
+    for selective use. All quality checks (lint, format, type-check) pass.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T03:08:11.746Z
