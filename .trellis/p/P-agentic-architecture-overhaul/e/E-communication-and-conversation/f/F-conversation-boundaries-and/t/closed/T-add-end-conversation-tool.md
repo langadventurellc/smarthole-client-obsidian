@@ -1,15 +1,34 @@
 ---
 id: T-add-end-conversation-tool
 title: Add End Conversation Tool
-status: open
+status: done
 priority: medium
 parent: F-conversation-boundaries-and
 prerequisites:
   - T-implement-conversationmanager
   - T-implement-conversation-1
   - T-integrate-conversationmanager
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/endConversation.ts: Created new file implementing the
+    end_conversation tool with EndConversationContext and EndConversationInput
+    interfaces, tool definition, and createEndConversationTool factory function
+  src/llm/tools/index.ts: Added exports for createEndConversationTool and related
+    types (EndConversationContext, EndConversationInput)
+  src/llm/index.ts: Added re-exports for createEndConversationTool and related
+    types from tools module
+  src/processor/MessageProcessor.ts: Added import for createEndConversationTool
+    and EndConversationContext; registered the end_conversation tool in
+    processWithRetry() after send_message tool registration
+log:
+  - Implemented the end_conversation tool that allows the agent to explicitly
+    end a conversation, triggering summary generation and starting fresh
+    context. The tool follows the established pattern from sendMessage.ts with a
+    context interface, input interface, tool definition, and factory function.
+    When called, it checks for an active conversation, ends it via
+    ConversationManager.endConversation() (which generates a summary using the
+    LLM service), and returns a success message with the optional reason. The
+    tool gracefully handles the case when no active conversation exists and
+    catches any errors during the process.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T17:12:49.874Z

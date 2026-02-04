@@ -40,7 +40,9 @@ affectedFiles:
     SendMessageContext, and SendMessageInput from sendMessage module; Removed
     imports for createCreateNoteTool, createModifyNoteTool,
     createSearchNotesTool, createOrganizeNoteTool; removed them from
-    createVaultTools() array; removed their re-export statements
+    createVaultTools() array; removed their re-export statements; Added exports
+    for createEndConversationTool and related types (EndConversationContext,
+    EndConversationInput)
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file
@@ -100,7 +102,10 @@ affectedFiles:
     ConversationMessage; Changed private member to conversationManager; Updated
     processWithRetry() to use conversationManager.getContextPrompt() and record
     messages as separate user/assistant ConversationMessage entries; Removed
-    triggerSummarization method and needsSummarization check
+    triggerSummarization method and needsSummarization check; Added import for
+    createEndConversationTool and EndConversationContext; registered the
+    end_conversation tool in processWithRetry() after send_message tool
+    registration
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -114,7 +119,9 @@ affectedFiles:
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module; Removed
     re-exports for createCreateNoteTool, createModifyNoteTool,
-    createSearchNotesTool, createOrganizeNoteTool from the Vault Tools section
+    createSearchNotesTool, createOrganizeNoteTool from the Vault Tools section;
+    Added re-exports for createEndConversationTool and related types from tools
+    module
   src/main.ts: Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
     for ChatView subscription; Replaced ConversationHistory import with
@@ -154,6 +161,9 @@ affectedFiles:
     migration, added migrateFromOldFormat(), convertOldEntriesToMessages(),
     buildMigrationSummary(), toPersistedFormat(), and
     loadFromPersistedConversations() methods"
+  src/llm/tools/endConversation.ts: Created new file implementing the
+    end_conversation tool with EndConversationContext and EndConversationInput
+    interfaces, tool definition, and createEndConversationTool factory function
 log: []
 schema: v1.0
 childrenIds:

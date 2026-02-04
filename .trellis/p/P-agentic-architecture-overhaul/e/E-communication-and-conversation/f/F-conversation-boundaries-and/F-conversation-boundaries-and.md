@@ -1,7 +1,7 @@
 ---
 id: F-conversation-boundaries-and
 title: Conversation Boundaries and Lifecycle
-status: in-progress
+status: done
 priority: medium
 parent: E-communication-and-conversation
 prerequisites: []
@@ -37,21 +37,32 @@ affectedFiles:
     conversationManager; Updated processWithRetry() to use
     conversationManager.getContextPrompt() and record messages as separate
     user/assistant ConversationMessage entries; Removed triggerSummarization
-    method and needsSummarization check
+    method and needsSummarization check; Added import for
+    createEndConversationTool and EndConversationContext; registered the
+    end_conversation tool in processWithRetry() after send_message tool
+    registration
   src/main.ts: Replaced ConversationHistory import with ConversationManager;
     Changed conversationHistory property to private conversationManager; Updated
     initialization to use ConversationManager; Updated MessageProcessor config;
     Added getConversationManager() accessor method
   src/views/ChatView.ts: Updated onOpen() to use plugin.getConversationManager()
     and load messages from active conversation using ConversationMessage format
-log: []
+  src/llm/tools/endConversation.ts: Created new file implementing the
+    end_conversation tool with EndConversationContext and EndConversationInput
+    interfaces, tool definition, and createEndConversationTool factory function
+  src/llm/tools/index.ts: Added exports for createEndConversationTool and related
+    types (EndConversationContext, EndConversationInput)
+  src/llm/index.ts: Added re-exports for createEndConversationTool and related
+    types from tools module
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
-  - T-add-end-conversation-tool
-  - T-integrate-conversationmanager
   - T-add-conversation-data-types
+  - T-add-end-conversation-tool
   - T-implement-conversation-1
   - T-implement-conversationmanager
+  - T-integrate-conversationmanager
   - T-migrate-existing-history-to
 created: 2026-02-04T06:03:55.794Z
 updated: 2026-02-04T06:03:55.794Z

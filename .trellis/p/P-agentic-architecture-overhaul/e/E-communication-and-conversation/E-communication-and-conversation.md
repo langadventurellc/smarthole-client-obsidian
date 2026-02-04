@@ -20,7 +20,10 @@ affectedFiles:
     ConversationMessage; Changed private member to conversationManager; Updated
     processWithRetry() to use conversationManager.getContextPrompt() and record
     messages as separate user/assistant ConversationMessage entries; Removed
-    triggerSummarization method and needsSummarization check
+    triggerSummarization method and needsSummarization check; Added import for
+    createEndConversationTool and EndConversationContext; registered the
+    end_conversation tool in processWithRetry() after send_message tool
+    registration
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -32,9 +35,12 @@ affectedFiles:
     validation, ChatView and SmartHole delivery logic, and appropriate return
     messages
   src/llm/tools/index.ts: Added exports for createSendMessageTool,
-    SendMessageContext, and SendMessageInput from sendMessage module
+    SendMessageContext, and SendMessageInput from sendMessage module; Added
+    exports for createEndConversationTool and related types
+    (EndConversationContext, EndConversationInput)
   src/llm/index.ts: Added re-exports for createSendMessageTool,
-    SendMessageContext, and SendMessageInput from tools module
+    SendMessageContext, and SendMessageInput from tools module; Added re-exports
+    for createEndConversationTool and related types from tools module
   src/main.ts: Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
     for ChatView subscription; Replaced ConversationHistory import with
@@ -70,6 +76,9 @@ affectedFiles:
     migration, added migrateFromOldFormat(), convertOldEntriesToMessages(),
     buildMigrationSummary(), toPersistedFormat(), and
     loadFromPersistedConversations() methods"
+  src/llm/tools/endConversation.ts: Created new file implementing the
+    end_conversation tool with EndConversationContext and EndConversationInput
+    interfaces, tool definition, and createEndConversationTool factory function
 log: []
 schema: v1.0
 childrenIds:
