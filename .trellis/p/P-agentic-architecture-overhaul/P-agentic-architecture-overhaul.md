@@ -8,7 +8,10 @@ prerequisites: []
 affectedFiles:
   src/llm/tools/protected.ts: Created new protected path utility with
     isProtectedPath(), assertNotProtected(), and internal normalizePath()
-    functions
+    functions; Added case-insensitive comparison by normalizing paths to
+    lowercase before checking against PROTECTED_FOLDERS. Updated
+    isProtectedPath() and assertNotProtected() functions. Enhanced docstring
+    examples to document case-insensitive behavior.
   src/llm/tools/readFile.ts: Created new read_file tool with path validation,
     protected path checking, line number formatting, optional line range
     filtering, and smart truncation for large files

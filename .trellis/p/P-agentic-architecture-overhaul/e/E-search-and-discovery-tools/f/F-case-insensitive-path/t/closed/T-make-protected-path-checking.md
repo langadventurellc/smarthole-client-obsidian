@@ -1,12 +1,23 @@
 ---
 id: T-make-protected-path-checking
 title: Make protected path checking case-insensitive
-status: open
+status: done
 priority: high
 parent: F-case-insensitive-path
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/protected.ts: Added case-insensitive comparison by normalizing
+    paths to lowercase before checking against PROTECTED_FOLDERS. Updated
+    isProtectedPath() and assertNotProtected() functions. Enhanced docstring
+    examples to document case-insensitive behavior.
+log:
+  - Made protected path checking case-insensitive by normalizing paths to
+    lowercase before comparing with PROTECTED_FOLDERS. Updated both
+    `isProtectedPath()` and `assertNotProtected()` functions to use
+    `toLowerCase()` on the normalized path before comparison. This security
+    enhancement ensures that `.Obsidian/`, `.OBSIDIAN/`, `.SmartHole/`, and any
+    other case variations of protected folders are properly blocked, preventing
+    potential bypasses through different casing.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T05:22:53.411Z

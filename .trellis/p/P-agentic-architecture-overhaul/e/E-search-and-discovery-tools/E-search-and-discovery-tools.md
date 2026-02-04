@@ -30,6 +30,10 @@ affectedFiles:
     case-insensitive file and folder lookup. Also added import for App, TFile,
     TFolder from 'obsidian'.; Added 'i' flag to RegExp constructor in
     globToRegex() function (line 66) to enable case-insensitive pattern matching
+  src/llm/tools/protected.ts: Added case-insensitive comparison by normalizing
+    paths to lowercase before checking against PROTECTED_FOLDERS. Updated
+    isProtectedPath() and assertNotProtected() functions. Enhanced docstring
+    examples to document case-insensitive behavior.
 log: []
 schema: v1.0
 childrenIds:
