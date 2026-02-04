@@ -42,7 +42,10 @@ affectedFiles:
     createSearchNotesTool, createOrganizeNoteTool; removed them from
     createVaultTools() array; removed their re-export statements; Added exports
     for createEndConversationTool and related types (EndConversationContext,
-    EndConversationInput)
+    EndConversationInput); Added exports for createGetConversationTool factory
+    function and GetConversationContext, GetConversationInput types from the
+    getConversation module, following the existing pattern for context-dependent
+    tools.
   src/llm/tools/editFile.ts: "Created new edit_file tool with search/replace
     functionality, supporting first occurrence or all occurrences replacement,
     protected path validation, and atomic file operations; Extended edit_file

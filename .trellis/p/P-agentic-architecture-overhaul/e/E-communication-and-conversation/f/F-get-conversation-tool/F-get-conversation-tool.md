@@ -11,12 +11,16 @@ affectedFiles:
     GetConversationContext interface, GetConversationInput type, tool
     definition, and createGetConversationTool factory function. Supports
     get-by-ID and list-recent modes with proper validation and error handling.
+  src/llm/tools/index.ts: Added exports for createGetConversationTool factory
+    function and GetConversationContext, GetConversationInput types from the
+    getConversation module, following the existing pattern for context-dependent
+    tools.
 log: []
 schema: v1.0
 childrenIds:
-  - T-create-get-conversation-tool
   - T-export-get-conversation-tool
   - T-register-get-conversation
+  - T-create-get-conversation-tool
 created: 2026-02-04T06:04:09.173Z
 updated: 2026-02-04T06:04:09.173Z
 ---

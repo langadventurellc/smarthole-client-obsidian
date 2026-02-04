@@ -49,7 +49,10 @@ affectedFiles:
   src/llm/tools/index.ts: Added exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from sendMessage module; Added
     exports for createEndConversationTool and related types
-    (EndConversationContext, EndConversationInput)
+    (EndConversationContext, EndConversationInput); Added exports for
+    createGetConversationTool factory function and GetConversationContext,
+    GetConversationInput types from the getConversation module, following the
+    existing pattern for context-dependent tools.
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module; Added re-exports
     for createEndConversationTool and related types from tools module

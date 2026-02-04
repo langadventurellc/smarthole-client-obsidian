@@ -1,13 +1,22 @@
 ---
 id: T-export-get-conversation-tool
 title: Export get_conversation tool from tools index
-status: open
+status: done
 priority: medium
 parent: F-get-conversation-tool
 prerequisites:
   - T-create-get-conversation-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/index.ts: Added exports for createGetConversationTool factory
+    function and GetConversationContext, GetConversationInput types from the
+    getConversation module, following the existing pattern for context-dependent
+    tools.
+log:
+  - Added exports for the get_conversation tool to the tools index file.
+    Following the established pattern for context-dependent tools (like
+    sendMessage and endConversation), added the factory function export
+    (createGetConversationTool) and type exports (GetConversationContext,
+    GetConversationInput) from the getConversation module.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T18:39:52.081Z
