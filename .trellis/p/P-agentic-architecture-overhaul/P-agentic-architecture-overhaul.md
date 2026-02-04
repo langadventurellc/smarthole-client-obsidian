@@ -1,7 +1,7 @@
 ---
 id: P-agentic-architecture-overhaul
 title: Agentic Architecture Overhaul
-status: in-progress
+status: done
 priority: high
 parent: none
 prerequisites: []
@@ -203,7 +203,10 @@ affectedFiles:
     GetConversationContext interface, GetConversationInput type, tool
     definition, and createGetConversationTool factory function. Supports
     get-by-ID and list-recent modes with proper validation and error handling.
-log: []
+  docs/llm-service.md: Updated line 97 example to use current tool names (search_files, read_file)
+  docs/chat-view.md: Updated line 42 ASCII diagram to show write_file instead of create_note
+log:
+  - "Auto-completed: All child epics are complete"
 schema: v1.0
 childrenIds:
   - E-communication-and-conversation
