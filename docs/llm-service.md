@@ -255,6 +255,31 @@ Tool input:
 }
 ```
 
+### get_conversation
+
+Allows the agent to retrieve past conversation details when context from previous conversations is needed. Since past conversations are no longer included in the system prompt, the agent uses this tool to access them on demand. See [Conversation History](conversation-history.md) for detailed documentation.
+
+```typescript
+import { createGetConversationTool, GetConversationContext } from "./llm/tools";
+
+const context: GetConversationContext = {
+  conversationManager,
+};
+
+const tool = createGetConversationTool(context);
+service.registerTool(tool);
+```
+
+Tool input:
+```typescript
+{
+  conversation_id?: string,  // Specific conversation to retrieve (full history)
+  list_recent?: number       // List N most recent conversations (summaries only, default: 10)
+}
+```
+
+When `conversation_id` is provided, returns the full conversation with all messages. When `list_recent` is provided (or neither parameter), returns summaries of recent conversations. Only completed conversations are accessible (not the current active one).
+
 ## Implementation
 
 Located in `src/llm/`:
