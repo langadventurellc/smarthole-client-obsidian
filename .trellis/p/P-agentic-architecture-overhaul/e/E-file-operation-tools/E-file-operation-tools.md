@@ -35,6 +35,9 @@ affectedFiles:
   src/llm/tools/createFolder.ts: Created new file implementing the create_folder
     tool with path validation, normalization, protected path blocking, and
     folder creation via Obsidian vault API
+  src/llm/tools/deleteFile.ts: Created new delete_file tool that soft-deletes
+    files and folders to Obsidian's trash, following the existing tool pattern
+    from writeFile.ts
 log: []
 schema: v1.0
 childrenIds:

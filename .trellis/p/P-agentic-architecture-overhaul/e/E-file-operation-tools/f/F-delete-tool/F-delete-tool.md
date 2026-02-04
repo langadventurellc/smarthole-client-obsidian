@@ -1,15 +1,20 @@
 ---
 id: F-delete-tool
 title: Delete Tool
-status: open
+status: in-progress
 priority: medium
 parent: E-file-operation-tools
 prerequisites:
   - F-read-file-tool
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/deleteFile.ts: Created new delete_file tool that soft-deletes
+    files and folders to Obsidian's trash, following the existing tool pattern
+    from writeFile.ts
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-delete-file-tool
+  - T-register-delete-file-tool-in
 created: 2026-02-04T02:04:13.116Z
 updated: 2026-02-04T02:04:13.116Z
 ---
