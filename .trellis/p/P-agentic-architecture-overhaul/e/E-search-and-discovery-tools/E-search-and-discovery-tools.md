@@ -17,13 +17,18 @@ affectedFiles:
     ./searchFiles, added createSearchFilesTool(app) to the createVaultTools()
     return array, and added re-export statement for selective use; Added import
     for createListFilesTool, added to createVaultTools() array, and added
-    re-export
+    re-export; Added import, registration in createVaultTools() array, and
+    re-export for createGetFileInfoTool
   src/llm/tools/listFiles.ts: Created new tool file with glob matching (reused
     pattern from searchFiles.ts), path normalization, modification time sorting,
     and formatted output with type indicators
+  src/llm/tools/getFileInfo.ts: Created new tool file with get_file_info
+    implementation including formatBytes() and formatDate() helper functions,
+    tool definition, and createGetFileInfoTool() factory function
 log: []
 schema: v1.0
 childrenIds:
+  - F-case-insensitive-path
   - F-get-file-info-tool
   - F-list-files-tool
   - F-search-files-tool
