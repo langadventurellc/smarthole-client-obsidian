@@ -87,7 +87,17 @@ src/
 
 ## Detailed Documentation
 
+- [WebSocket Connection](docs/websocket-connection.md) - SmartHole client connection, registration, reconnection
+- [LLM Service](docs/llm-service.md) - Provider-agnostic LLM integration, tool registration, multi-turn processing
+- [Vault Tools](docs/vault-tools.md) - Note creation, modification, search, and organization tools
+- [Message Processor](docs/message-processor.md) - Pipeline orchestration, retry logic, error handling
+- [Conversation History](docs/conversation-history.md) - Persistent history, context injection, summarization
+- [Inbox Manager](docs/inbox-manager.md) - Message durability, crash recovery
+- [Chat View](docs/chat-view.md) - Sidebar UI, direct messages, tool display
 - [Living Spec](docs/living-spec.md) - Product vision and requirements
+- [Agentic Architecture](docs/requirements-agentic-architecture.md) - Planned filesystem access and autonomous execution
+
+### Reference Documentation
 - [SmartHole Protocol](reference-docs/smarthole-client-docs/protocol-reference.md) - WebSocket protocol specification
 - [Obsidian Plugin API](reference-docs/obsidian-plugin-docs/index.md) - Obsidian development reference
 

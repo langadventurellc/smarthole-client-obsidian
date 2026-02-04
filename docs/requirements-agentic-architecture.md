@@ -2,53 +2,81 @@
 
 ## Overview
 
-Rearchitect the SmartHole Obsidian agent from a limited tool-use model (using Obsidian Plugin API) to a fully agentic system with direct filesystem access, autonomous execution, and conversational capabilities.
+Rearchitect the SmartHole Obsidian agent from a limited tool-use model (using Obsidian Plugin API) to a fully agentic system with dedicated file operation tools, autonomous execution, and conversational capabilities.
 
 ---
 
 ## What
 
-### 1. Bash Command Execution
+### 1. Dedicated File Operation Tools
 
-Replace Obsidian API-based tools with direct filesystem access via bash commands.
+Replace Obsidian API-based tools with purpose-built tools designed for LLM agent use. No bash fallback - dedicated tools only, designed with predictable output formats, clear error handling, and context-window-friendly responses.
 
-**Constraints:**
-- **Vault-scoped**: All commands run with working directory set to the vault root; cannot access files outside the vault
-- **Command allowlist**: Only allow safe commands (grep, find, cat, head, tail, sed, awk, ls, etc.); deny dangerous operations (rm -rf, chmod, chown, etc.)
-- **Synchronous execution**: Commands run and agent waits for result before proceeding
+**Design principles:**
+- Tools should have predictable, consistent output formats
+- Error messages should be clear and actionable
+- Output should be sized appropriately for LLM context windows
+- Tools should handle edge cases gracefully (missing files, empty directories, etc.)
 
-**Rationale**: Obsidian's `prepareSimpleSearch()` and vault API are insufficient for effective searching and editing. Since notes are just markdown files, direct filesystem access enables:
-- Grep/ripgrep-style pattern matching across files
-- Sed-like inline edits
-- Find with complex predicates
-- Novel tool combinations the agent can discover
+**Rationale**: Following Claude Code's pattern of preferring dedicated tools over bash equivalents. Dedicated tools provide:
+- Predictable output parsing
+- Better error handling
+- Fewer agent mistakes (no sed syntax errors, platform differences)
+- Token-efficient self-documenting parameters
 
-### 2. File Operation Abstractions
+### 2. Complete Tool Set
 
-Provide safe, high-level tools alongside (or instead of) raw bash for common operations.
+**File Operations:**
 
-**Tools to provide:**
-- `read_file` - Read file contents with optional line range
-- `write_file` - Create or overwrite a file with content
-- `edit_file` - Apply targeted edits (search/replace, line insertions) without rewriting entire file
-- `list_files` - List files/directories with glob patterns
+| Tool | Description |
+|------|-------------|
+| `read_file` | Read file contents with optional line range. Handles large files with truncation. Returns line numbers. |
+| `write_file` | Create or overwrite a file. Auto-creates parent directories. |
+| `edit_file` | Apply targeted edits without rewriting entire file. Supports search/replace and line-based operations. |
+| `move` | Move or rename a file/folder. Auto-creates destination parent directories. |
+| `delete` | Soft delete to Obsidian's trash (respects user's trash settings). Recoverable. |
 
-**Design choice**: As an AI agent, I'd prefer having both safe abstractions AND bash access. The abstractions handle 80% of cases cleanly (read a file, write a file), while bash handles edge cases and novel patterns. However, per user preference, we're replacing the old tools entirely - so these abstractions become the primary interface with bash as the power-user escape hatch.
+**Search & Discovery:**
 
-### 3. Notification as a Tool
+| Tool | Description |
+|------|-------------|
+| `search_files` | Regex content search across files. Supports file pattern filtering, context lines, match limits. |
+| `list_files` | Glob-based file listing. Works for both finding files and exploring folder contents. Sorted by modification time. |
+| `get_file_info` | Retrieve file metadata: created date, modified date, size. Useful for "recent files" queries. |
+
+**Folder Operations:**
+
+| Tool | Description |
+|------|-------------|
+| `create_folder` | Create folder structure (including parents). For setting up organization before files exist. |
+
+**Communication:**
+
+| Tool | Description |
+|------|-------------|
+| `send_message` | Send message to user via SmartHole or ChatView. Can be called multiple times during execution. |
+
+### 3. Protected Folders
+
+Agent cannot read, write, or delete in protected folders:
+- `.obsidian/` - Obsidian configuration (could break the app)
+- `.smarthole/` - Our internal storage (inbox, trash, etc.)
+
+Operations targeting these folders return a clear error explaining why access is denied.
+
+### 4. Notification as a Tool
 
 Make sending messages to the user an explicit tool the agent can invoke during execution.
 
-**Tool: `send_message`**
-- Sends a message back to SmartHole (or displays in ChatView for direct messages)
-- Agent can call this multiple times during execution
-- Used for: progress updates, asking questions, providing partial results, final answers
-
 **Current behavior**: Response is sent automatically after LLM processing completes. The agent has no control over when or how messages are sent.
 
-**New behavior**: Agent explicitly decides when to communicate. The final text response becomes optional - agent might only communicate via `send_message` calls.
+**New behavior**: Agent explicitly decides when to communicate via `send_message`. The final text response becomes optional - agent might only communicate via tool calls. This enables:
+- Progress updates during long operations
+- Asking clarifying questions mid-task
+- Providing partial results
+- Multi-turn conversations
 
-### 4. Agentic Autonomy
+### 5. Agentic Autonomy
 
 Enable fully autonomous multi-step execution with conversational state.
 
@@ -83,12 +111,17 @@ src/llm/tools/organizeNotes.ts
 ### Files to Create
 
 ```
-src/llm/tools/bash.ts          # Vault-scoped bash execution with allowlist
-src/llm/tools/readFile.ts      # Safe file reading
-src/llm/tools/writeFile.ts     # Safe file writing
+src/llm/tools/readFile.ts      # Read file contents with line ranges
+src/llm/tools/writeFile.ts     # Create/overwrite files
 src/llm/tools/editFile.ts      # Targeted file editing
-src/llm/tools/listFiles.ts     # Directory listing with globs
-src/llm/tools/sendMessage.ts   # Notification/message tool
+src/llm/tools/move.ts          # Move/rename files and folders
+src/llm/tools/delete.ts        # Soft delete to trash
+src/llm/tools/searchFiles.ts   # Regex content search
+src/llm/tools/listFiles.ts     # Glob-based file listing
+src/llm/tools/getFileInfo.ts   # File metadata retrieval
+src/llm/tools/createFolder.ts  # Create folder structure
+src/llm/tools/sendMessage.ts   # User communication tool
+src/llm/tools/protected.ts     # Shared logic for protected folder checks
 ```
 
 ### Files to Modify
@@ -98,6 +131,7 @@ src/llm/tools/index.ts         # Update exports for new tools
 src/llm/LLMService.ts          # Handle conversation state, sendMessage integration
 src/processor/MessageProcessor.ts  # Support ongoing conversations
 src/processor/types.ts         # Add conversation state types
+src/context/types.ts           # Add conversation state to persisted data
 ```
 
 ---
@@ -116,15 +150,23 @@ The MVP tools got us to a working state but have fundamental limitations:
 
 4. **Response handling is inflexible**: The agent can only communicate at the end. Can't provide progress updates, can't ask clarifying questions mid-task.
 
-### Why Not Claude Agent SDK?
+5. **Missing operations**: No delete, no metadata queries, no folder management.
 
-Attempted but doesn't work in Electron plugin environment. Also, it would lock the solution to Claude - we want provider flexibility.
+### Why Not Bash?
+
+Initial design considered bash with allowlist, but following Claude Code's evolution:
+- Dedicated tools have predictable output formats
+- LLMs make fewer mistakes with dedicated tools than bash syntax
+- Easier to add protection (folder restrictions, size limits)
+- Can learn what's missing and add new tools vs. allowing arbitrary commands
+
+We can revisit bash as a fallback if dedicated tools prove insufficient.
 
 ### Design Principles
 
-Following patterns from successful coding agents (Claude Code, Cursor, etc.):
-- Direct filesystem access over abstraction layers
-- Tools that enable novel use, not just predefined operations
+Following patterns from successful coding agents:
+- Purpose-built tools designed for LLM consumption
+- Predictable output formats and clear errors
 - Agentic loops where the AI controls the flow
 - Conversation as a first-class capability
 
@@ -134,31 +176,76 @@ Following patterns from successful coding agents (Claude Code, Cursor, etc.):
 
 ### Acceptance Criteria
 
-**Bash Execution**
-- [ ] Bash tool executes commands within vault directory only
-- [ ] Commands outside vault are rejected with clear error
-- [ ] Dangerous commands (rm -rf, chmod, etc.) are blocked
-- [ ] Allowlist is configurable or well-documented
-- [ ] Command output is captured and returned to agent
-- [ ] Reasonable timeout prevents hung commands (e.g., 30 seconds)
+**File Reading**
+- [ ] `read_file` reads file contents
+- [ ] Supports optional `start_line` and `end_line` parameters
+- [ ] Returns line numbers with content
+- [ ] Handles large files with smart truncation (configurable limit)
+- [ ] Clear error for non-existent files
 
-**File Operations**
-- [ ] `read_file` reads file contents, supports line ranges
-- [ ] `write_file` creates/overwrites files, creates parent directories
-- [ ] `edit_file` applies targeted changes without full rewrite
-- [ ] `list_files` lists files with glob pattern support
-- [ ] All operations are vault-scoped (cannot escape vault directory)
+**File Writing**
+- [ ] `write_file` creates new files
+- [ ] `write_file` overwrites existing files
+- [ ] Auto-creates parent directories
+- [ ] Returns confirmation with file path and size
 
-**Notification Tool**
-- [ ] `send_message` tool sends message to user via SmartHole or ChatView
+**File Editing**
+- [ ] `edit_file` supports search/replace operations
+- [ ] `edit_file` supports line-based insertions
+- [ ] Handles "not found" cases with clear error
+- [ ] Returns diff or summary of changes made
+
+**Move/Rename**
+- [ ] `move` renames files
+- [ ] `move` moves files to different folders
+- [ ] `move` works for folders too
+- [ ] Auto-creates destination parent directories
+- [ ] Clear error if source doesn't exist
+
+**Delete**
+- [ ] `delete` soft deletes to Obsidian trash
+- [ ] Uses `app.vault.trash()` API (respects user settings)
+- [ ] Returns confirmation of what was deleted
+- [ ] Clear error if file doesn't exist
+
+**Search**
+- [ ] `search_files` searches content with regex patterns
+- [ ] Supports file pattern filtering (e.g., `*.md`, `Projects/**`)
+- [ ] Supports context lines (before/after match)
+- [ ] Limits results to prevent overwhelming output
+- [ ] Returns file paths with matching excerpts
+
+**List Files**
+- [ ] `list_files` supports glob patterns
+- [ ] Returns files sorted by modification time (most recent first)
+- [ ] Includes basic info (path, type: file/folder)
+- [ ] Handles empty directories gracefully
+
+**File Info**
+- [ ] `get_file_info` returns created date, modified date, size
+- [ ] Works for both files and folders
+- [ ] Clear error for non-existent paths
+
+**Create Folder**
+- [ ] `create_folder` creates single folder
+- [ ] Creates parent directories if needed
+- [ ] Returns confirmation or note if already exists
+
+**Protected Folders**
+- [ ] Operations on `.obsidian/` are blocked with clear error
+- [ ] Operations on `.smarthole/` are blocked with clear error
+- [ ] Protection applies to all file/folder tools
+
+**Communication**
+- [ ] `send_message` sends message to user via SmartHole
+- [ ] `send_message` displays in ChatView for direct messages
 - [ ] Agent can call `send_message` multiple times during execution
 - [ ] Messages appear in real-time (not batched until end)
-- [ ] Works for both WebSocket and direct message sources
 
-**Agentic Behavior**
-- [ ] Agent executes multi-step tool chains autonomously
-- [ ] Agent can ask questions and receive follow-up responses
-- [ ] Conversation state persists between messages when agent is "waiting"
+**Conversation State**
+- [ ] Agent can ask questions and wait for response
+- [ ] Conversation state persists between messages
+- [ ] Next user message continues existing conversation context
 - [ ] Clear distinction between "task complete" and "awaiting response"
 - [ ] Safety limit on tool iterations remains in place
 
@@ -171,29 +258,31 @@ Following patterns from successful coding agents (Claude Code, Cursor, etc.):
 
 ## Technical Notes
 
-### Bash Execution Implementation
+### Protected Folder Check
 
-Use Node.js `child_process.spawn` or `child_process.exec`:
+Shared utility for all tools:
 
 ```typescript
-import { exec } from 'child_process';
-import { promisify } from 'util';
+// src/llm/tools/protected.ts
+const PROTECTED_FOLDERS = ['.obsidian', '.smarthole'];
 
-const execAsync = promisify(exec);
+export function isProtectedPath(relativePath: string): boolean {
+  const normalized = relativePath.replace(/\\/g, '/');
+  return PROTECTED_FOLDERS.some(folder =>
+    normalized === folder ||
+    normalized.startsWith(`${folder}/`)
+  );
+}
 
-// Execute with vault as cwd, capture output
-const { stdout, stderr } = await execAsync(command, {
-  cwd: vaultPath,
-  timeout: 30000,
-  maxBuffer: 1024 * 1024, // 1MB output limit
-});
+export function assertNotProtected(relativePath: string): void {
+  if (isProtectedPath(relativePath)) {
+    throw new Error(
+      `Access denied: "${relativePath}" is in a protected folder. ` +
+      `The agent cannot access .obsidian or .smarthole directories.`
+    );
+  }
+}
 ```
-
-### Command Allowlist Strategy
-
-Two-layer approach:
-1. **Allowlist base commands**: `grep`, `find`, `cat`, `head`, `tail`, `ls`, `sed`, `awk`, `wc`, `sort`, `uniq`, `diff`, `echo`, `mkdir`, `mv`, `cp`, `touch`
-2. **Block dangerous patterns**: Commands containing `..`, absolute paths outside vault, pipes to dangerous commands, etc.
 
 ### Conversation State
 
@@ -214,17 +303,40 @@ When agent sends a message that ends with a question or explicitly signals "wait
 
 ### sendMessage Tool Integration
 
-The tool needs access to the notification channel. Options:
-1. Pass connection/callback reference when creating tools
-2. Use event emitter pattern
-3. Return special result type that MessageProcessor interprets
-
-Recommendation: Pass a callback when creating the tool:
+The tool needs access to the notification channel. Pass a callback when creating the tool:
 
 ```typescript
-function createSendMessageTool(
-  sendFn: (message: string, priority?: 'normal' | 'high') => void
-): ToolHandler
+interface SendMessageContext {
+  sendToSmartHole: (message: string, priority?: 'normal' | 'high') => void;
+  sendToChatView: (message: string) => void;
+  source: 'websocket' | 'direct';
+}
+
+function createSendMessageTool(context: SendMessageContext): ToolHandler
+```
+
+### Soft Delete Implementation
+
+Use Obsidian's built-in trash API:
+
+```typescript
+// The second parameter controls system trash vs .trash folder
+// Based on user's Obsidian settings
+await app.vault.trash(file, false);
+```
+
+### Search Implementation
+
+Since we're not using bash grep, implement search using Node.js:
+
+```typescript
+// Options:
+// 1. Read files and match with JS regex (simple but potentially slow)
+// 2. Use a library like 'glob' + 'fast-glob' for file finding
+// 3. Use Node's fs.readdir with manual filtering
+
+// For MVP, option 1 is fine - vault sizes are typically small
+// Can optimize later if needed
 ```
 
 ---
@@ -237,7 +349,8 @@ None - requirements are fully specified based on user input.
 
 ## Out of Scope
 
-- Mobile support (bash requires desktop/Electron)
-- Async/background command execution
+- Bash command execution (may revisit if dedicated tools prove insufficient)
+- Mobile support (desktop only for file operations)
+- Async/background operations
 - Multiple LLM providers (architecture supports it, but not part of this work)
-- RAG/vector search (plain text search via grep is sufficient)
+- RAG/vector search (regex search is sufficient for now)

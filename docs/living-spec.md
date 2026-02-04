@@ -196,145 +196,20 @@ The goal is an evolving personal wiki where information is easy to find and natu
 
 ## Technical Notes
 
-### SmartHole Protocol
+For detailed technical documentation, see the individual docs:
 
-Refer to `/reference-docs/smarthole-client-docs/` for complete protocol documentation:
-- WebSocket connection to `ws://127.0.0.1:9473`
-- Registration message with name, description, version
-- Receive `message` type with `id`, `text`, `timestamp`, `metadata`
-- Respond with `ack`, `reject`, or `notification` types
+- [WebSocket Connection](websocket-connection.md) - Protocol, reconnection, response methods
+- [LLM Service](llm-service.md) - Provider architecture, tool registration, multi-turn processing
+- [Vault Tools](vault-tools.md) - Tool definitions and usage
+- [Message Processor](message-processor.md) - Pipeline flow, retry logic, error handling
+- [Conversation History](conversation-history.md) - Storage, context injection, summarization
+- [Inbox Manager](inbox-manager.md) - Durability layer, crash recovery
+- [Chat View](chat-view.md) - Sidebar UI implementation
 
-**Implementation**: `src/websocket/` contains the SmartHoleConnection class and protocol types. The connection class handles registration, message parsing with type guards, response methods (sendAck, sendReject, sendNotification), and automatic reconnection with exponential backoff (1s → 30s cap).
+### Reference Documentation
 
-### Obsidian APIs
-
-Refer to `/reference-docs/obsidian-plugin-docs/` for API documentation:
-- `Plugin` lifecycle (`onload`, `onunload`)
-- `Vault` for file operations (create, modify, read, delete, rename)
-- `PluginSettingTab` for settings UI
-- `prepareFuzzySearch` / `prepareSimpleSearch` for search
-- Native `WebSocket` API (Electron environment)
-
-### LLM Architecture Considerations
-
-Design the LLM integration layer with future extensibility:
-- Abstract interface for LLM providers
-- Anthropic implementation as first concrete provider
-- Tool definitions separate from provider-specific formatting
-- Configuration for model selection within a provider
-
-**Implementation**: `src/llm/` contains the LLM service layer:
-- `types.ts` - Provider-agnostic type definitions (LLMProvider interface, LLMMessage, ContentBlock types, Tool/ToolCall/ToolResult, LLMError with error codes)
-- `AnthropicProvider.ts` - Claude API integration with retry logic (3 attempts, exponential backoff 1s/2s/4s), error classification (auth, rate limit, network, invalid request)
-- `LLMService.ts` - Main service orchestrating tool registration, conversation history (max 20 messages), system prompt construction with information architecture, and multi-turn tool use loop (max 10 iterations)
-- `index.ts` - Public exports for the module
-- `tools/` - Vault manipulation tools (see Vault Tools below)
-
-### Vault Tools
-
-The LLM uses these tools to manipulate the Obsidian vault:
-
-| Tool | Description |
-|------|-------------|
-| `create_note` | Create new markdown notes. Auto-generates filenames from H1 headings or content if path not specified. Creates parent folders automatically. |
-| `modify_note` | Modify existing notes with atomic operations. Supports `append`, `prepend`, and `replace` operations. Uses `vault.process()` for safe concurrent access. |
-| `search_notes` | Search notes using `prepareSimpleSearch()`. Returns up to 10 results with excerpts. Optional `read_content` parameter returns full file content. |
-| `organize_note` | Rename or move notes. Creates destination folders automatically. Validates against overwrites. |
-
-**Implementation**: `src/llm/tools/` contains factory functions for each tool:
-- Each factory function (e.g., `createCreateNoteTool(app)`) returns a `ToolHandler` with a tool definition and execute function
-- `createVaultTools(app)` returns an array of all instantiated tools for bulk registration with `LLMService`
-- All tools normalize paths to ensure `.md` extension and handle missing folders gracefully
-
-### Message Processor
-
-The MessageProcessor orchestrates the complete message processing pipeline, integrating the inbox, LLM, and notification systems.
-
-**Pipeline flow:**
-1. **Save to inbox** - Message persisted for durability before any processing
-2. **Send acknowledgment** - Notify SmartHole that message was received (skipped for reprocessing)
-3. **LLM processing** - Create LLMService instance, register vault tools, process message with retry
-4. **Send notification** - Success or error notification sent via SmartHole
-5. **Cleanup** - Remove message from inbox on success (kept on failure for reprocessing)
-
-**Retry logic:**
-- Maximum 3 retry attempts for transient LLM errors
-- Exponential backoff: 1s, 2s, 4s delays between retries
-- Only retryable errors (rate limits, network issues) trigger retry
-- Non-retryable errors (auth, invalid request) fail immediately
-
-**Startup recovery:**
-- `reprocessPending()` called on plugin load
-- Iterates through all messages in inbox folder
-- Reprocesses each with `skipAck=true` (original ack already sent)
-- Ensures no messages lost due to plugin crashes or Obsidian restarts
-
-**Error messages:**
-- User-friendly error messages mapped from LLMError codes
-- Auth errors: "API key is missing or invalid"
-- Rate limits: "Too many requests. Please try again in a moment."
-- Network errors: "Network error. Please check your internet connection."
-- Invalid requests: "Unable to process request. The message may be too long."
-
-**Implementation**: `src/processor/` contains:
-- `types.ts` - MessageProcessorConfig and ProcessResult interfaces
-- `MessageProcessor.ts` - Main orchestration class with process() and reprocessPending() methods
-- `index.ts` - Public exports for the module
-
-### Conversation History
-
-The ConversationHistory class manages persistent conversation history across plugin restarts, providing context to the LLM for continuity.
-
-**Storage:**
-- Persisted in plugin data (via `saveData()`), NOT in vault files
-- Rolling window of recent conversations (configurable, default 50)
-- Older conversations summarized before removal to preserve context
-
-**Data model:**
-- `HistoryEntry` - Individual conversation with id, timestamp, userMessage, assistantResponse, toolsUsed
-- `ConversationSummary` - LLM-generated summary of a batch of older conversations
-- `PersistedHistory` - Container with recentConversations, summaries, and lastSummarized timestamp
-
-**Context injection:**
-- `getContextPrompt()` returns formatted context for inclusion in LLM system prompt
-- Includes up to 10 recent conversations in full detail
-- Includes summaries of older conversations for longer-term context
-- MessageProcessor records conversations after successful processing
-
-**Summarization:**
-- Triggered when conversation count exceeds `maxConversationHistory` setting
-- Summarizes batches of at least 10 conversations at a time
-- Uses LLM to generate concise summaries capturing key topics, files modified, user patterns
-
-**Implementation**: `src/context/` contains:
-- `types.ts` - HistoryEntry, ConversationSummary, PersistedHistory interfaces (includes `source` field for tracking message origin)
-- `ConversationHistory.ts` - Main class with load(), addConversation(), getContextPrompt(), getRecentConversations(), clear(), summarizeOld()
-- `index.ts` - Public exports for the module
-
-### Chat Sidebar
-
-The ChatView provides an in-Obsidian interface for direct interaction with the agent, complementing the SmartHole voice/text routing.
-
-**Features:**
-- Sidebar view accessible via ribbon icon (message-circle) or command "SmartHole: Open Chat"
-- Direct message input that bypasses WebSocket (no SmartHole required)
-- Unified conversation display showing both WebSocket and direct messages
-- Tool usage display (collapsible per-message showing vault operations)
-- Source indicators distinguishing "typed" vs "voice" messages
-- Real-time updates when messages arrive via WebSocket
-
-**Implementation**: `src/views/` contains:
-- `ChatView.ts` - ItemView implementation with message display, input handling, typing indicator
-- `index.ts` - Public exports (ChatView, VIEW_TYPE_CHAT, ChatMessage)
-
-**Integration points:**
-- `SmartHolePlugin.processDirectMessage(text)` - Entry point for direct messages (creates synthetic RoutedMessage with `source: "direct"`)
-- `SmartHolePlugin.onMessageResponse(callback)` - Subscribe to LLM processing results
-- `SmartHolePlugin.onMessageReceived(callback)` - Subscribe to incoming WebSocket messages
-- `MessageProcessor` - Extended with response and message-received callback mechanisms
-- `ConversationHistory.getRecentConversations()` - Load history for display on sidebar open
-
-**Styling**: `styles.css` at project root contains all chat sidebar styles using Obsidian CSS variables for theme compatibility.
+- [SmartHole Protocol](/reference-docs/smarthole-client-docs/protocol-reference.md) - Complete WebSocket protocol specification
+- [Obsidian Plugin API](/reference-docs/obsidian-plugin-docs/index.md) - Obsidian development reference
 
 ---
 
