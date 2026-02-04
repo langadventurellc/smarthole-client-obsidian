@@ -10,5 +10,6 @@ export type { HistoryEntry, ConversationSummary, PersistedHistory } from "./type
 // Type Definitions (New conversation-based model)
 export type { Conversation, ConversationMessage, PersistedConversations } from "./types";
 
-// Manager Class
+// Manager Classes
 export { ConversationHistory } from "./ConversationHistory";
+export { ConversationManager } from "./ConversationManager";

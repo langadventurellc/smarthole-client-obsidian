@@ -37,10 +37,14 @@ affectedFiles:
     PersistedConversations interfaces for the new conversation-based data model
   src/context/index.ts: Added exports for new types (Conversation,
     ConversationMessage, PersistedConversations) while keeping legacy type
-    exports
+    exports; Added export for ConversationManager class
   src/settings.ts: Added conversationIdleTimeoutMinutes and
     maxConversationsRetained to SmartHoleSettings interface and
     DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
+  src/context/ConversationManager.ts: Created new ConversationManager class with
+    conversation lifecycle management (load/save, addMessage, endConversation,
+    getActiveConversation, getContextPrompt, getConversation,
+    getRecentConversations, idle timeout detection, rolling limit enforcement)
 log: []
 schema: v1.0
 childrenIds:

@@ -1,13 +1,58 @@
 ---
 id: T-implement-conversationmanager
 title: Implement ConversationManager Core
-status: open
+status: done
 priority: high
 parent: F-conversation-boundaries-and
 prerequisites:
   - T-add-conversation-data-types
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/ConversationManager.ts: Created new ConversationManager class with
+    conversation lifecycle management (load/save, addMessage, endConversation,
+    getActiveConversation, getContextPrompt, getConversation,
+    getRecentConversations, idle timeout detection, rolling limit enforcement)
+  src/context/index.ts: Added export for ConversationManager class
+log:
+  - >-
+    Implemented ConversationManager class with all required functionality:
+
+
+    - Created ConversationManager class with private state (plugin,
+    conversations array, activeConversationId)
+
+    - Implemented load() / save() for persistence using plugin storage key
+    "conversationData"
+
+    - getActiveConversation() returns conversation where endedAt === null
+
+    - addMessage(message) creates new conversation if idle timeout exceeded or
+    no active, adds message to active conversation
+
+    - endConversation() sets endedAt on active conversation
+
+    - shouldStartNewConversation() checks idle timeout from settings
+
+    - getIdleTimeoutMs() converts minutes setting to milliseconds
+
+    - enforceConversationLimit() removes oldest ended conversations when
+    exceeding max
+
+    - getContextPrompt() returns only current conversation's messages formatted
+    for LLM
+
+    - getConversation(id) finds conversation by ID
+
+    - getRecentConversations(limit) returns ended conversations sorted by
+    recency
+
+
+    All quality checks pass (lint, format, type-check) and build succeeds.
+  - Implemented ConversationManager class that manages conversation lifecycle
+    and boundaries. The class handles conversation creation based on idle
+    timeout detection, explicit conversation endings, message addition, context
+    prompt generation for LLM, and rolling limit enforcement to keep storage
+    bounded. Uses the plugin storage key "conversationData" for persistence and
+    follows the same patterns as the existing ConversationHistory class.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T17:11:31.371Z
