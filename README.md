@@ -9,7 +9,7 @@ An Obsidian plugin that acts as a SmartHole client, receiving voice and text com
 - **Intelligent Note Management**: Claude interprets your commands and decides where to create, update, or organize notes
 - **Customizable Organization**: Define your own "information architecture" to guide how notes are organized
 - **Message Durability**: Commands are saved to an inbox before processing, so nothing is lost if the API is temporarily unavailable
-- **Conversation Context**: Maintains history of recent interactions for context-aware responses
+- **Conversation Context**: Groups messages into discrete conversations with automatic boundaries and LLM-generated summaries
 
 ## Requirements
 

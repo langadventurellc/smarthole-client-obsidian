@@ -1,153 +1,262 @@
 # Conversation History
 
-Persistent conversation history management for LLM context continuity across plugin restarts.
+Persistent conversation management for LLM context continuity across plugin restarts. The system groups messages into discrete conversations bounded by idle timeouts or explicit endings.
 
-## Initialization
+## Overview
+
+The context module provides two approaches:
+
+1. **ConversationManager** (recommended) - Groups messages into discrete conversations with automatic boundary detection, LLM-generated summaries, and conversation lifecycle management.
+
+2. **ConversationHistory** (legacy) - Flat list of conversation entries with periodic summarization. Retained for backward compatibility.
+
+## ConversationManager
+
+The recommended approach for managing conversation context. Conversations are bounded by:
+
+- **Idle timeout**: After `conversationIdleTimeoutMinutes` of inactivity, the next message starts a new conversation
+- **Explicit ending**: The agent can call the `end_conversation` tool to close the current conversation
+
+### Initialization
 
 ```typescript
-import { ConversationHistory } from "./context";
+import { ConversationManager } from "./context";
 
-const history = new ConversationHistory({
-  loadData: () => plugin.loadData(),
-  saveData: (data) => plugin.saveData(data),
-  maxConversations: 50,
-});
-
-await history.load();
+const conversationManager = new ConversationManager(plugin);
+await conversationManager.load();
 ```
+
+### Data Model
+
+#### Conversation Message
+
+```typescript
+interface ConversationMessage {
+  id: string;           // Unique message ID
+  timestamp: string;    // ISO 8601 timestamp
+  role: "user" | "assistant";
+  content: string;
+  toolsUsed?: string[]; // Tools invoked (assistant only)
+}
+```
+
+#### Conversation
+
+```typescript
+interface Conversation {
+  id: string;           // e.g., "conv-1704067200000"
+  startedAt: string;    // ISO 8601 timestamp
+  endedAt: string | null;  // null if active
+  title: string | null;    // LLM-generated title when ended
+  summary: string | null;  // LLM-generated summary when ended
+  messages: ConversationMessage[];
+}
+```
+
+#### Persisted Format
+
+```typescript
+interface PersistedConversations {
+  conversations: Conversation[];
+  lastMigrated?: string;  // Set if migrated from old format
+}
+```
+
+### Usage
+
+#### Adding Messages
+
+Messages are added to the active conversation. If no active conversation exists or the idle timeout has elapsed, a new one is created automatically.
+
+```typescript
+const message: ConversationMessage = {
+  id: `msg-${Date.now()}`,
+  timestamp: new Date().toISOString(),
+  role: "user",
+  content: "Create a note about today's meeting",
+};
+
+// LLM service optional - used for summary generation when closing previous conversation
+const conversation = await conversationManager.addMessage(message, llmService);
+```
+
+#### Ending Conversations
+
+Conversations can be ended explicitly, triggering summary generation:
+
+```typescript
+// With LLM service - generates title and summary
+await conversationManager.endConversation(llmService);
+
+// Without LLM service - closes without summary
+await conversationManager.endConversation();
+```
+
+#### Getting Context for LLM
+
+Returns formatted context from the active conversation for the system prompt:
+
+```typescript
+const contextPrompt = conversationManager.getContextPrompt();
+// Returns:
+// ## Current Conversation
+// [2025-01-15T10:00:00Z]
+// User: Create a note about today's meeting
+//
+// [2025-01-15T10:00:05Z]
+// Assistant: I've created 'Meeting Notes.md' in your Journal folder. [used: write_file]
+```
+
+#### Retrieving Conversations
+
+```typescript
+// Get active conversation (if any)
+const active = conversationManager.getActiveConversation();
+
+// Get specific conversation by ID
+const conv = conversationManager.getConversation("conv-1704067200000");
+
+// Get recent ended conversations
+const recent = conversationManager.getRecentConversations(10);
+```
+
+### Conversation Boundaries
+
+#### Idle Timeout
+
+When a message is added and more than `conversationIdleTimeoutMinutes` has elapsed since the last message:
+
+1. The previous conversation is ended (summary generated if LLM available)
+2. A new conversation is created
+3. The message is added to the new conversation
+
+#### Explicit Ending
+
+The agent can use the `end_conversation` tool to explicitly close a conversation:
+
+```json
+{
+  "name": "end_conversation",
+  "input": {
+    "reason": "task completed"
+  }
+}
+```
+
+This is useful when:
+- A task is clearly complete
+- The user indicates they're done
+- The topic is changing significantly
+
+### Summary Generation
+
+When a conversation ends with an LLM service available, a summary is generated:
+
+```typescript
+const { title, summary } = await conversationManager.generateConversationSummary(
+  conversationId,
+  llmService
+);
+// title: "Meeting Notes Creation Request" (5-8 words)
+// summary: "User requested creation of meeting notes. Created 'Meeting Notes.md' in Journal folder. Task completed successfully." (2-3 sentences)
+```
+
+### Rolling Limit
+
+The system enforces `maxConversationsRetained` (default: 1000) by removing the oldest ended conversations when the limit is exceeded.
+
+### Migration
+
+Existing data in the old `HistoryEntry` format is automatically migrated:
+
+1. All old entries are combined into a single "Migrated Conversation History" conversation
+2. The old format data is deleted
+3. A `lastMigrated` timestamp is recorded
+
+## Configuration
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `conversationIdleTimeoutMinutes` | number | 30 | Minutes of inactivity before a conversation ends |
+| `maxConversationsRetained` | number | 1000 | Maximum conversations to keep (oldest deleted when exceeded) |
 
 ## Storage
 
 - Persisted in Obsidian plugin data (via `saveData()`)
 - NOT stored as vault files (internal to plugin)
-- Rolling window of recent conversations
-- Older conversations summarized to preserve context
+- Storage key: `conversationData`
 
-## Data Model
+## end_conversation Tool
 
-### History Entry
+The plugin provides an `end_conversation` tool that allows the agent to explicitly end conversations:
+
+### Tool Definition
+
+```typescript
+{
+  name: "end_conversation",
+  description: "End the current conversation and generate a summary. Use this when a topic is concluded, the user indicates they're done, or when moving to an unrelated topic.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      reason: {
+        type: "string",
+        description: "Optional reason for ending (e.g., 'task completed', 'user requested')"
+      }
+    },
+    required: []
+  }
+}
+```
+
+### Registration
+
+```typescript
+import { createEndConversationTool } from "./llm/tools/endConversation";
+
+const endConversationTool = createEndConversationTool({
+  conversationManager,
+  getLLMService: () => llmService,
+});
+
+llmService.registerTool(endConversationTool);
+```
+
+## Legacy: ConversationHistory
+
+The original flat history system is retained for backward compatibility but is no longer the recommended approach.
+
+### Data Model
 
 ```typescript
 interface HistoryEntry {
-  id: string;                  // Unique conversation ID
-  timestamp: string;           // ISO 8601 timestamp
-  userMessage: string;         // Original user input
-  assistantResponse: string;   // LLM's response
-  toolsUsed: string[];         // Tools invoked
-  source?: "websocket" | "direct";  // Message origin
-}
-```
-
-### Conversation Summary
-
-```typescript
-interface ConversationSummary {
   id: string;
-  createdAt: string;
-  periodStart: string;         // Earliest conversation in batch
-  periodEnd: string;           // Latest conversation in batch
-  summary: string;             // LLM-generated summary
-  conversationCount: number;   // Number of conversations summarized
+  timestamp: string;
+  userMessage: string;
+  assistantResponse: string;
+  toolsUsed: string[];
+  source?: "websocket" | "direct";
 }
-```
 
-### Persisted History
+interface ConversationSummary {
+  startDate: string;
+  endDate: string;
+  summary: string;
+  conversationCount: number;
+}
 
-```typescript
 interface PersistedHistory {
   recentConversations: HistoryEntry[];
   summaries: ConversationSummary[];
-  lastSummarized: string | null;
+  lastSummarized: string;
 }
 ```
-
-## Usage
-
-### Recording Conversations
-
-```typescript
-await history.addConversation({
-  userMessage: "Create a note about today's meeting",
-  assistantResponse: "I've created 'Meeting Notes.md' in your Journal folder.",
-  toolsUsed: ["create_note"],
-  source: "direct",
-});
-```
-
-### Getting Context for LLM
-
-```typescript
-// Returns formatted context for system prompt
-const contextPrompt = history.getContextPrompt();
-
-// Includes:
-// - Up to 10 recent conversations in full detail
-// - Summaries of older conversations
-```
-
-### Retrieving Recent Conversations
-
-```typescript
-// Get last N conversations for UI display
-const recent = history.getRecentConversations(20);
-```
-
-### Clearing History
-
-```typescript
-await history.clear();
-```
-
-## Context Injection
-
-The `getContextPrompt()` method formats history for the LLM system prompt:
-
-```
-## Recent Conversation History
-
-### 2 hours ago
-User: Create a note about the meeting
-Assistant: Created 'Meeting Notes.md' in Journal folder
-Tools: create_note
-
-### Yesterday
-User: Find all notes about project X
-Assistant: Found 3 notes: ...
-Tools: search_notes
-
-## Summary of Older Conversations
-- User frequently creates notes in Journal folder
-- Common topics: meetings, project updates, daily logs
-```
-
-## Summarization
-
-Triggered when conversation count exceeds `maxConversations`:
-
-1. Batch at least 10 oldest conversations
-2. Send to LLM with summarization prompt
-3. Store summary with period metadata
-4. Remove summarized conversations from recent list
-
-### Summarization Prompt
-
-The LLM generates summaries capturing:
-- Key topics discussed
-- Files modified or created
-- User patterns and preferences
-- Important context for future conversations
-
-## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `maxConversations` | number | 50 | Max recent conversations before summarization |
-| `loadData` | function | - | Plugin data loader |
-| `saveData` | function | - | Plugin data saver |
 
 ## Implementation
 
 Located in `src/context/`:
-- `types.ts` - Data model interfaces
-- `ConversationHistory.ts` - Main history manager
+
+- `types.ts` - All data model interfaces (legacy and new)
+- `ConversationManager.ts` - Conversation lifecycle manager (recommended)
+- `ConversationHistory.ts` - Legacy flat history manager
 - `index.ts` - Public exports
