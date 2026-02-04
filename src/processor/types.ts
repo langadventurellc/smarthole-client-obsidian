@@ -7,6 +7,7 @@
 
 import type { App } from "obsidian";
 import type { ConversationManager } from "../context";
+import type SmartHolePlugin from "../main";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection } from "../websocket";
 import type { InboxManager } from "../inbox";
@@ -17,6 +18,8 @@ export interface MessageProcessorConfig {
   app: App;
   settings: SmartHoleSettings;
   conversationManager: ConversationManager;
+  /** Plugin reference for accessing loadData/saveData persistence */
+  plugin: SmartHolePlugin;
 }
 
 export interface ProcessResult {
@@ -24,6 +27,8 @@ export interface ProcessResult {
   messageId: string;
   response?: string;
   error?: string;
+  /** Signals that the agent expects a follow-up message from the user */
+  isWaitingForResponse?: boolean;
 }
 
 /**

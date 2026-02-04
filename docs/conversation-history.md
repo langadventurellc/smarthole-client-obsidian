@@ -179,6 +179,12 @@ Existing data in the old `HistoryEntry` format is automatically migrated:
 |---------|------|---------|-------------|
 | `conversationIdleTimeoutMinutes` | number | 30 | Minutes of inactivity before a conversation ends |
 | `maxConversationsRetained` | number | 1000 | Maximum conversations to keep (oldest deleted when exceeded) |
+| `conversationStateTimeoutMinutes` | number | 60 | Minutes before a pending conversation state is considered stale |
+
+### Conversation State vs Conversation History
+
+- **Conversation History** (this document): Persistent record of completed message exchanges, organized into conversations with summaries
+- **Conversation State**: Tracks *active* conversation flow, specifically whether the agent is waiting for a user response. See [Message Processor](message-processor.md#conversation-state-persistence) for details
 
 ## Storage
 

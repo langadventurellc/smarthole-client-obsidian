@@ -1,14 +1,49 @@
 ---
 id: F-conversation-state-management
 title: Conversation State Management
-status: open
+status: done
 priority: high
 parent: E-communication-and-conversation
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/types.ts: Added PendingContext interface (originalMessageId,
+    toolCallsCompleted, lastAgentMessage, createdAt) and ConversationState
+    interface (isWaitingForResponse, pendingContext?)
+  src/processor/types.ts: "Added isWaitingForResponse?: boolean field to
+    ProcessResult interface; Added SmartHolePlugin import and plugin property to
+    MessageProcessorConfig interface for persistence access"
+  src/context/index.ts: Added exports for ConversationState and PendingContext types
+  src/llm/LLMService.ts: Added ConversationState import, state tracking properties
+    (waitingForResponse, lastQuestionMessage, toolCallsInSession), and
+    conversation state management methods (isWaitingForUserResponse,
+    getConversationState, restoreConversationState, setWaitingForResponse,
+    clearWaitingState). Updated executeToolCalls to track tool call count.
+  src/llm/tools/sendMessage.ts: Extended SendMessageContext interface with
+    optional setWaitingForResponse callback. Updated execute function to call
+    setWaitingForResponse when is_question=true.
+  src/processor/MessageProcessor.ts: Added setWaitingForResponse callback to
+    SendMessageContext that delegates to llmService.setWaitingForResponse().;
+    Added ConversationState import, SmartHolePlugin import,
+    CONVERSATION_STATES_KEY constant, plugin property, conversationStates Map,
+    buildContinuationContext(), persistConversationStates(),
+    loadConversationStates(), and updated processWithRetry() to restore/persist
+    conversation state; Added public initialize() method, public
+    cleanupStaleStates() method, made loadConversationStates() private with
+    error handling, removed constructor call to loadConversationStates()
+  src/main.ts: "Added plugin: this to MessageProcessor config; Added call to
+    messageProcessor.initialize() after construction, added periodic cleanup
+    interval (15 minutes), added extractSettings field for
+    conversationStateTimeoutMinutes"
+  src/settings.ts: "Added conversationStateTimeoutMinutes field to
+    SmartHoleSettings interface and DEFAULT_SETTINGS (default: 60)"
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-conversationstate-types
+  - T-add-crash-recovery-and-stale
+  - T-extend-llmservice-to-track
+  - T-implement-conversation-state
 created: 2026-02-04T06:03:35.444Z
 updated: 2026-02-04T06:03:35.444Z
 ---

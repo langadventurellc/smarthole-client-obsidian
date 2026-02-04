@@ -7,10 +7,12 @@ parent: P-agentic-architecture-overhaul
 prerequisites:
   - E-file-operation-tools
 affectedFiles:
-  src/processor/types.ts: Added AgentMessageCallback type definition with JSDoc
+  src/processor/types.ts: "Added AgentMessageCallback type definition with JSDoc
     comment; Replaced ConversationHistory import with ConversationManager;
     Changed conversationHistory property to conversationManager in
-    MessageProcessorConfig interface
+    MessageProcessorConfig interface; Added isWaitingForResponse?: boolean field
+    to ProcessResult interface; Added SmartHolePlugin import and plugin property
+    to MessageProcessorConfig interface for persistence access"
   src/processor/MessageProcessor.ts: Added agentMessageCallbacks array,
     onAgentMessage() registration method, and notifyAgentMessageCallbacks()
     notification method; Added imports for createSendMessageTool and
@@ -23,7 +25,15 @@ affectedFiles:
     triggerSummarization method and needsSummarization check; Added import for
     createEndConversationTool and EndConversationContext; registered the
     end_conversation tool in processWithRetry() after send_message tool
-    registration
+    registration; Added setWaitingForResponse callback to SendMessageContext
+    that delegates to llmService.setWaitingForResponse().; Added
+    ConversationState import, SmartHolePlugin import, CONVERSATION_STATES_KEY
+    constant, plugin property, conversationStates Map,
+    buildContinuationContext(), persistConversationStates(),
+    loadConversationStates(), and updated processWithRetry() to restore/persist
+    conversation state; Added public initialize() method, public
+    cleanupStaleStates() method, made loadConversationStates() private with
+    error handling, removed constructor call to loadConversationStates()
   src/processor/index.ts: Added AgentMessageCallback to module exports
   src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
     (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
@@ -33,7 +43,9 @@ affectedFiles:
     'send_message', description, and inputSchema, and added
     createSendMessageTool factory function that creates a ToolHandler with
     validation, ChatView and SmartHole delivery logic, and appropriate return
-    messages
+    messages; Extended SendMessageContext interface with optional
+    setWaitingForResponse callback. Updated execute function to call
+    setWaitingForResponse when is_question=true.
   src/llm/tools/index.ts: Added exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from sendMessage module; Added
     exports for createEndConversationTool and related types
@@ -41,26 +53,35 @@ affectedFiles:
   src/llm/index.ts: Added re-exports for createSendMessageTool,
     SendMessageContext, and SendMessageInput from tools module; Added re-exports
     for createEndConversationTool and related types from tools module
-  src/main.ts: Added import for AgentMessageCallback type and added
+  src/main.ts: "Added import for AgentMessageCallback type and added
     onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
     for ChatView subscription; Replaced ConversationHistory import with
     ConversationManager; Changed conversationHistory property to private
     conversationManager; Updated initialization to use ConversationManager;
     Updated MessageProcessor config; Added getConversationManager() accessor
-    method
+    method; Added plugin: this to MessageProcessor config; Added call to
+    messageProcessor.initialize() after construction, added periodic cleanup
+    interval (15 minutes), added extractSettings field for
+    conversationStateTimeoutMinutes"
   src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
     agent messages in onOpen() to display mid-execution messages as assistant
     messages, and added cleanup in onClose(); Updated onOpen() to use
     plugin.getConversationManager() and load messages from active conversation
     using ConversationMessage format
   src/context/types.ts: Added ConversationMessage, Conversation, and
-    PersistedConversations interfaces for the new conversation-based data model
+    PersistedConversations interfaces for the new conversation-based data model;
+    Added PendingContext interface (originalMessageId, toolCallsCompleted,
+    lastAgentMessage, createdAt) and ConversationState interface
+    (isWaitingForResponse, pendingContext?)
   src/context/index.ts: Added exports for new types (Conversation,
     ConversationMessage, PersistedConversations) while keeping legacy type
-    exports; Added export for ConversationManager class
-  src/settings.ts: Added conversationIdleTimeoutMinutes and
+    exports; Added export for ConversationManager class; Added exports for
+    ConversationState and PendingContext types
+  src/settings.ts: "Added conversationIdleTimeoutMinutes and
     maxConversationsRetained to SmartHoleSettings interface and
-    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
+    DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display(); Added
+    conversationStateTimeoutMinutes field to SmartHoleSettings interface and
+    DEFAULT_SETTINGS (default: 60)"
   src/context/ConversationManager.ts: "Created new ConversationManager class with
     conversation lifecycle management (load/save, addMessage, endConversation,
     getActiveConversation, getContextPrompt, getConversation,
@@ -79,6 +100,11 @@ affectedFiles:
   src/llm/tools/endConversation.ts: Created new file implementing the
     end_conversation tool with EndConversationContext and EndConversationInput
     interfaces, tool definition, and createEndConversationTool factory function
+  src/llm/LLMService.ts: Added ConversationState import, state tracking properties
+    (waitingForResponse, lastQuestionMessage, toolCallsInSession), and
+    conversation state management methods (isWaitingForUserResponse,
+    getConversationState, restoreConversationState, setWaitingForResponse,
+    clearWaitingState). Updated executeToolCalls to track tool call count.
 log: []
 schema: v1.0
 childrenIds:

@@ -79,7 +79,21 @@ export default class SmartHolePlugin extends Plugin {
       app: this.app,
       settings: this.settings,
       conversationManager: this.conversationManager,
+      plugin: this,
     });
+
+    // Initialize MessageProcessor (load persisted states, cleanup stale)
+    await this.messageProcessor.initialize();
+
+    // Register periodic cleanup of stale conversation states (every 15 minutes)
+    this.registerInterval(
+      window.setInterval(
+        () => {
+          this.messageProcessor?.cleanupStaleStates();
+        },
+        15 * 60 * 1000
+      )
+    );
 
     // Process incoming messages through the full pipeline
     this.connection.onMessage = async (message) => {
@@ -160,6 +174,8 @@ export default class SmartHolePlugin extends Plugin {
       settings.conversationIdleTimeoutMinutes = d.conversationIdleTimeoutMinutes;
     if (typeof d.maxConversationsRetained === "number")
       settings.maxConversationsRetained = d.maxConversationsRetained;
+    if (typeof d.conversationStateTimeoutMinutes === "number")
+      settings.conversationStateTimeoutMinutes = d.conversationStateTimeoutMinutes;
 
     return settings;
   }

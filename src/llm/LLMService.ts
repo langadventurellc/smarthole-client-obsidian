@@ -10,6 +10,7 @@
 
 import type { App } from "obsidian";
 import type { SmartHoleSettings } from "../settings";
+import type { ConversationState } from "../context";
 import { AnthropicProvider } from "./AnthropicProvider";
 import type { LLMMessage, LLMResponse, Tool, ToolCall, ToolResultContentBlock } from "./types";
 import { extractToolCalls, LLMError } from "./types";
@@ -50,6 +51,12 @@ export class LLMService {
   private settings: SmartHoleSettings;
   private initialized = false;
   private conversationContext = "";
+
+  // Conversation state tracking
+  private waitingForResponse = false;
+  private lastQuestionMessage: string | null = null;
+  private waitingForMessageId: string | null = null;
+  private toolCallsInSession = 0;
 
   constructor(app: App, settings: SmartHoleSettings) {
     this.app = app;
@@ -209,6 +216,72 @@ export class LLMService {
     this.conversationContext = context;
   }
 
+  // ===========================================================================
+  // Conversation State Management
+  // ===========================================================================
+
+  /**
+   * Check if the agent is currently waiting for a user response.
+   */
+  isWaitingForUserResponse(): boolean {
+    return this.waitingForResponse;
+  }
+
+  /**
+   * Get the current conversation state for persistence.
+   * Returns the state needed to restore a conversation after restart.
+   */
+  getConversationState(): ConversationState {
+    return {
+      isWaitingForResponse: this.waitingForResponse,
+      pendingContext: this.waitingForResponse
+        ? {
+            originalMessageId: this.waitingForMessageId ?? "",
+            toolCallsCompleted: this.toolCallsInSession,
+            lastAgentMessage: this.lastQuestionMessage ?? "",
+            createdAt: new Date().toISOString(),
+          }
+        : undefined,
+    };
+  }
+
+  /**
+   * Restore conversation state from persistence.
+   * Called when continuing a conversation after plugin restart.
+   *
+   * @param state - The persisted conversation state to restore
+   */
+  restoreConversationState(state: ConversationState): void {
+    this.waitingForResponse = state.isWaitingForResponse;
+    this.lastQuestionMessage = state.pendingContext?.lastAgentMessage ?? null;
+    this.waitingForMessageId = state.pendingContext?.originalMessageId ?? null;
+    this.toolCallsInSession = state.pendingContext?.toolCallsCompleted ?? 0;
+  }
+
+  /**
+   * Signal that the agent is waiting for a user response.
+   * Called by send_message tool when is_question=true.
+   *
+   * @param message - The question message being sent to the user
+   * @param messageId - The ID of the message that triggered the question
+   */
+  setWaitingForResponse(message: string, messageId: string): void {
+    this.waitingForResponse = true;
+    this.lastQuestionMessage = message;
+    this.waitingForMessageId = messageId;
+  }
+
+  /**
+   * Clear waiting state when conversation continues or completes.
+   * Also resets the tool call counter for a fresh session.
+   */
+  clearWaitingState(): void {
+    this.waitingForResponse = false;
+    this.lastQuestionMessage = null;
+    this.waitingForMessageId = null;
+    this.toolCallsInSession = 0;
+  }
+
   /**
    * Get all registered tool definitions.
    */
@@ -245,6 +318,7 @@ ${toolsSection}${contextSection}`.trim();
 
   /**
    * Execute a list of tool calls and return results.
+   * Tracks the number of tool calls executed in this session.
    */
   private async executeToolCalls(toolCalls: ToolCall[]): Promise<ToolResultContentBlock[]> {
     const results: ToolResultContentBlock[] = [];
@@ -252,6 +326,7 @@ ${toolsSection}${contextSection}`.trim();
     for (const call of toolCalls) {
       const result = await this.executeToolCall(call);
       results.push(result);
+      this.toolCallsInSession++;
     }
 
     return results;

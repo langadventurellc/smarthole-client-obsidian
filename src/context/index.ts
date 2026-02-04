@@ -10,6 +10,9 @@ export type { HistoryEntry, ConversationSummary, PersistedHistory } from "./type
 // Type Definitions (New conversation-based model)
 export type { Conversation, ConversationMessage, PersistedConversations } from "./types";
 
+// Type Definitions (Conversation state tracking)
+export type { ConversationState, PendingContext } from "./types";
+
 // Manager Classes
 export { ConversationHistory } from "./ConversationHistory";
 export { ConversationManager } from "./ConversationManager";

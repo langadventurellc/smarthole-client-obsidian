@@ -15,6 +15,8 @@ export interface SmartHoleSettings {
   conversationIdleTimeoutMinutes: number;
   /** Maximum number of conversations to retain (oldest deleted when exceeded) */
   maxConversationsRetained: number;
+  /** Minutes before a pending conversation state is considered stale and cleaned up */
+  conversationStateTimeoutMinutes: number;
 }
 
 const DEFAULT_ROUTING_DESCRIPTION = `Miss Simone - I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.`;
@@ -39,6 +41,7 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   maxConversationHistory: 50,
   conversationIdleTimeoutMinutes: 30,
   maxConversationsRetained: 1000,
+  conversationStateTimeoutMinutes: 60,
 };
 
 export class SmartHoleSettingTab extends PluginSettingTab {
