@@ -1,9 +1,17 @@
 import type SmartHolePlugin from "../main";
 import type { LLMService } from "../llm";
 import { extractTextContent } from "../llm";
-import type { Conversation, ConversationMessage, PersistedConversations } from "./types";
+import type {
+  Conversation,
+  ConversationMessage,
+  PersistedConversations,
+  PersistedHistory,
+  HistoryEntry,
+  ConversationSummary,
+} from "./types";
 
 const CONVERSATION_DATA_KEY = "conversationData";
+const HISTORY_DATA_KEY = "conversationHistory";
 
 export class ConversationManager {
   private plugin: SmartHolePlugin;
@@ -18,13 +26,23 @@ export class ConversationManager {
 
   async load(): Promise<void> {
     const data = await this.plugin.loadData();
-    if (data && data[CONVERSATION_DATA_KEY]) {
-      const persisted = this.validatePersistedData(data[CONVERSATION_DATA_KEY]);
-      this.conversations = persisted.conversations;
 
-      const active = this.conversations.find((c) => c.endedAt === null);
-      this.activeConversationId = active?.id ?? null;
+    // Check for existing new-format data
+    if (data && data[CONVERSATION_DATA_KEY]) {
+      this.loadFromPersistedConversations(data[CONVERSATION_DATA_KEY]);
+      return;
     }
+
+    // Check for old-format data that needs migration
+    if (data && data[HISTORY_DATA_KEY]) {
+      const validatedOldHistory = this.validateOldHistory(data[HISTORY_DATA_KEY]);
+      await this.migrateFromOldFormat(validatedOldHistory);
+      return;
+    }
+
+    // No existing data - start fresh
+    this.conversations = [];
+    this.activeConversationId = null;
   }
 
   private async save(): Promise<void> {
@@ -220,6 +238,162 @@ SUMMARY: [your summary here]`;
       summary: null,
       messages: [],
     };
+  }
+
+  private async migrateFromOldFormat(oldHistory: PersistedHistory): Promise<void> {
+    console.log("ConversationManager: Migrating from old conversation history format");
+
+    const recentConversations = oldHistory.recentConversations || [];
+    const summaries = oldHistory.summaries || [];
+
+    if (recentConversations.length === 0 && summaries.length === 0) {
+      // Nothing to migrate
+      this.conversations = [];
+      this.activeConversationId = null;
+      await this.save();
+      return;
+    }
+
+    // Create a single completed conversation from all old entries
+    const migratedConversation: Conversation = {
+      id: `conv-migrated-${Date.now()}`,
+      startedAt: recentConversations[0]?.timestamp || new Date().toISOString(),
+      endedAt: new Date().toISOString(),
+      title: "Migrated Conversation History",
+      summary: this.buildMigrationSummary(recentConversations, summaries),
+      messages: this.convertOldEntriesToMessages(recentConversations),
+    };
+
+    this.conversations = [migratedConversation];
+    this.activeConversationId = null;
+
+    // Save in new format and clear old format data
+    const data = (await this.plugin.loadData()) || {};
+    delete data[HISTORY_DATA_KEY];
+    const persisted = this.toPersistedFormat();
+    persisted.lastMigrated = new Date().toISOString();
+    data[CONVERSATION_DATA_KEY] = persisted;
+    await this.plugin.saveData(data);
+
+    console.log(
+      `ConversationManager: Migrated ${recentConversations.length} entries to new format`
+    );
+  }
+
+  private convertOldEntriesToMessages(entries: HistoryEntry[]): ConversationMessage[] {
+    const messages: ConversationMessage[] = [];
+
+    for (const entry of entries) {
+      // Add user message
+      messages.push({
+        id: `${entry.id}-user`,
+        timestamp: entry.timestamp,
+        role: "user",
+        content: entry.userMessage,
+      });
+
+      // Add assistant response
+      const toolsUsed = entry.toolsUsed || [];
+      messages.push({
+        id: `${entry.id}-assistant`,
+        timestamp: entry.timestamp,
+        role: "assistant",
+        content: entry.assistantResponse,
+        toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+      });
+    }
+
+    return messages;
+  }
+
+  private buildMigrationSummary(
+    entries: HistoryEntry[],
+    oldSummaries: ConversationSummary[]
+  ): string {
+    const parts: string[] = [];
+
+    if (oldSummaries.length > 0) {
+      parts.push("Historical summaries:");
+      for (const summary of oldSummaries) {
+        parts.push(
+          `- ${summary.startDate} to ${summary.endDate} (${summary.conversationCount} conversations): ${summary.summary}`
+        );
+      }
+    }
+
+    if (entries.length > 0) {
+      parts.push(`\nMigrated ${entries.length} recent conversations from previous format.`);
+
+      // Extract unique tools used
+      const allTools = new Set<string>();
+      for (const entry of entries) {
+        const toolsUsed = entry.toolsUsed || [];
+        for (const tool of toolsUsed) {
+          allTools.add(tool);
+        }
+      }
+      if (allTools.size > 0) {
+        parts.push(`Tools used: ${Array.from(allTools).join(", ")}`);
+      }
+    }
+
+    return parts.join("\n") || "Migrated from legacy conversation history format.";
+  }
+
+  private toPersistedFormat(): PersistedConversations {
+    return {
+      conversations: this.conversations,
+    };
+  }
+
+  private validateOldHistory(data: unknown): PersistedHistory {
+    if (!data || typeof data !== "object") {
+      return { recentConversations: [], summaries: [], lastSummarized: "" };
+    }
+
+    const candidate = data as Partial<PersistedHistory>;
+
+    return {
+      recentConversations: Array.isArray(candidate.recentConversations)
+        ? candidate.recentConversations.filter(this.isValidHistoryEntry)
+        : [],
+      summaries: Array.isArray(candidate.summaries)
+        ? candidate.summaries.filter(this.isValidSummary)
+        : [],
+      lastSummarized: typeof candidate.lastSummarized === "string" ? candidate.lastSummarized : "",
+    };
+  }
+
+  private isValidHistoryEntry(entry: unknown): entry is HistoryEntry {
+    if (!entry || typeof entry !== "object") return false;
+    const e = entry as Partial<HistoryEntry>;
+    return (
+      typeof e.id === "string" &&
+      typeof e.timestamp === "string" &&
+      typeof e.userMessage === "string" &&
+      typeof e.assistantResponse === "string" &&
+      Array.isArray(e.toolsUsed)
+    );
+  }
+
+  private isValidSummary(summary: unknown): summary is ConversationSummary {
+    if (!summary || typeof summary !== "object") return false;
+    const s = summary as Partial<ConversationSummary>;
+    return (
+      typeof s.startDate === "string" &&
+      typeof s.endDate === "string" &&
+      typeof s.summary === "string" &&
+      typeof s.conversationCount === "number"
+    );
+  }
+
+  private loadFromPersistedConversations(data: unknown): void {
+    const persisted = this.validatePersistedData(data);
+    this.conversations = persisted.conversations;
+
+    // Find active conversation (one without endedAt)
+    const active = this.conversations.find((c) => c.endedAt === null);
+    this.activeConversationId = active?.id ?? null;
   }
 
   private validatePersistedData(data: unknown): PersistedConversations {

@@ -1,14 +1,43 @@
 ---
 id: T-migrate-existing-history-to
 title: Migrate Existing History to Conversations
-status: open
+status: done
 priority: medium
 parent: F-conversation-boundaries-and
 prerequisites:
   - T-add-conversation-data-types
   - T-implement-conversationmanager
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/ConversationManager.ts: "Added migration logic: imported old format
+    types (PersistedHistory, HistoryEntry, ConversationSummary), added
+    HISTORY_DATA_KEY constant, updated load() to check for old format and run
+    migration, added migrateFromOldFormat(), convertOldEntriesToMessages(),
+    buildMigrationSummary(), toPersistedFormat(), and
+    loadFromPersistedConversations() methods"
+log:
+  - >-
+    Implemented migration logic in ConversationManager to preserve existing
+    ConversationHistory data when upgrading to the new conversation-based
+    system. The migration:
+
+    1. Updated load() to check for new format first (key: "conversationData"),
+    then check for old format (key: "conversationHistory") and run migration if
+    found
+
+    2. Added migrateFromOldFormat() that creates a single completed conversation
+    from all old HistoryEntry items
+
+    3. Added convertOldEntriesToMessages() to convert HistoryEntry items to
+    ConversationMessage pairs (user + assistant)
+
+    4. Added buildMigrationSummary() to preserve old summaries in the migrated
+    conversation's summary text
+
+    5. Added toPersistedFormat() and loadFromPersistedConversations() helper
+    methods
+
+    6. Migration sets lastMigrated timestamp, clears old conversationHistory
+    key, and logs to console
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T17:12:30.351Z

@@ -41,7 +41,7 @@ affectedFiles:
   src/settings.ts: Added conversationIdleTimeoutMinutes and
     maxConversationsRetained to SmartHoleSettings interface and
     DEFAULT_SETTINGS, plus UI controls in SmartHoleSettingTab.display()
-  src/context/ConversationManager.ts: Created new ConversationManager class with
+  src/context/ConversationManager.ts: "Created new ConversationManager class with
     conversation lifecycle management (load/save, addMessage, endConversation,
     getActiveConversation, getContextPrompt, getConversation,
     getRecentConversations, idle timeout detection, rolling limit enforcement);
@@ -50,7 +50,12 @@ affectedFiles:
     title/summary generation. Updated endConversation() to accept optional
     llmService parameter and generate summaries. Updated addMessage() to accept
     optional llmService parameter and pass it to endConversation() on idle
-    timeout.
+    timeout.; Added migration logic: imported old format types
+    (PersistedHistory, HistoryEntry, ConversationSummary), added
+    HISTORY_DATA_KEY constant, updated load() to check for old format and run
+    migration, added migrateFromOldFormat(), convertOldEntriesToMessages(),
+    buildMigrationSummary(), toPersistedFormat(), and
+    loadFromPersistedConversations() methods"
 log: []
 schema: v1.0
 childrenIds:
