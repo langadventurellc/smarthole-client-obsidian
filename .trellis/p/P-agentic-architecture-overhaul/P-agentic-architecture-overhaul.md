@@ -190,6 +190,10 @@ affectedFiles:
     conversation state management methods (isWaitingForUserResponse,
     getConversationState, restoreConversationState, setWaitingForResponse,
     clearWaitingState). Updated executeToolCalls to track tool call count.
+  src/llm/tools/getConversation.ts: Created new tool implementation with
+    GetConversationContext interface, GetConversationInput type, tool
+    definition, and createGetConversationTool factory function. Supports
+    get-by-ID and list-recent modes with proper validation and error handling.
 log: []
 schema: v1.0
 childrenIds:

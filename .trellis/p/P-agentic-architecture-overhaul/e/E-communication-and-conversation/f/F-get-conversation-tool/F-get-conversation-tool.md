@@ -1,15 +1,22 @@
 ---
 id: F-get-conversation-tool
 title: Get Conversation Tool
-status: open
+status: in-progress
 priority: medium
 parent: E-communication-and-conversation
 prerequisites:
   - F-conversation-boundaries-and
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/getConversation.ts: Created new tool implementation with
+    GetConversationContext interface, GetConversationInput type, tool
+    definition, and createGetConversationTool factory function. Supports
+    get-by-ID and list-recent modes with proper validation and error handling.
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-create-get-conversation-tool
+  - T-export-get-conversation-tool
+  - T-register-get-conversation
 created: 2026-02-04T06:04:09.173Z
 updated: 2026-02-04T06:04:09.173Z
 ---
