@@ -44,7 +44,13 @@ affectedFiles:
   src/context/ConversationManager.ts: Created new ConversationManager class with
     conversation lifecycle management (load/save, addMessage, endConversation,
     getActiveConversation, getContextPrompt, getConversation,
-    getRecentConversations, idle timeout detection, rolling limit enforcement)
+    getRecentConversations, idle timeout detection, rolling limit enforcement);
+    Added imports for LLMService type and extractTextContent utility from
+    '../llm'. Added generateConversationSummary() method for LLM-based
+    title/summary generation. Updated endConversation() to accept optional
+    llmService parameter and generate summaries. Updated addMessage() to accept
+    optional llmService parameter and pass it to endConversation() on idle
+    timeout.
 log: []
 schema: v1.0
 childrenIds:

@@ -1,13 +1,45 @@
 ---
 id: T-implement-conversation-1
 title: Implement Conversation Summary Generation
-status: open
+status: done
 priority: medium
 parent: F-conversation-boundaries-and
 prerequisites:
   - T-implement-conversationmanager
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/ConversationManager.ts: Added imports for LLMService type and
+    extractTextContent utility from '../llm'. Added
+    generateConversationSummary() method for LLM-based title/summary generation.
+    Updated endConversation() to accept optional llmService parameter and
+    generate summaries. Updated addMessage() to accept optional llmService
+    parameter and pass it to endConversation() on idle timeout.
+log:
+  - >-
+    Implemented conversation summary generation functionality in
+    ConversationManager:
+
+
+    1. Added `generateConversationSummary(conversationId, llmService)` method
+    that:
+       - Retrieves conversation by ID
+       - Formats messages as text with timestamps, roles, and tools used
+       - Prompts the LLM to generate a title (5-8 words) and summary (2-3 sentences)
+       - Uses `extractTextContent()` utility to extract text from LLM response
+       - Parses TITLE: and SUMMARY: from response with regex
+       - Returns `{ title, summary }` with fallback defaults if parsing fails
+
+    2. Updated `endConversation(llmService?)` to:
+       - Accept optional LLMService parameter
+       - Generate summary when llmService provided and conversation has messages
+       - Handle errors gracefully with fallback title/summary ("Conversation" / "Summary generation failed.")
+       - Call enforceConversationLimit() after ending
+
+    3. Updated `addMessage(message, llmService?)` to:
+       - Accept optional LLMService parameter
+       - End previous conversation WITH summary generation when idle timeout triggers a new conversation and llmService is provided
+       - Fall back to ending without summary when llmService not provided
+
+    All quality checks pass (lint, format, type-check) and build succeeds.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T17:11:49.998Z

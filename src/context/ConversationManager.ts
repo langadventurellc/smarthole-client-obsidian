@@ -1,4 +1,6 @@
 import type SmartHolePlugin from "../main";
+import type { LLMService } from "../llm";
+import { extractTextContent } from "../llm";
 import type { Conversation, ConversationMessage, PersistedConversations } from "./types";
 
 const CONVERSATION_DATA_KEY = "conversationData";
@@ -41,12 +43,18 @@ export class ConversationManager {
     return this.conversations.find((c) => c.id === this.activeConversationId) ?? null;
   }
 
-  async addMessage(message: ConversationMessage): Promise<Conversation> {
+  async addMessage(message: ConversationMessage, llmService?: LLMService): Promise<Conversation> {
     if (this.shouldStartNewConversation()) {
-      const active = this.getActiveConversation();
-      if (active) {
-        active.endedAt = new Date().toISOString();
-        this.activeConversationId = null;
+      // End previous conversation with summary if it exists
+      if (this.activeConversationId && llmService) {
+        await this.endConversation(llmService);
+      } else if (this.activeConversationId) {
+        // End without summary if no LLM service available
+        const active = this.getActiveConversation();
+        if (active) {
+          active.endedAt = new Date().toISOString();
+          this.activeConversationId = null;
+        }
       }
 
       const newConversation = this.createConversation();
@@ -67,15 +75,74 @@ export class ConversationManager {
     return activeConversation;
   }
 
-  async endConversation(): Promise<void> {
+  async endConversation(llmService?: LLMService): Promise<void> {
     const active = this.getActiveConversation();
     if (!active) {
       return;
     }
 
     active.endedAt = new Date().toISOString();
+
+    // Generate summary if LLM service provided and conversation has messages
+    if (llmService && active.messages.length > 0) {
+      try {
+        const { title, summary } = await this.generateConversationSummary(active.id, llmService);
+        active.title = title;
+        active.summary = summary;
+      } catch (error) {
+        console.error("Failed to generate conversation summary:", error);
+        active.title = "Conversation";
+        active.summary = "Summary generation failed.";
+      }
+    }
+
     this.activeConversationId = null;
+    this.enforceConversationLimit();
     await this.save();
+  }
+
+  async generateConversationSummary(
+    conversationId: string,
+    llmService: LLMService
+  ): Promise<{ title: string; summary: string }> {
+    const conversation = this.getConversation(conversationId);
+    if (!conversation) {
+      throw new Error(`Conversation not found: ${conversationId}`);
+    }
+
+    const messagesText = conversation.messages
+      .map((msg) => {
+        const tools = msg.toolsUsed?.length ? ` (tools: ${msg.toolsUsed.join(", ")})` : "";
+        return `[${msg.timestamp}]\n${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}${tools}`;
+      })
+      .join("\n\n---\n\n");
+
+    const prompt = `Analyze this conversation between a user and an Obsidian vault assistant.
+
+Conversation:
+${messagesText}
+
+Generate:
+1. A brief title (5-8 words max) that captures the main topic
+2. A concise summary (2-3 sentences) covering: topics discussed, actions taken, and outcomes
+
+Format your response as:
+TITLE: [your title here]
+SUMMARY: [your summary here]`;
+
+    const response = await llmService.processMessage(prompt);
+
+    // Extract text content using the utility function
+    const responseText = extractTextContent(response);
+
+    // Parse response
+    const titleMatch = responseText.match(/TITLE:\s*(.+?)(?:\n|$)/i);
+    const summaryMatch = responseText.match(/SUMMARY:\s*(.+)/is);
+
+    return {
+      title: titleMatch?.[1]?.trim() || "Untitled Conversation",
+      summary: summaryMatch?.[1]?.trim() || "No summary available.",
+    };
   }
 
   private shouldStartNewConversation(): boolean {
