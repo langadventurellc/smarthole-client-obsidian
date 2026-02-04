@@ -29,7 +29,7 @@ src/
 ├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
 ├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
-│   └── tools/     # Tools (vault: createNote, modifyNote, searchNotes, searchFiles, listFiles, getFileInfo, organizeNotes, readFile, editFile, writeFile, createFolder, deleteFile, moveFile; communication: sendMessage; utils: pathUtils, protected)
+│   └── tools/     # Tools (vault: readFile, editFile, writeFile, createFolder, deleteFile, moveFile, searchFiles, listFiles, getFileInfo; communication: sendMessage; utils: pathUtils, protected)
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
 ├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
 ├── context/       # Conversation history persistence (ConversationHistory, stored in plugin data)
@@ -89,7 +89,7 @@ src/
 
 - [WebSocket Connection](docs/websocket-connection.md) - SmartHole client connection, registration, reconnection
 - [LLM Service](docs/llm-service.md) - Provider-agnostic LLM integration, tool registration, multi-turn processing
-- [Vault Tools](docs/vault-tools.md) - Note creation, modification, search, and organization tools
+- [Vault Tools](docs/vault-tools.md) - File operations, search, and vault management tools
 - [Message Processor](docs/message-processor.md) - Pipeline orchestration, retry logic, error handling
 - [Conversation History](docs/conversation-history.md) - Persistent history, context injection, summarization
 - [Inbox Manager](docs/inbox-manager.md) - Message durability, crash recovery

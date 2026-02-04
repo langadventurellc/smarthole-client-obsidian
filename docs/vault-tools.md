@@ -6,19 +6,15 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 
 | Tool | Description |
 |------|-------------|
-| `create_note` | Create new markdown notes |
-| `modify_note` | Modify existing notes with atomic operations |
-| `search_notes` | Search notes using Obsidian's search API |
-| `search_files` | Search file contents using regex patterns with context |
-| `list_files` | List files and folders matching a glob pattern |
-| `get_file_info` | Get file/folder metadata (dates, size) |
-| `organize_note` | Rename or move notes |
 | `read_file` | Read file contents with optional line ranges |
 | `edit_file` | Make targeted edits using search/replace or line operations |
 | `write_file` | Write content to files (create or overwrite) |
 | `create_folder` | Create folders in the vault |
 | `delete_file` | Soft-delete files or folders to trash |
 | `move_file` | Move or rename files and folders |
+| `search_files` | Search file contents using regex patterns with context |
+| `list_files` | List files and folders matching a glob pattern |
+| `get_file_info` | Get file/folder metadata (dates, size) |
 
 ## Usage
 
@@ -27,124 +23,6 @@ import { createVaultTools } from "./llm/tools";
 
 const tools = createVaultTools(app);
 tools.forEach((tool) => llmService.registerTool(tool));
-```
-
-## create_note
-
-Create new markdown notes in the vault.
-
-### Input Schema
-
-```typescript
-{
-  content: string,     // Note content (required)
-  path?: string,       // Target path (optional, auto-generated if omitted)
-  title?: string       // Note title (optional, extracted from content if omitted)
-}
-```
-
-### Behavior
-
-- Auto-generates filename from H1 heading or first line if path not specified
-- Creates parent folders automatically
-- Adds `.md` extension if missing
-- Returns created file path on success
-
-### Example
-
-```typescript
-// LLM call
-{
-  name: "create_note",
-  input: {
-    content: "# Meeting Notes\n\nDiscussed project timeline...",
-    path: "Meetings/2026-02-03.md"
-  }
-}
-```
-
-## modify_note
-
-Modify existing notes with atomic read-modify-write operations.
-
-### Input Schema
-
-```typescript
-{
-  path: string,                      // File path (required)
-  operation: "append" | "prepend" | "replace",  // Operation type (required)
-  content: string,                   // Content to add/replace with (required)
-  search?: string                    // Text to find (required for replace)
-}
-```
-
-### Behavior
-
-- Uses `vault.process()` for atomic operations
-- `append` adds content to end of file
-- `prepend` adds content to beginning of file
-- `replace` finds and replaces text (requires `search` parameter)
-- Fails gracefully if file not found
-
-### Example
-
-```typescript
-// Append to a note
-{
-  name: "modify_note",
-  input: {
-    path: "Journal/daily.md",
-    operation: "append",
-    content: "\n\n## Evening Update\nCompleted all tasks."
-  }
-}
-```
-
-## search_notes
-
-Search notes using Obsidian's `prepareSimpleSearch()` API.
-
-### Input Schema
-
-```typescript
-{
-  query: string,         // Search query (required)
-  read_content?: boolean // Return full file content (default: false)
-}
-```
-
-### Behavior
-
-- Returns up to 10 matching files
-- By default returns file paths and match excerpts
-- With `read_content: true`, returns full file contents
-- Results sorted by relevance
-
-### Example
-
-```typescript
-// Search for project notes
-{
-  name: "search_notes",
-  input: {
-    query: "project timeline",
-    read_content: true
-  }
-}
-```
-
-### Response Format
-
-```typescript
-{
-  results: [
-    {
-      path: "Projects/Alpha.md",
-      excerpt: "...project timeline is set for Q2...",
-      content?: "# Alpha Project\n\nFull content here..."
-    }
-  ]
-}
 ```
 
 ## search_files
@@ -227,16 +105,6 @@ Line 43:   some context after
 Line 10: > FIXME: needs review
 Line 11:   following content
 ```
-
-### Comparison with search_notes
-
-| Feature | search_notes | search_files |
-|---------|--------------|--------------|
-| Pattern type | Simple text | Regex |
-| Matching | Obsidian API | Line-by-line |
-| Context | Characters around match | Lines around match |
-| Use case | Natural language queries | Precise pattern matching |
-| File filtering | None (all notes) | Glob patterns |
 
 ## list_files
 
@@ -409,39 +277,6 @@ Error: Path not found: "nonexistent/file.md"
 - **Use `get_file_info`** when you need file metadata without reading content
 - Useful for queries like "find recent files" or "find largest files"
 - Use with `list_files` to get details about files in a directory
-
-## organize_note
-
-Rename or move notes within the vault.
-
-### Input Schema
-
-```typescript
-{
-  source: string,       // Current file path (required)
-  destination: string   // New file path (required)
-}
-```
-
-### Behavior
-
-- Creates destination folders automatically
-- Validates against overwrites (fails if destination exists)
-- Adds `.md` extension if missing
-- Updates internal links if Obsidian is configured to do so
-
-### Example
-
-```typescript
-// Move a note to a different folder
-{
-  name: "organize_note",
-  input: {
-    source: "Inbox/meeting-notes.md",
-    destination: "Meetings/2026/February/meeting-notes.md"
-  }
-}
-```
 
 ## read_file
 
@@ -705,7 +540,6 @@ Error: Failed to write file "invalid/path.md": <error details>
 ### When to Use
 
 - **Use `write_file`** when you need to completely replace file contents or create a new file with known content
-- **Use `create_note`** when creating markdown notes with auto-generated filenames from content
 - **Use `edit_file`** when making targeted changes to existing files (search/replace, line operations)
 
 ## create_folder
@@ -772,7 +606,7 @@ Error: Access denied: Cannot access files in '.obsidian/' directory (protected s
 ### When to Use
 
 - **Use `create_folder`** when you need to create an empty folder structure before adding files
-- **Use `create_note` or `write_file`** when creating files (they auto-create parent folders)
+- **Use `write_file`** when creating files (it auto-creates parent folders)
 
 ## delete_file
 
@@ -919,7 +753,6 @@ Error: Access denied: Cannot access files in '.obsidian/' directory (protected s
 
 - **Use `move_file`** when you need to rename files or move them to different locations
 - Works for both files and folders (folders move with all contents)
-- **Use `organize_note`** as an alternative for note-specific moves (adds `.md` extension automatically)
 
 ## Tool Handler Interface
 
@@ -960,19 +793,15 @@ Error: Access denied: Cannot access files in '.obsidian/' directory (protected s
 ## Implementation
 
 Located in `src/llm/tools/`:
-- `createNote.ts` - Note creation factory
-- `modifyNote.ts` - Note modification factory
-- `searchNotes.ts` - Simple text search factory
-- `searchFiles.ts` - Regex content search factory
-- `listFiles.ts` - Glob-based file listing factory
-- `getFileInfo.ts` - File/folder metadata retrieval factory
-- `organizeNotes.ts` - Rename/move factory
 - `readFile.ts` - File reading factory
 - `editFile.ts` - Targeted file editing factory
 - `writeFile.ts` - Full file write/overwrite factory
 - `createFolder.ts` - Folder creation factory
 - `deleteFile.ts` - File/folder deletion factory
 - `moveFile.ts` - File/folder move/rename factory
+- `searchFiles.ts` - Regex content search factory
+- `listFiles.ts` - Glob-based file listing factory
+- `getFileInfo.ts` - File/folder metadata retrieval factory
 - `pathUtils.ts` - Shared path normalization, glob matching (case-insensitive), and case-insensitive file/folder lookup utilities
 - `protected.ts` - Protected path validation utility (case-insensitive)
 - `index.ts` - `createVaultTools()` aggregator

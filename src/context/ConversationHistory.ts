@@ -42,7 +42,7 @@ const HISTORY_DATA_KEY = "conversationHistory";
  *   timestamp: new Date().toISOString(),
  *   userMessage: "Create a note about cats",
  *   assistantResponse: "I created a new note...",
- *   toolsUsed: ["createNote"]
+ *   toolsUsed: ["write_file"]
  * });
  * const context = history.getContextPrompt();
  * ```
