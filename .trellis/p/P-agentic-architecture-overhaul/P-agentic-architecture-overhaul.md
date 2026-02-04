@@ -1,14 +1,21 @@
 ---
 id: P-agentic-architecture-overhaul
 title: Agentic Architecture Overhaul
-status: open
+status: in-progress
 priority: high
 parent: none
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/protected.ts: Created new protected path utility with
+    isProtectedPath(), assertNotProtected(), and internal normalizePath()
+    functions
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - E-communication-and-conversation
+  - E-file-operation-tools
+  - E-search-and-discovery-tools
+  - E-tool-migration-and-cleanup
 created: 2026-02-04T01:54:52.442Z
 updated: 2026-02-04T01:54:52.442Z
 ---

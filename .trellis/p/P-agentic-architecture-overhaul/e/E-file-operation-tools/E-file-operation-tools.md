@@ -1,14 +1,23 @@
 ---
 id: E-file-operation-tools
 title: File Operation Tools
-status: open
+status: in-progress
 priority: high
 parent: P-agentic-architecture-overhaul
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/protected.ts: Created new protected path utility with
+    isProtectedPath(), assertNotProtected(), and internal normalizePath()
+    functions
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - F-create-folder-tool
+  - F-delete-tool
+  - F-edit-file-tool
+  - F-move-tool
+  - F-read-file-tool
+  - F-write-file-tool
 created: 2026-02-04T01:57:36.976Z
 updated: 2026-02-04T01:57:36.976Z
 ---
