@@ -39,7 +39,7 @@ Run "SmartHole: Open Chat" from the command palette (Ctrl/Cmd+P).
 │  │ Assistant            10:31am │   │
 │  │ Created 'Meeting Notes.md'  │   │
 │  │ ▼ Tools used (1)            │   │
-│  │   • create_note             │   │
+│  │   • write_file              │   │
 │  └─────────────────────────────┘   │
 │                                     │
 ├─────────────────────────────────────┤

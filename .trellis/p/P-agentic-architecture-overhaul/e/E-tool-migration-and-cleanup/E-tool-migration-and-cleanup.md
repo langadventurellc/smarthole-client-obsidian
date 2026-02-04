@@ -1,7 +1,7 @@
 ---
 id: E-tool-migration-and-cleanup
 title: Tool Migration and Cleanup
-status: in-progress
+status: done
 priority: medium
 parent: P-agentic-architecture-overhaul
 prerequisites:
@@ -19,7 +19,10 @@ affectedFiles:
   src/llm/tools/modifyNote.ts: DELETED - old MVP tool for modifying notes
   src/llm/tools/searchNotes.ts: DELETED - old MVP tool for searching notes
   src/llm/tools/organizeNotes.ts: DELETED - old MVP tool for organizing notes
-log: []
+  docs/llm-service.md: Updated line 97 example to use current tool names (search_files, read_file)
+  docs/chat-view.md: Updated line 42 ASCII diagram to show write_file instead of create_note
+log:
+  - "Auto-completed: All child features are complete"
 schema: v1.0
 childrenIds:
   - F-remove-old-mvp-tools

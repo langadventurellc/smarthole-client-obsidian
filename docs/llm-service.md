@@ -94,7 +94,7 @@ The service automatically handles multi-turn conversations when tools are invoke
 ```typescript
 // Automatic tool execution loop
 const result = await service.processMessage("Search for notes about project X and summarize");
-// May involve: search_notes → read results → generate summary
+// May involve: search_files → read_file → generate summary
 ```
 
 ## Conversation History

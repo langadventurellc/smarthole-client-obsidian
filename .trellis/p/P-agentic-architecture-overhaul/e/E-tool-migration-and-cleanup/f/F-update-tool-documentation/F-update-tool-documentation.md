@@ -1,15 +1,19 @@
 ---
 id: F-update-tool-documentation
 title: Update Tool Documentation
-status: open
+status: done
 priority: medium
 parent: E-tool-migration-and-cleanup
 prerequisites:
   - F-remove-old-mvp-tools
-affectedFiles: {}
-log: []
+affectedFiles:
+  docs/llm-service.md: Updated line 97 example to use current tool names (search_files, read_file)
+  docs/chat-view.md: Updated line 42 ASCII diagram to show write_file instead of create_note
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-update-remaining-documentation
 created: 2026-02-04T06:44:43.901Z
 updated: 2026-02-04T06:44:43.901Z
 ---
