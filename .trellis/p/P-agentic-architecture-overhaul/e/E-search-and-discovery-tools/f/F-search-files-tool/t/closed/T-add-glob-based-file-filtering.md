@@ -1,13 +1,23 @@
 ---
 id: T-add-glob-based-file-filtering
 title: Add glob-based file filtering to searchFiles tool
-status: open
+status: done
 priority: high
 parent: F-search-files-tool
 prerequisites:
   - T-create-searchfiles-tool-with
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/searchFiles.ts: Added globToRegex() function to convert glob
+    patterns to RegExp, matchGlob() function to test file paths against
+    patterns, and integrated glob filtering into the execute function. Updated
+    the file_pattern parameter description to reflect the implemented behavior.
+log:
+  - Added glob-based file filtering to the searchFiles tool. Implemented a
+    simple glob-to-regex converter that supports the required patterns (*.ext,
+    folder/*, folder/**, **/*.ext, **). When the file_pattern parameter is
+    provided, the tool now searches all vault files matching the glob pattern.
+    When omitted, it defaults to searching only markdown files. Protected paths
+    (.obsidian/, .smarthole/) remain excluded regardless of the file pattern.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T04:24:44.606Z

@@ -19,6 +19,61 @@ const DEFAULT_MAX_RESULTS = 10;
 /** Maximum excerpts per file to prevent overwhelming output */
 const MAX_EXCERPTS_PER_FILE = 5;
 
+/**
+ * Converts a glob pattern to a RegExp for matching file paths.
+ *
+ * Supported patterns: "*.ext" (root files), "**\/*.ext" (any directory),
+ * "folder/*" (direct children), "folder/**" (recursive), "**" (any path).
+ */
+function globToRegex(globPattern: string): RegExp {
+  // Normalize pattern: remove leading/trailing slashes, convert backslashes
+  let pattern = globPattern.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+
+  // Escape regex special characters except * and ?
+  pattern = pattern.replace(/[.+^${}()|[\]]/g, "\\$&");
+
+  // Handle ** (match any path segment including slashes)
+  // Replace **/ with a placeholder first to handle it separately
+  pattern = pattern.replace(/\*\*\//g, "{{GLOBSTAR_SLASH}}");
+  // Replace remaining ** (at end or standalone)
+  pattern = pattern.replace(/\*\*/g, "{{GLOBSTAR}}");
+
+  // Handle * (match anything except /)
+  pattern = pattern.replace(/\*/g, "[^/]*");
+
+  // Handle ? (match single character except /)
+  pattern = pattern.replace(/\?/g, "[^/]");
+
+  // Replace placeholders with actual regex
+  // **/ matches zero or more path segments
+  pattern = pattern.replace(/\{\{GLOBSTAR_SLASH\}\}/g, "(?:.*?/)?");
+  // ** at end matches anything including nested paths
+  pattern = pattern.replace(/\{\{GLOBSTAR\}\}/g, ".*");
+
+  // Anchor the pattern to match the full path
+  return new RegExp(`^${pattern}$`);
+}
+
+/**
+ * Tests if a file path matches a glob pattern.
+ *
+ * @param filePath - The file path to test (relative to vault root)
+ * @param globPattern - The glob pattern to match against
+ * @returns true if the path matches the pattern
+ */
+function matchGlob(filePath: string, globPattern: string): boolean {
+  // Normalize the file path
+  const normalizedPath = filePath.replace(/\\/g, "/").replace(/^\/+/, "");
+
+  try {
+    const regex = globToRegex(globPattern);
+    return regex.test(normalizedPath);
+  } catch {
+    // Invalid glob pattern - return false rather than throwing
+    return false;
+  }
+}
+
 interface FileMatch {
   path: string;
   excerpts: MatchExcerpt[];
@@ -181,7 +236,7 @@ const toolDefinition: Tool = {
       file_pattern: {
         type: "string",
         description:
-          "Glob pattern to filter files (e.g., '*.md', 'Projects/**'). Currently searches all markdown files; glob filtering coming in a future update.",
+          "Glob pattern to filter files (e.g., '*.md', 'Projects/**', '**/*.txt'). When provided, searches all matching files. When omitted, searches only markdown files.",
       },
       context_lines: {
         type: "integer",
@@ -207,9 +262,9 @@ export function createSearchFilesTool(app: App): ToolHandler {
     definition: toolDefinition,
     execute: async (input: Record<string, unknown>): Promise<string> => {
       const patternInput = input.pattern as string;
+      const filePatternInput = input.file_pattern as string | undefined;
       const contextLinesInput = input.context_lines as number | undefined;
       const maxResultsInput = input.max_results as number | undefined;
-      // file_pattern is defined in schema but not implemented yet (glob filtering in follow-up task)
 
       // Validate pattern
       if (!patternInput || typeof patternInput !== "string" || patternInput.trim().length === 0) {
@@ -238,13 +293,25 @@ export function createSearchFilesTool(app: App): ToolHandler {
           ? maxResultsInput
           : DEFAULT_MAX_RESULTS;
 
-      // Get all markdown files (glob filtering will be added in follow-up task)
-      const markdownFiles = app.vault.getMarkdownFiles();
+      // Get files to search based on file_pattern
+      let files: TFile[];
+      if (
+        filePatternInput &&
+        typeof filePatternInput === "string" &&
+        filePatternInput.trim().length > 0
+      ) {
+        // When file_pattern is provided, search all files matching the glob pattern
+        const filePattern = filePatternInput.trim();
+        files = app.vault.getFiles().filter((file) => matchGlob(file.path, filePattern));
+      } else {
+        // Default: search only markdown files
+        files = app.vault.getMarkdownFiles();
+      }
 
       // Search files and collect matches
       const matches: FileMatch[] = [];
 
-      for (const file of markdownFiles) {
+      for (const file of files) {
         const match = await searchFile(file, regex, contextLines, app);
 
         if (match) {

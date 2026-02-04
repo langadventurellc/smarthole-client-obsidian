@@ -8,13 +8,16 @@ prerequisites: []
 affectedFiles:
   src/llm/tools/searchFiles.ts: Created new search_files tool with regex-based
     content search, line context extraction, protected path filtering, and
-    result formatting with line numbers
+    result formatting with line numbers; Added globToRegex() function to convert
+    glob patterns to RegExp, matchGlob() function to test file paths against
+    patterns, and integrated glob filtering into the execute function. Updated
+    the file_pattern parameter description to reflect the implemented behavior.
 log: []
 schema: v1.0
 childrenIds:
   - T-add-glob-based-file-filtering
-  - T-create-searchfiles-tool-with
   - T-register-searchfiles-tool-in
+  - T-create-searchfiles-tool-with
 created: 2026-02-04T04:19:40.194Z
 updated: 2026-02-04T04:19:40.194Z
 ---
