@@ -15,6 +15,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `write_file` | Write content to files (create or overwrite) |
 | `create_folder` | Create folders in the vault |
 | `delete_file` | Soft-delete files or folders to trash |
+| `move_file` | Move or rename files and folders |
 
 ## Usage
 
@@ -569,6 +570,89 @@ Error: Access denied: Cannot access files in '.obsidian/' directory (protected s
 - Files go to trash (recoverable) rather than being permanently deleted
 - The exact trash behavior depends on user's Obsidian settings
 
+## move_file
+
+Move or rename files and folders within the vault.
+
+### Input Schema
+
+```typescript
+{
+  source: string,       // Path to the file or folder to move (required)
+  destination: string   // New path for the file or folder (required)
+}
+```
+
+### Behavior
+
+- Moves files to different locations or renames them in place
+- Moves folders with all their contents
+- Auto-creates parent directories for the destination
+- Blocks access to protected folders (`.obsidian/`, `.smarthole/`) for both source and destination
+- Validates source exists before moving
+- Validates destination doesn't already exist (no overwrites)
+- Handles same-path case gracefully (no-op with clear message)
+- Updates internal links if Obsidian is configured to do so
+
+### Example
+
+```typescript
+// Rename a file in place
+{
+  name: "move_file",
+  input: {
+    source: "notes/old-name.md",
+    destination: "notes/new-name.md"
+  }
+}
+
+// Move a file to a different folder
+{
+  name: "move_file",
+  input: {
+    source: "Inbox/meeting-notes.md",
+    destination: "Meetings/2026/February/meeting-notes.md"
+  }
+}
+
+// Move an entire folder
+{
+  name: "move_file",
+  input: {
+    source: "Projects/old-project",
+    destination: "Archive/2026/old-project"
+  }
+}
+```
+
+### Response Format
+
+Success responses:
+```
+Moved "notes/old-name.md" to "notes/new-name.md".
+Moved "Inbox/meeting-notes.md" to "Meetings/2026/February/meeting-notes.md".
+```
+
+Same path (no-op):
+```
+No changes made: source and destination are the same path ("notes/file.md").
+```
+
+Error responses:
+```
+Error: source is required and must be a non-empty string.
+Error: destination is required and must be a non-empty string.
+Error: Source not found: "nonexistent.md"
+Error: Destination already exists: "existing-file.md"
+Error: Access denied: Cannot access files in '.obsidian/' directory (protected system folder)
+```
+
+### When to Use
+
+- **Use `move_file`** when you need to rename files or move them to different locations
+- Works for both files and folders (folders move with all contents)
+- **Use `organize_note`** as an alternative for note-specific moves (adds `.md` extension automatically)
+
 ## Tool Handler Interface
 
 ```typescript
@@ -615,5 +699,6 @@ Located in `src/llm/tools/`:
 - `writeFile.ts` - Full file write/overwrite factory
 - `createFolder.ts` - Folder creation factory
 - `deleteFile.ts` - File/folder deletion factory
+- `moveFile.ts` - File/folder move/rename factory
 - `protected.ts` - Protected path validation utility
 - `index.ts` - `createVaultTools()` aggregator
