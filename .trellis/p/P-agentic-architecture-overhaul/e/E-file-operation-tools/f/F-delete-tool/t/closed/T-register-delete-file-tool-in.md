@@ -1,13 +1,18 @@
 ---
 id: T-register-delete-file-tool-in
 title: Register delete_file tool in index
-status: open
+status: done
 priority: medium
 parent: F-delete-tool
 prerequisites:
   - T-implement-delete-file-tool
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/index.ts: Added import for createDeleteFileTool, added to
+    createVaultTools() array, and added re-export
+log:
+  - Registered the delete_file tool in the tools index by adding the import
+    statement, including it in the createVaultTools() array, and adding the
+    re-export for selective use.
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T03:39:12.806Z
