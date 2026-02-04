@@ -1,15 +1,23 @@
 ---
 id: F-edit-file-tool
 title: Edit File Tool
-status: open
+status: in-progress
 priority: high
 parent: E-file-operation-tools
 prerequisites:
   - F-read-file-tool
-affectedFiles: {}
+affectedFiles:
+  src/llm/tools/editFile.ts: Created new edit_file tool with search/replace
+    functionality, supporting first occurrence or all occurrences replacement,
+    protected path validation, and atomic file operations
+  src/llm/tools/index.ts: Added import and export for createEditFileTool, added to
+    createVaultTools array
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-line-based-operations-to
+  - T-implement-edit-file-tool-with
+  - T-register-edit-file-tool-in
 created: 2026-02-04T02:03:57.093Z
 updated: 2026-02-04T02:03:57.093Z
 ---
