@@ -16,15 +16,19 @@ affectedFiles:
     paths to lowercase before checking against PROTECTED_FOLDERS. Updated
     isProtectedPath() and assertNotProtected() functions. Enhanced docstring
     examples to document case-insensitive behavior.
+  src/llm/tools/readFile.ts: Added import for findFileInsensitive from
+    pathUtils.ts. Replaced app.vault.getFileByPath() with findFileInsensitive()
+    for case-insensitive file lookup. Added handling for ambiguous paths
+    (multiple case-insensitive matches) with a helpful error message.
 log: []
 schema: v1.0
 childrenIds:
-  - T-make-protected-path-checking
   - T-update-get-file-info-tool-to
   - T-update-list-files-tool-to-use
   - T-update-read-file-tool-to-use
   - T-add-case-insensitive-path
   - T-make-glob-matching-case
+  - T-make-protected-path-checking
 created: 2026-02-04T05:07:02.971Z
 updated: 2026-02-04T05:07:02.971Z
 ---

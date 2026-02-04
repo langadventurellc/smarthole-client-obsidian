@@ -8,6 +8,7 @@
 import type { App } from "obsidian";
 import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
+import { findFileInsensitive } from "./pathUtils";
 import { assertNotProtected } from "./protected";
 
 /** Maximum lines to return before truncation */
@@ -79,11 +80,15 @@ export function createReadFileTool(app: App): ToolHandler {
         return error instanceof Error ? `Error: ${error.message}` : "Error: Access denied.";
       }
 
-      // Get the file
-      const file = app.vault.getFileByPath(filePath);
-      if (!file) {
+      // Get the file (case-insensitive lookup for speech-to-text usability)
+      const result = findFileInsensitive(app, filePath);
+      if (result.ambiguous) {
+        return `Error: Multiple files match "${filePath}" with different casing. Please specify the exact path.`;
+      }
+      if (!result.item) {
         return `Error: File not found: "${filePath}"`;
       }
+      const file = result.item;
 
       // Read file content
       const content = await app.vault.read(file);

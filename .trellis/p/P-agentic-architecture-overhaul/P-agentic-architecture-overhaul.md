@@ -14,7 +14,11 @@ affectedFiles:
     examples to document case-insensitive behavior.
   src/llm/tools/readFile.ts: Created new read_file tool with path validation,
     protected path checking, line number formatting, optional line range
-    filtering, and smart truncation for large files
+    filtering, and smart truncation for large files; Added import for
+    findFileInsensitive from pathUtils.ts. Replaced app.vault.getFileByPath()
+    with findFileInsensitive() for case-insensitive file lookup. Added handling
+    for ambiguous paths (multiple case-insensitive matches) with a helpful error
+    message.
   src/llm/tools/index.ts: Added import and export for createReadFileTool, added to
     createVaultTools() array; Added import and export for createEditFileTool,
     added to createVaultTools array; Added import and export for

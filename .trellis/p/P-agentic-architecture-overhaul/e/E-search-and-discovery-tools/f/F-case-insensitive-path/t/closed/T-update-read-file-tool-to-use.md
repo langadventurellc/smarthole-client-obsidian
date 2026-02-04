@@ -1,13 +1,24 @@
 ---
 id: T-update-read-file-tool-to-use
 title: Update read_file tool to use case-insensitive path lookup
-status: open
+status: done
 priority: medium
 parent: F-case-insensitive-path
 prerequisites:
   - T-add-case-insensitive-path
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/readFile.ts: Added import for findFileInsensitive from
+    pathUtils.ts. Replaced app.vault.getFileByPath() with findFileInsensitive()
+    for case-insensitive file lookup. Added handling for ambiguous paths
+    (multiple case-insensitive matches) with a helpful error message.
+log:
+  - "Updated read_file tool to use case-insensitive path lookup via
+    findFileInsensitive() helper. The tool now: (1) tries exact match first for
+    performance, (2) falls back to case-insensitive enumeration if no exact
+    match, (3) returns a clear error message when multiple files match with
+    different casing, and (4) maintains existing error handling for missing
+    files. This improves usability for speech-to-text input where users may not
+    remember exact file casing."
 schema: v1.0
 childrenIds: []
 created: 2026-02-04T05:23:00.240Z
