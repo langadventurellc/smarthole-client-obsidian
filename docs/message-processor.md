@@ -71,6 +71,12 @@ processor.onResponse((messageId, response, toolsUsed) => {
 processor.onMessageReceived((message) => {
   // Display in chat UI
 });
+
+// Subscribe to mid-execution agent messages (from send_message tool)
+processor.onAgentMessage((message) => {
+  // Display real-time updates from agent
+  console.log(message.content, message.isQuestion);
+});
 ```
 
 ## Process Result
@@ -141,6 +147,26 @@ Messages are saved to `.smarthole/inbox/` before processing:
 - Successful messages cleaned up after processing
 - `reprocessPending()` handles recovery on plugin load
 
+## Agent Communication (send_message Tool)
+
+The processor integrates the `send_message` tool, allowing the agent to communicate with users during task execution:
+
+```typescript
+// Tool is automatically registered during processWithRetry()
+// Uses SendMessageContext to route messages to appropriate channels
+
+interface SendMessageContext {
+  sendToSmartHole: (message: string, priority?: "normal" | "high") => void;
+  sendToChatView: (message: string, isQuestion: boolean) => void;
+  source: "websocket" | "direct";
+}
+```
+
+- Messages always appear in ChatView (regardless of source)
+- WebSocket messages also send SmartHole notifications
+- Questions use high priority for SmartHole notifications
+- Supports `is_question` flag for conversational workflows
+
 ## Configuration
 
 ```typescript
@@ -157,6 +183,6 @@ interface MessageProcessorConfig {
 ## Implementation
 
 Located in `src/processor/`:
-- `types.ts` - Configuration and result interfaces
+- `types.ts` - Configuration and result interfaces (includes `AgentMessageCallback`)
 - `MessageProcessor.ts` - Main orchestration class
 - `index.ts` - Public exports

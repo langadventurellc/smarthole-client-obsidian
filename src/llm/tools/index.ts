@@ -59,3 +59,7 @@ export { createMoveFileTool } from "./moveFile";
 export { createSearchFilesTool } from "./searchFiles";
 export { createListFilesTool } from "./listFiles";
 export { createGetFileInfoTool } from "./getFileInfo";
+
+// Send Message Tool (separate from vault tools - requires runtime context)
+export { createSendMessageTool } from "./sendMessage";
+export type { SendMessageContext, SendMessageInput } from "./sendMessage";

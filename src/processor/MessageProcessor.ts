@@ -10,12 +10,20 @@ import type { ConversationHistory, HistoryEntry } from "../context";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
 import type { InboxManager, InboxMessage } from "../inbox";
-import { LLMService, LLMError, extractTextContent, createVaultTools } from "../llm";
+import {
+  LLMService,
+  LLMError,
+  extractTextContent,
+  createVaultTools,
+  createSendMessageTool,
+} from "../llm";
+import type { SendMessageContext } from "../llm";
 import type {
   MessageProcessorConfig,
   ProcessResult,
   ResponseCallback,
   MessageReceivedCallback,
+  AgentMessageCallback,
 } from "./types";
 
 /** Maximum number of retry attempts for transient LLM errors */
@@ -32,6 +40,7 @@ export class MessageProcessor {
   private conversationHistory: ConversationHistory;
   private responseCallbacks: ResponseCallback[] = [];
   private messageReceivedCallbacks: MessageReceivedCallback[] = [];
+  private agentMessageCallbacks: AgentMessageCallback[] = [];
 
   constructor(config: MessageProcessorConfig) {
     this.connection = config.connection;
@@ -64,6 +73,38 @@ export class MessageProcessor {
       const idx = this.messageReceivedCallbacks.indexOf(callback);
       if (idx >= 0) this.messageReceivedCallbacks.splice(idx, 1);
     };
+  }
+
+  /**
+   * Register a callback for mid-execution agent messages.
+   * Used by ChatView to receive real-time updates from send_message tool.
+   * Returns an unsubscribe function.
+   */
+  onAgentMessage(callback: AgentMessageCallback): () => void {
+    this.agentMessageCallbacks.push(callback);
+    return () => {
+      const idx = this.agentMessageCallbacks.indexOf(callback);
+      if (idx >= 0) this.agentMessageCallbacks.splice(idx, 1);
+    };
+  }
+
+  /**
+   * Notify listeners of a mid-execution agent message.
+   * Called by send_message tool context during LLM processing.
+   */
+  notifyAgentMessageCallbacks(content: string, isQuestion: boolean): void {
+    const message = {
+      content,
+      isQuestion,
+      timestamp: new Date().toISOString(),
+    };
+    for (const callback of this.agentMessageCallbacks) {
+      try {
+        callback(message);
+      } catch (err) {
+        console.error("MessageProcessor: Agent message callback error:", err);
+      }
+    }
   }
 
   private notifyMessageReceivedCallbacks(message: RoutedMessage): void {
@@ -240,6 +281,24 @@ export class MessageProcessor {
         for (const tool of tools) {
           llmService.registerTool(tool);
         }
+
+        // Create SendMessageContext and register send_message tool
+        const sendMessageContext: SendMessageContext = {
+          sendToSmartHole: (message: string, priority: "normal" | "high" = "normal") => {
+            this.connection.sendNotification(messageId, {
+              body: message,
+              priority,
+            });
+          },
+          sendToChatView: (message: string, isQuestion: boolean) => {
+            this.notifyAgentMessageCallbacks(message, isQuestion);
+          },
+          source,
+        };
+
+        const sendMessageTool = createSendMessageTool(sendMessageContext);
+        llmService.registerTool(sendMessageTool);
+        toolNames.push(sendMessageTool.definition.name);
 
         // Process the message
         const response = await llmService.processMessage(messageText);

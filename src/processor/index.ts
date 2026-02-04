@@ -11,6 +11,7 @@ export type {
   ProcessResult,
   ResponseCallback,
   MessageReceivedCallback,
+  AgentMessageCallback,
 } from "./types";
 
 // Processor Class

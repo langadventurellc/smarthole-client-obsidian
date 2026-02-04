@@ -2,7 +2,12 @@ import { Plugin, WorkspaceLeaf } from "obsidian";
 
 import { ConversationHistory } from "./context";
 import { InboxManager } from "./inbox";
-import { MessageProcessor, type ResponseCallback, type MessageReceivedCallback } from "./processor";
+import {
+  MessageProcessor,
+  type ResponseCallback,
+  type MessageReceivedCallback,
+  type AgentMessageCallback,
+} from "./processor";
 import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 import type { ConnectionStatus } from "./types";
 import { ChatView, VIEW_TYPE_CHAT } from "./views";
@@ -225,5 +230,17 @@ export default class SmartHolePlugin extends Plugin {
       return () => {};
     }
     return this.messageProcessor.onMessageReceived(callback);
+  }
+
+  /**
+   * Register a callback for mid-execution agent messages.
+   * Used by ChatView to receive real-time updates from send_message tool.
+   * Returns an unsubscribe function.
+   */
+  onAgentMessage(callback: AgentMessageCallback): () => void {
+    if (!this.messageProcessor) {
+      return () => {};
+    }
+    return this.messageProcessor.onAgentMessage(callback);
   }
 }

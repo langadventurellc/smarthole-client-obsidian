@@ -158,11 +158,40 @@ const provider = new AnthropicProvider(
 | Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | Balanced |
 | Claude Opus 4.5 | `claude-opus-4-5-20251101` | Maximum capability |
 
+## Communication Tools
+
+Beyond vault manipulation tools, the service supports communication tools:
+
+### send_message
+
+Allows the agent to send messages to users during task execution:
+
+```typescript
+import { createSendMessageTool, SendMessageContext } from "./llm/tools";
+
+const context: SendMessageContext = {
+  sendToSmartHole: (msg, priority) => connection.sendNotification(msg, priority),
+  sendToChatView: (msg, isQuestion) => notifyCallback({ content: msg, isQuestion }),
+  source: "websocket" | "direct",
+};
+
+const tool = createSendMessageTool(context);
+service.registerTool(tool);
+```
+
+Tool input:
+```typescript
+{
+  message: string,      // Message content (required)
+  is_question?: boolean // Whether waiting for user response
+}
+```
+
 ## Implementation
 
 Located in `src/llm/`:
 - `types.ts` - Provider-agnostic type definitions
 - `LLMService.ts` - Main orchestration service
 - `AnthropicProvider.ts` - Claude API integration
-- `tools/` - Vault manipulation tools
+- `tools/` - Vault manipulation and communication tools
 - `index.ts` - Public exports

@@ -1,15 +1,45 @@
 ---
 id: E-communication-and-conversation
 title: Communication and Conversation State
-status: open
+status: in-progress
 priority: high
 parent: P-agentic-architecture-overhaul
 prerequisites:
   - E-file-operation-tools
-affectedFiles: {}
+affectedFiles:
+  src/processor/types.ts: Added AgentMessageCallback type definition with JSDoc comment
+  src/processor/MessageProcessor.ts: Added agentMessageCallbacks array,
+    onAgentMessage() registration method, and notifyAgentMessageCallbacks()
+    notification method; Added imports for createSendMessageTool and
+    SendMessageContext. In processWithRetry(), created SendMessageContext with
+    channel functions and registered the send_message tool with LLMService.
+  src/processor/index.ts: Added AgentMessageCallback to module exports
+  src/llm/tools/sendMessage.ts: Created new file with SendMessageContext interface
+    (sendToSmartHole, sendToChatView, source properties) and SendMessageInput
+    interface (message, is_question properties). Includes comprehensive JSDoc
+    documentation explaining the purpose of each field.; Added imports for
+    ToolHandler and Tool types, added toolDefinition constant with name
+    'send_message', description, and inputSchema, and added
+    createSendMessageTool factory function that creates a ToolHandler with
+    validation, ChatView and SmartHole delivery logic, and appropriate return
+    messages
+  src/llm/tools/index.ts: Added exports for createSendMessageTool,
+    SendMessageContext, and SendMessageInput from sendMessage module
+  src/llm/index.ts: Added re-exports for createSendMessageTool,
+    SendMessageContext, and SendMessageInput from tools module
+  src/main.ts: Added import for AgentMessageCallback type and added
+    onAgentMessage() method that delegates to MessageProcessor.onAgentMessage()
+    for ChatView subscription
+  src/views/ChatView.ts: Added unsubscribeAgentMessage property, subscribed to
+    agent messages in onOpen() to display mid-execution messages as assistant
+    messages, and added cleanup in onClose()
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - F-conversation-boundaries-and
+  - F-conversation-state-management
+  - F-get-conversation-tool
+  - F-send-message-tool
 created: 2026-02-04T01:58:12.351Z
 updated: 2026-02-04T01:58:12.351Z
 ---

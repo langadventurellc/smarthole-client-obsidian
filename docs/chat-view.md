@@ -10,6 +10,7 @@ In-Obsidian sidebar interface for direct interaction with the SmartHole agent, c
 - Tool usage display with collapsible details
 - Source indicators ("typed" vs "voice")
 - Real-time WebSocket message display
+- Real-time agent messages during task execution (via `send_message` tool)
 - Conversation history on open
 
 ## Activation
@@ -80,6 +81,11 @@ plugin.onMessageResponse((messageId, response, tools) => {
 plugin.onMessageReceived((message) => {
   // Display in chat
 });
+
+// Subscribe to mid-execution agent messages
+plugin.onAgentMessage((message) => {
+  // Display real-time agent updates
+});
 ```
 
 ### History Loading
@@ -102,6 +108,26 @@ Messages entered in ChatView bypass SmartHole routing:
 5. Response displayed in ChatView
 
 This allows using the agent without SmartHole desktop running.
+
+## Real-Time Agent Messages
+
+The agent can send messages during task execution using the `send_message` tool:
+
+- Messages appear immediately in ChatView as assistant messages
+- Displayed before the final response is complete
+- Supports `is_question` flag for conversational workflows
+- Automatically subscribed in `onOpen()` and cleaned up in `onClose()`
+
+```typescript
+// ChatView subscribes to agent messages
+const unsubscribe = plugin.onAgentMessage((message) => {
+  this.addMessage({
+    role: "assistant",
+    content: message.content,
+    timestamp: new Date(message.timestamp),
+  });
+});
+```
 
 ## Styling
 
