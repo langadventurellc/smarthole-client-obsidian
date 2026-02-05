@@ -8,6 +8,37 @@
   color: var(--text-normal);
 }
 
+/* ChatView header with title and model selector */
+.smarthole-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--size-4-2) var(--size-4-3);
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.smarthole-chat-header-title {
+  font-weight: var(--font-semibold);
+  font-size: var(--font-ui-medium);
+  color: var(--text-normal);
+}
+
+.smarthole-chat-model-select {
+  font-size: var(--font-ui-small);
+  padding: var(--size-4-1) var(--size-4-2);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.smarthole-chat-model-select:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
 /* Messages area - scrollable */
 .smarthole-chat-messages {
   flex: 1;

@@ -26,13 +26,21 @@ affectedFiles:
     visual feedback via icon swap (copy -> check -> copy after 1500ms).; Added
     dragover and drop event listeners in onOpen() for file drag-and-drop path
     normalization, and added private insertAtCursor(text: string) method for
-    inserting text at the textarea cursor position."
-  styles.css: Added .smarthole-chat-message-footer styles (flex container, hidden
+    inserting text at the textarea cursor position.; Added import for
+    CLAUDE_MODELS and ClaudeModelId from types. Added header section in onOpen()
+    before messages area with title span and model select dropdown. Dropdown
+    populates from CLAUDE_MODELS with short names, pre-selects current model,
+    and persists changes on selection."
+  styles.css: "Added .smarthole-chat-message-footer styles (flex container, hidden
     by default, visible on hover with opacity transition),
     .smarthole-chat-action-btn styles (transparent icon button with hover
     state), and parent hover rule to show footer.; Added
     .smarthole-chat-message-editing style with outline indicator and rule to
-    keep footer visible when editing
+    keep footer visible when editing; Added .smarthole-chat-header (flex row,
+    border-bottom, flex-shrink: 0), .smarthole-chat-header-title (semibold,
+    medium font), .smarthole-chat-model-select (small font, themed
+    border/background, cursor pointer), and .smarthole-chat-model-select:focus
+    (accent border, no outline) styles."
   src/context/ConversationManager.ts: "Added ConversationBranch import and
     implemented forkConversation(messageId: string) method (lines 133-177) that
     archives messages from a specified point into archivedBranches and truncates
