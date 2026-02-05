@@ -1,12 +1,24 @@
 ---
 id: T-add-enablesmartholeconnection
 title: Add enableSmartHoleConnection setting and UI toggle
-status: open
+status: done
 priority: medium
 parent: F-websocket-connection-toggle
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/settings.ts: Added enableSmartHoleConnection boolean to SmartHoleSettings
+    interface, added default value true to DEFAULT_SETTINGS, added toggle UI
+    control at top of display() method with name, description, and onChange
+    handler that saves settings and conditionally calls
+    setSmartHoleConnectionEnabled
+log:
+  - Added enableSmartHoleConnection setting to control WebSocket connection to
+    SmartHole desktop app. The setting is added to the SmartHoleSettings
+    interface with a JSDoc comment, defaults to true in DEFAULT_SETTINGS for
+    backward compatibility, and includes a toggle UI at the top of the settings
+    panel (before API Key). The toggle saves the setting on change and includes
+    a conditional call to setSmartHoleConnectionEnabled (which will be added in
+    task T-add-setsmartholeconnectionenab).
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T06:03:25.252Z

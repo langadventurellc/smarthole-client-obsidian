@@ -8,12 +8,17 @@ prerequisites: []
 affectedFiles:
   src/types.ts: Added "disabled" to ConnectionStatus type union
   src/main.ts: Added "disabled" entry to statusText Record in updateStatusBar() method
+  src/settings.ts: Added enableSmartHoleConnection boolean to SmartHoleSettings
+    interface, added default value true to DEFAULT_SETTINGS, added toggle UI
+    control at top of display() method with name, description, and onChange
+    handler that saves settings and conditionally calls
+    setSmartHoleConnectionEnabled
 log: []
 schema: v1.0
 childrenIds:
-  - T-add-disabled-status-to
   - T-add-enablesmartholeconnection
   - T-add-setsmartholeconnectionenab
+  - T-add-disabled-status-to
 created: 2026-02-05T06:01:23.639Z
 updated: 2026-02-05T06:01:23.639Z
 ---
