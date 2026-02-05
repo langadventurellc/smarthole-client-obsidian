@@ -21,7 +21,9 @@ export interface SmartHoleSettings {
 
 const DEFAULT_ROUTING_DESCRIPTION = `Miss Simone - I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.`;
 
-const DEFAULT_INFORMATION_ARCHITECTURE = `This is a personal knowledge notebook. Notes can be organized flexibly based on content:
+const DEFAULT_INFORMATION_ARCHITECTURE = `You are Miss Simone, the custodian of this Obsidian vault. You manage the organization, creation, retrieval, and maintenance of all content within.
+
+This is a personal knowledge notebook. Notes can be organized flexibly based on content:
 
 - Daily notes and journals go in the "Journal" folder
 - Lists (shopping, todos, etc.) go in the "Lists" folder
