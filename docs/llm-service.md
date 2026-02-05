@@ -23,6 +23,8 @@ service.setSystemPrompt("You are a helpful assistant.");
 service.setConversationContext("Previous conversation summary...");
 ```
 
+The system prompt automatically includes the user's current local time with IANA timezone name and UTC offset (e.g., `Thursday, Feb 5, 2026 2:30 PM (America/New_York, UTC-5)`), giving the LLM awareness of the user's temporal context for interpreting references like "yesterday" or "this morning".
+
 ## Architecture
 
 ```

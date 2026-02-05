@@ -4,7 +4,7 @@ Obsidian plugin that acts as a SmartHole client, using Claude (Anthropic) to int
 
 ## Tech Stack
 
-TypeScript, Obsidian Plugin API, esbuild, @anthropic-ai/sdk
+TypeScript, Obsidian Plugin API, esbuild, @anthropic-ai/sdk, Vitest
 
 ## Commands
 
@@ -33,7 +33,9 @@ src/
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
 ├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
 ├── context/       # Conversation management (ConversationManager for grouped conversations, ConversationHistory legacy)
+├── utils/         # Shared utilities (time formatting for LLM context)
 └── views/         # UI components (ChatView sidebar for direct interaction)
+tests/             # Unit tests (Vitest)
 ```
 
 ## Architecture Rules

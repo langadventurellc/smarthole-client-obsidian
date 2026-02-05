@@ -184,10 +184,10 @@ The `pattern` parameter supports common glob patterns (case-insensitive matching
 ```
 Found 5 item(s):
 
-[file] Projects/notes.md (modified: 2026-02-03)
-[file] Projects/todo.md (modified: 2026-02-01)
+[file] Projects/notes.md (modified: Feb 3, 2026)
+[file] Projects/todo.md (modified: Feb 1, 2026)
 [folder] Projects/Archive/
-[file] README.md (modified: 2026-01-30)
+[file] README.md (modified: Jan 30, 2026)
 [folder] Templates/
 ```
 
@@ -226,7 +226,7 @@ Get metadata about a file or folder without reading its contents. Uses case-inse
 - Returns clear error if multiple files/folders match with different casing (ambiguous path)
 - Blocks access to protected folders (`.obsidian/`, `.smarthole/`)
 - Returns clear error for non-existent paths
-- Formats dates in human-readable format (YYYY-MM-DD HH:MM:SS)
+- Formats dates in the user's local time (e.g., `Feb 5, 2026 10:30 AM`)
 - Formats sizes in human-readable format (bytes, KB, MB)
 
 ### Example
@@ -256,16 +256,16 @@ For a file:
 File: Projects/project-a.md
 Type: file
 Size: 2.4 KB (2,456 bytes)
-Created: 2026-01-15 10:30:22
-Modified: 2026-02-03 14:22:45
+Created: Jan 15, 2026 10:30 AM
+Modified: Feb 3, 2026 2:22 PM
 ```
 
 For a folder:
 ```
 Folder: Projects/
 Type: folder
-Created: 2026-01-10 09:00:00
-Modified: 2026-02-03 14:22:45
+Created: Jan 10, 2026 9:00 AM
+Modified: Feb 3, 2026 2:22 PM
 ```
 
 For non-existent path:
@@ -791,7 +791,7 @@ When a file is active:
 ```
 Active file: Projects/meeting-notes.md
 Name: meeting-notes.md
-Modified: 2026-02-04 10:30:22
+Modified: Feb 4, 2026 10:30 AM
 ```
 
 When no file is active:
