@@ -73,3 +73,13 @@ export type AgentMessageCallback = (message: {
   isQuestion: boolean;
   timestamp: string;
 }) => void;
+
+/**
+ * Callback type for retrospection completion notifications.
+ * Used by ChatView to display retrospection insights as a system message.
+ */
+export type RetrospectionCallback = (result: {
+  conversationTitle: string;
+  content: string;
+  timestamp: string;
+}) => void;

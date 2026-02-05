@@ -11,7 +11,8 @@ affectedFiles:
     constant, added both fields to DEFAULT_SETTINGS, and added toggle + textarea
     UI controls in the settings tab display() method
   src/main.ts: Added extraction logic for enableConversationRetrospection
-    (boolean) and retrospectionPrompt (string) in extractSettings() method
+    (boolean) and retrospectionPrompt (string) in extractSettings() method;
+    Added RetrospectionCallback import and onRetrospection() delegation method
   src/retrospection/RetrospectionService.ts: "New file: RetrospectionService class
     with runRetrospection(), buildPrompt(), formatEntry(), and
     persistRetrospection() methods"
@@ -19,6 +20,13 @@ affectedFiles:
     and RetrospectionResult type"
   tests/retrospection/RetrospectionService.test.ts: "New file: 11 unit tests
     covering buildPrompt (8 tests) and formatEntry (3 tests)"
+  src/processor/types.ts: Added RetrospectionCallback type definition after AgentMessageCallback
+  src/processor/index.ts: Added RetrospectionCallback to type exports
+  src/processor/MessageProcessor.ts: Added imports for RetrospectionService and
+    Conversation; added retrospectionCallbacks array, onRetrospection()
+    subscribe method, notifyRetrospection() and runRetrospection() methods;
+    wired Trigger Path A (end_conversation tool) and Trigger Path B (idle
+    timeout) into processWithRetry()
 log:
   - >-
     Completed comprehensive implementation plan for all 4 tasks. Each task body
@@ -69,9 +77,9 @@ log:
 schema: v1.0
 childrenIds:
   - T-add-retrospection-display-to
-  - T-create-retrospectionservice
   - T-integrate-retrospection
   - T-add-retrospection-settings
+  - T-create-retrospectionservice
 created: 2026-02-05T23:01:17.797Z
 updated: 2026-02-05T23:01:17.797Z
 ---

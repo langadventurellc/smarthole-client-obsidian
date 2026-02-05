@@ -6,7 +6,12 @@
  */
 
 import type { App } from "obsidian";
-import type { ConversationManager, ConversationMessage, ConversationState } from "../context";
+import type {
+  ConversationManager,
+  ConversationMessage,
+  ConversationState,
+  Conversation,
+} from "../context";
 import type SmartHolePlugin from "../main";
 import type { SmartHoleSettings } from "../settings";
 import type { SmartHoleConnection, RoutedMessage } from "../websocket";
@@ -21,12 +26,14 @@ import {
   createGetConversationTool,
 } from "../llm";
 import type { SendMessageContext, EndConversationContext, GetConversationContext } from "../llm";
+import { RetrospectionService } from "../retrospection";
 import type {
   MessageProcessorConfig,
   ProcessResult,
   ResponseCallback,
   MessageReceivedCallback,
   AgentMessageCallback,
+  RetrospectionCallback,
 } from "./types";
 
 /** Maximum number of retry attempts for transient LLM errors */
@@ -48,6 +55,7 @@ export class MessageProcessor {
   private responseCallbacks: ResponseCallback[] = [];
   private messageReceivedCallbacks: MessageReceivedCallback[] = [];
   private agentMessageCallbacks: AgentMessageCallback[] = [];
+  private retrospectionCallbacks: RetrospectionCallback[] = [];
 
   /** Track the active LLM service instance for cancellation support */
   private currentLLMService: LLMService | null = null;
@@ -122,6 +130,19 @@ export class MessageProcessor {
   }
 
   /**
+   * Register a callback for retrospection completion.
+   * Used by ChatView to display retrospection results as system messages.
+   * Returns an unsubscribe function.
+   */
+  onRetrospection(callback: RetrospectionCallback): () => void {
+    this.retrospectionCallbacks.push(callback);
+    return () => {
+      const idx = this.retrospectionCallbacks.indexOf(callback);
+      if (idx >= 0) this.retrospectionCallbacks.splice(idx, 1);
+    };
+  }
+
+  /**
    * Notify listeners of a mid-execution agent message.
    * Called by send_message tool context during LLM processing.
    */
@@ -165,6 +186,26 @@ export class MessageProcessor {
         console.error("MessageProcessor: Response callback error:", err);
       }
     }
+  }
+
+  private notifyRetrospection(result: {
+    conversationTitle: string;
+    content: string;
+    timestamp: string;
+  }): void {
+    for (const callback of this.retrospectionCallbacks) {
+      try {
+        callback(result);
+      } catch (err) {
+        console.error("MessageProcessor: Retrospection callback error:", err);
+      }
+    }
+  }
+
+  private async runRetrospection(conversation: Conversation): Promise<void> {
+    const service = new RetrospectionService(this.app, this.settings);
+    const result = await service.runRetrospection(conversation);
+    this.notifyRetrospection(result);
   }
 
   /** Process a message through the complete pipeline. */
@@ -389,6 +430,10 @@ export class MessageProcessor {
           // Determine which tools were actually used by examining the response history
           const toolsUsed = this.extractToolsUsed(llmService, toolNames);
 
+          // Capture active conversation ID before addMessage (for idle timeout detection)
+          const activeConvIdBeforeAdd =
+            this.conversationManager.getActiveConversation()?.id ?? null;
+
           // Record user message in conversation
           const timestamp = new Date().toISOString();
           const userMessage: ConversationMessage = {
@@ -400,6 +445,21 @@ export class MessageProcessor {
           // Pass llmService to enable auto-summary generation on idle timeout
           await this.conversationManager.addMessage(userMessage, llmService);
 
+          // Check if idle timeout triggered a conversation end
+          if (this.settings.enableConversationRetrospection && activeConvIdBeforeAdd !== null) {
+            const newActiveId = this.conversationManager.getActiveConversation()?.id ?? null;
+            if (newActiveId !== activeConvIdBeforeAdd) {
+              // The old conversation was ended due to idle timeout
+              const endedConversation =
+                this.conversationManager.getConversation(activeConvIdBeforeAdd);
+              if (endedConversation) {
+                void this.runRetrospection(endedConversation).catch((err) =>
+                  console.error("MessageProcessor: Retrospection failed:", err)
+                );
+              }
+            }
+          }
+
           // Record assistant response in conversation
           const assistantMessage: ConversationMessage = {
             id: `${messageId}-assistant`,
@@ -409,6 +469,22 @@ export class MessageProcessor {
             toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
           };
           await this.conversationManager.addMessage(assistantMessage);
+
+          // Check if end_conversation was called (conversation was explicitly ended)
+          if (
+            this.settings.enableConversationRetrospection &&
+            toolsUsed.includes("end_conversation")
+          ) {
+            // The end_conversation tool ran during processMessage(), so the conversation
+            // is already ended. Retrieve the most recently ended conversation.
+            const recentEnded = this.conversationManager.getRecentConversations(1);
+            const endedConversation = recentEnded[0];
+            if (endedConversation) {
+              void this.runRetrospection(endedConversation).catch((err) =>
+                console.error("MessageProcessor: Retrospection failed:", err)
+              );
+            }
+          }
 
           // Check if agent is waiting for user response
           const isWaitingForResponse = llmService.isWaitingForUserResponse();

@@ -1,14 +1,32 @@
 ---
 id: T-integrate-retrospection
 title: Integrate retrospection triggers into MessageProcessor
-status: open
+status: done
 priority: high
 parent: F-conversation-retrospection
 prerequisites:
   - T-add-retrospection-settings
   - T-create-retrospectionservice
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/processor/types.ts: Added RetrospectionCallback type definition after AgentMessageCallback
+  src/processor/index.ts: Added RetrospectionCallback to type exports
+  src/processor/MessageProcessor.ts: Added imports for RetrospectionService and
+    Conversation; added retrospectionCallbacks array, onRetrospection()
+    subscribe method, notifyRetrospection() and runRetrospection() methods;
+    wired Trigger Path A (end_conversation tool) and Trigger Path B (idle
+    timeout) into processWithRetry()
+  src/main.ts: Added RetrospectionCallback import and onRetrospection() delegation method
+log:
+  - Wired RetrospectionService into MessageProcessor with both conversation-end
+    trigger paths and the callback pattern for ChatView notification. Added
+    RetrospectionCallback type, onRetrospection() subscribe/unsubscribe,
+    notifyRetrospection(), and runRetrospection() to MessageProcessor.
+    Implemented Trigger Path A (explicit end_conversation tool detection via
+    toolsUsed) and Trigger Path B (idle timeout detection by comparing active
+    conversation ID before/after addMessage). Added onRetrospection() delegation
+    method to SmartHolePlugin. Both paths are non-blocking (fire-and-forget with
+    error logging) and gated behind enableConversationRetrospection setting. All
+    quality checks and tests pass.
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T23:05:25.075Z
