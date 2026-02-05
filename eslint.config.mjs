@@ -5,7 +5,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ["main.js", "*.config.mjs"],
+    ignores: ["main.js", "*.config.mjs", "*.config.ts"],
   },
   {
     rules: {

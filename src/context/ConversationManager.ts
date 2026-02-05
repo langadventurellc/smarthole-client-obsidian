@@ -1,6 +1,7 @@
 import type SmartHolePlugin from "../main";
 import type { LLMService } from "../llm";
 import { extractTextContent } from "../llm";
+import { formatLocalTimestamp } from "../utils/time";
 import type {
   Conversation,
   ConversationBranch,
@@ -189,7 +190,7 @@ export class ConversationManager {
     const messagesText = conversation.messages
       .map((msg) => {
         const tools = msg.toolsUsed?.length ? ` (tools: ${msg.toolsUsed.join(", ")})` : "";
-        return `[${msg.timestamp}]\n${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}${tools}`;
+        return `[${formatLocalTimestamp(msg.timestamp)}]\n${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}${tools}`;
       })
       .join("\n\n---\n\n");
 
@@ -269,7 +270,7 @@ SUMMARY: [your summary here]`;
 
     if (recentConversations.length > 0) {
       const summaries = recentConversations
-        .map((c) => `### ${c.title} (ended ${c.endedAt})\n${c.summary}`)
+        .map((c) => `### ${c.title} (ended ${formatLocalTimestamp(c.endedAt!)})\n${c.summary}`)
         .join("\n\n");
       sections.push(`## Recent Conversations\n${summaries}`);
     }
@@ -280,7 +281,7 @@ SUMMARY: [your summary here]`;
       const messageSection = active.messages
         .map((msg) => {
           const tools = msg.toolsUsed?.length ? ` [used: ${msg.toolsUsed.join(", ")}]` : "";
-          return `[${msg.timestamp}]\n${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}${tools}`;
+          return `[${formatLocalTimestamp(msg.timestamp)}]\n${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}${tools}`;
         })
         .join("\n\n");
       sections.push(`## Current Conversation\n${messageSection}`);

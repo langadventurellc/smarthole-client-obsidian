@@ -350,7 +350,11 @@ export class LLMService {
 
     const contextSection = this.conversationContext.trim() ? `\n\n${this.conversationContext}` : "";
 
+    const localTime = this.formatCurrentLocalTime();
+
     return `You are an intelligent assistant managing an Obsidian vault. You help users organize their notes, create new content, and find information.
+
+The current local time is: ${localTime}
 
 ${iaSection}## Guidelines
 - Make best-guess decisions rather than asking for clarification
@@ -360,6 +364,38 @@ ${iaSection}## Guidelines
 - Be concise in responses; focus on what was done rather than lengthy explanations
 
 ${toolsSection}${contextSection}`.trim();
+  }
+
+  /**
+   * Format the current local time with IANA timezone name and UTC offset.
+   * Example: "Thursday, Feb 5, 2026 2:30 PM (America/New_York, UTC-5)"
+   */
+  private formatCurrentLocalTime(): string {
+    const now = new Date();
+
+    const formatted = now.toLocaleString(undefined, {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // getTimezoneOffset() returns minutes, negative for east of UTC
+    const offsetMinutes = now.getTimezoneOffset();
+    const offsetSign = offsetMinutes <= 0 ? "+" : "-";
+    const absOffset = Math.abs(offsetMinutes);
+    const offsetHours = Math.floor(absOffset / 60);
+    const offsetMins = absOffset % 60;
+    const utcOffset =
+      offsetMins === 0
+        ? `UTC${offsetSign}${offsetHours}`
+        : `UTC${offsetSign}${offsetHours}:${String(offsetMins).padStart(2, "0")}`;
+
+    return `${formatted} (${timezone}, ${utcOffset})`;
   }
 
   /**

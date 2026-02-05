@@ -142,19 +142,21 @@ Returns formatted context for the system prompt, including summaries of the last
 const contextPrompt = conversationManager.getContextPrompt();
 // Returns:
 // ## Recent Conversations
-// ### Meeting Notes Setup (ended 2025-01-15T09:00:00Z)
+// ### Meeting Notes Setup (ended Jan 15, 2025 9:00 AM)
 // User asked to set up a meeting notes template. Created template in Templates folder.
 //
-// ### Daily Journal Configuration (ended 2025-01-14T16:30:00Z)
+// ### Daily Journal Configuration (ended Jan 14, 2025 4:30 PM)
 // User configured daily journal settings. Updated frontmatter template and folder path.
 //
 // ## Current Conversation
-// [2025-01-15T10:00:00Z]
+// [Jan 15, 2025 10:00 AM]
 // User: Create a note about today's meeting
 //
-// [2025-01-15T10:00:05Z]
+// [Jan 15, 2025 10:00 AM]
 // Assistant: I've created 'Meeting Notes.md' in your Journal folder. [used: write_file]
 ```
+
+Note: All timestamps in the context prompt are formatted in the user's local time via `formatLocalTimestamp()` from `src/utils/time.ts`. Stored data remains UTC ISO 8601.
 
 The `## Recent Conversations` section is omitted when there are no ended conversations with both a title and summary. The `## Current Conversation` section is omitted when there is no active conversation. If neither section has content, an empty string is returned.
 

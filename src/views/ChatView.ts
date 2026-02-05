@@ -1,4 +1,4 @@
-import { ItemView, setIcon, WorkspaceLeaf } from "obsidian";
+import { ItemView, MarkdownRenderer, setIcon, WorkspaceLeaf } from "obsidian";
 import type SmartHolePlugin from "../main";
 import type { ConversationManager } from "../context";
 import { CLAUDE_MODELS, type ClaudeModelId } from "../types";
@@ -156,7 +156,7 @@ export class ChatView extends ItemView {
     const activeConversation = conversationManager?.getActiveConversation();
     if (activeConversation) {
       for (const message of activeConversation.messages) {
-        this.addMessage({
+        await this.addMessage({
           id: message.id,
           role: message.role,
           content: message.content,
@@ -165,7 +165,6 @@ export class ChatView extends ItemView {
         });
       }
     }
-    this.scrollToBottom();
 
     // Subscribe to message processing responses
     this.unsubscribe = this.plugin.onMessageResponse((result) => {
@@ -261,7 +260,7 @@ export class ChatView extends ItemView {
     this.onSendCallback = callback;
   }
 
-  addMessage(message: ChatMessage): void {
+  async addMessage(message: ChatMessage): Promise<void> {
     // Deduplicate messages by ID
     if (this.renderedMessageIds.has(message.id)) {
       return;
@@ -269,7 +268,7 @@ export class ChatView extends ItemView {
     this.renderedMessageIds.add(message.id);
 
     this.messages.push(message);
-    this.renderMessage(message);
+    await this.renderMessage(message);
     this.scrollToBottom();
   }
 
@@ -430,7 +429,7 @@ export class ChatView extends ItemView {
     );
   }
 
-  private renderMessage(message: ChatMessage): void {
+  private async renderMessage(message: ChatMessage): Promise<void> {
     if (!this.messagesEl) return;
 
     const messageEl = this.messagesEl.createEl("div", {
@@ -450,8 +449,10 @@ export class ChatView extends ItemView {
     timestampEl.setText(this.formatTimestamp(message.timestamp));
 
     // Content
-    const contentEl = messageEl.createEl("div", { cls: "smarthole-chat-message-content" });
-    contentEl.setText(message.content);
+    const contentEl = messageEl.createEl("div", {
+      cls: "smarthole-chat-message-content markdown-rendered",
+    });
+    await MarkdownRenderer.render(this.app, message.content, contentEl, "", this);
 
     // Source indicator for user messages
     if (message.role === "user" && message.source) {
