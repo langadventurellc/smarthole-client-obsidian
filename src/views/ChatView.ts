@@ -297,6 +297,31 @@ export class ChatView extends ItemView {
         toolItem.setText(tool);
       }
     }
+
+    // Footer action bar
+    const footerEl = messageEl.createEl("div", { cls: "smarthole-chat-message-footer" });
+
+    // Edit button for user messages only
+    if (message.role === "user") {
+      const editBtn = footerEl.createEl("button", {
+        cls: "smarthole-chat-action-btn",
+        attr: { "data-message-id": message.id, "aria-label": "Edit message" },
+      });
+      setIcon(editBtn, "pencil");
+
+      editBtn.addEventListener("click", () => {
+        this.enterEditMode(message.id);
+      });
+    }
+  }
+
+  /**
+   * Enter edit mode for a specific message.
+   * Implementation will be completed in a subsequent task.
+   */
+  private enterEditMode(messageId: string): void {
+    // TODO: Implement in T-implement-edit-mode-state-and task
+    console.log("Enter edit mode for message:", messageId);
   }
 
   private scrollToBottom(): void {
