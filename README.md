@@ -68,7 +68,8 @@ After enabling the plugin, go to Settings → SmartHole Client to configure:
 1. Click the chat icon in the left ribbon, or use command palette: "SmartHole: Open Chat"
 2. Type messages directly in the sidebar
 3. Press Enter or click the send button to submit
-4. View conversation history, tool usage, and message sources (typed vs voice)
+4. Drag files or folders from the file explorer into the input to reference them by path
+5. View conversation history, tool usage, and message sources (typed vs voice)
 
 The chat sidebar shows a unified view of all conversations, whether they came from SmartHole voice commands or direct typing in the sidebar.
 

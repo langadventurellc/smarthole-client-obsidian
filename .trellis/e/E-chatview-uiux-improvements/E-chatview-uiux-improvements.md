@@ -10,10 +10,10 @@ affectedFiles:
     messages array and archivedAt timestamp. Added archivedBranches optional
     field to Conversation interface (line 101-102).
   src/context/index.ts: Added ConversationBranch to the type exports (line 13).
-  src/views/ChatView.ts: Added footer action bar in renderMessage method with edit
-    button for user messages. Added data-message-id attribute and click handler
-    that calls new enterEditMode stub method.; Added editingMessageId and
-    messageElements state tracking, implemented enterEditMode() and
+  src/views/ChatView.ts: "Added footer action bar in renderMessage method with
+    edit button for user messages. Added data-message-id attribute and click
+    handler that calls new enterEditMode stub method.; Added editingMessageId
+    and messageElements state tracking, implemented enterEditMode() and
     cancelEditMode() methods, added Escape key handler, updated renderMessage to
     store element references, updated onClose to clean up new state; Modified
     handleSend() to async function that detects edit mode and triggers
@@ -23,7 +23,10 @@ affectedFiles:
     handler after the edit button block in renderMessage(). The copy button
     appears on ALL messages (user and assistant), uses
     navigator.clipboard.writeText() with try/catch error handling, and provides
-    visual feedback via icon swap (copy -> check -> copy after 1500ms).
+    visual feedback via icon swap (copy -> check -> copy after 1500ms).; Added
+    dragover and drop event listeners in onOpen() for file drag-and-drop path
+    normalization, and added private insertAtCursor(text: string) method for
+    inserting text at the textarea cursor position."
   styles.css: Added .smarthole-chat-message-footer styles (flex container, hidden
     by default, visible on hover with opacity transition),
     .smarthole-chat-action-btn styles (transparent icon button with hover
