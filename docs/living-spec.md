@@ -159,6 +159,7 @@ The information architecture prompt allows users to define their organizational 
 - [x] Conversation history loading when sidebar opens
 - [x] Real-time WebSocket message display in sidebar
 - [x] Source indicators ("typed"/"voice") for messages
+- [x] Model selector dropdown in header for quick model switching (persists to settings)
 
 ---
 

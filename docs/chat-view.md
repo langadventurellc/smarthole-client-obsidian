@@ -7,6 +7,7 @@ In-Obsidian sidebar interface for direct interaction with the SmartHole agent, c
 - Sidebar view accessible via ribbon icon or command palette
 - Direct message input (bypasses WebSocket routing)
 - Unified conversation display (WebSocket and direct messages)
+- Model selector dropdown in header for quick model switching
 - Tool usage display with collapsible details
 - Source indicators ("typed" vs "voice")
 - Real-time WebSocket message display
@@ -30,7 +31,7 @@ Run "SmartHole: Open Chat" from the command palette (Ctrl/Cmd+P).
 
 ```
 ┌─────────────────────────────────────┐
-│  SmartHole Chat              [close]│
+│  SmartHole Chat       [Haiku 4.5 ▼]│
 ├─────────────────────────────────────┤
 │                                     │
 │  ┌─────────────────────────────┐   │
@@ -49,6 +50,16 @@ Run "SmartHole: Open Chat" from the command palette (Ctrl/Cmd+P).
 │  [Message input...        ] [Send]  │
 └─────────────────────────────────────┘
 ```
+
+## Model Selector
+
+The header contains a dropdown to switch between Claude models without navigating to the settings tab:
+
+- Populates options from the `CLAUDE_MODELS` constant in `src/types.ts`
+- Displays short names (e.g., "Haiku 4.5", "Sonnet 4.5", "Opus 4.5") by stripping the "Claude" prefix and parenthetical descriptions
+- Pre-selects the current model from `plugin.settings.model` when the view opens
+- On change, immediately updates `plugin.settings.model` and calls `plugin.saveSettings()` to persist
+- All subsequent messages (both direct and WebSocket-routed) use the newly selected model
 
 ## Message Sources
 
@@ -183,6 +194,9 @@ All styles are in `styles.css` at project root:
 | Class | Purpose |
 |-------|---------|
 | `.smarthole-chat-container` | Main container |
+| `.smarthole-chat-header` | Header bar (title + model selector) |
+| `.smarthole-chat-header-title` | Header title text |
+| `.smarthole-chat-model-select` | Model selector dropdown |
 | `.smarthole-chat-messages` | Message list |
 | `.smarthole-chat-message` | Individual message |
 | `.smarthole-chat-message-user` | User message styling |

@@ -1,14 +1,25 @@
 ---
 id: F-model-selector-in-chatview
 title: Model Selector in ChatView Header
-status: open
+status: done
 priority: medium
 parent: E-chatview-uiux-improvements
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/views/ChatView.ts: Added import for CLAUDE_MODELS and ClaudeModelId from
+    types. Added header section in onOpen() before messages area with title span
+    and model select dropdown. Dropdown populates from CLAUDE_MODELS with short
+    names, pre-selects current model, and persists changes on selection.
+  styles.css: "Added .smarthole-chat-header (flex row, border-bottom, flex-shrink:
+    0), .smarthole-chat-header-title (semibold, medium font),
+    .smarthole-chat-model-select (small font, themed border/background, cursor
+    pointer), and .smarthole-chat-model-select:focus (accent border, no outline)
+    styles."
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-model-selector-dropdown
 created: 2026-02-05T17:53:13.603Z
 updated: 2026-02-05T17:53:13.603Z
 ---

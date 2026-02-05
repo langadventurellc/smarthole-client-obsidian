@@ -1,6 +1,7 @@
 import { ItemView, setIcon, WorkspaceLeaf } from "obsidian";
 import type SmartHolePlugin from "../main";
 import type { ConversationManager } from "../context";
+import { CLAUDE_MODELS, type ClaudeModelId } from "../types";
 
 export const VIEW_TYPE_CHAT = "smarthole-chat-view";
 
@@ -49,6 +50,24 @@ export class ChatView extends ItemView {
     container.empty();
 
     const chatContainer = container.createEl("div", { cls: "smarthole-chat-container" });
+
+    // Header area with title and model selector
+    const headerEl = chatContainer.createEl("div", { cls: "smarthole-chat-header" });
+    const titleEl = headerEl.createEl("span", { cls: "smarthole-chat-header-title" });
+    titleEl.setText("SmartHole Chat");
+
+    const modelSelect = headerEl.createEl("select", { cls: "smarthole-chat-model-select" });
+    for (const [modelId, displayName] of Object.entries(CLAUDE_MODELS)) {
+      const option = modelSelect.createEl("option", { value: modelId });
+      const shortName = displayName.replace(/^Claude\s+/, "").replace(/\s*\(.*\)$/, "");
+      option.setText(shortName);
+    }
+    modelSelect.value = this.plugin.settings.model;
+
+    modelSelect.addEventListener("change", async () => {
+      this.plugin.settings.model = modelSelect.value as ClaudeModelId;
+      await this.plugin.saveSettings();
+    });
 
     // Messages area (scrollable)
     this.messagesEl = chatContainer.createEl("div", { cls: "smarthole-chat-messages" });
