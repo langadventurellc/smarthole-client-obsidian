@@ -42,7 +42,8 @@ interface LLMProvider {
   chat(
     messages: LLMMessage[],
     tools: Tool[],
-    systemPrompt: string
+    systemPrompt: string,
+    signal?: AbortSignal
   ): Promise<LLMResponse>;
 }
 
@@ -158,11 +159,28 @@ The state is automatically updated when:
 - Tool calls are executed (increments `toolCallsInSession`)
 - The conversation is cleared via `clearWaitingState()`
 
+## Request Cancellation
+
+The service supports aborting in-flight LLM requests via `AbortController`:
+
+```typescript
+// Abort the current request (safe to call at any time, no-op if idle)
+service.abort();
+```
+
+When `abort()` is called:
+1. The `AbortController` signal fires, causing the Anthropic SDK to throw `APIUserAbortError`
+2. `AnthropicProvider.classifyError()` maps this to `LLMError.aborted()` (non-retryable)
+3. `LLMService.processMessage()` catches the abort and returns an empty response (`content: [], stopReason: "end_turn"`)
+4. If in a multi-turn tool loop, pending tool calls are short-circuited before the next iteration
+
+The user's message is preserved in the local conversation history (it is added before the API call), but neither user nor assistant messages are recorded to the `ConversationManager` on cancellation.
+
 ## Error Handling
 
 ```typescript
 interface LLMError {
-  code: "auth_error" | "rate_limit" | "network_error" | "invalid_request" | "unknown";
+  code: "auth_error" | "rate_limit" | "network_error" | "invalid_request" | "aborted" | "unknown";
   message: string;
   retryable: boolean;
 }
@@ -174,6 +192,7 @@ interface LLMError {
 | `rate_limit` | Yes | Too many requests |
 | `network_error` | Yes | Connection failed |
 | `invalid_request` | No | Malformed request or content too long |
+| `aborted` | No | Request cancelled by user via stop button |
 | `unknown` | No | Unexpected error |
 
 ## Anthropic Provider

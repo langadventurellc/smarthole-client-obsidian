@@ -263,6 +263,15 @@ export default class SmartHolePlugin extends Plugin {
   }
 
   /**
+   * Cancel the currently in-flight LLM processing.
+   * Used by ChatView stop button to abort the active request.
+   * Safe to call at any time -- no-op if not currently processing.
+   */
+  cancelCurrentProcessing(): void {
+    this.messageProcessor?.cancelCurrentProcessing();
+  }
+
+  /**
    * Subscribe to message processing responses.
    * Returns an unsubscribe function.
    */

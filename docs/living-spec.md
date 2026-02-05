@@ -160,6 +160,7 @@ The information architecture prompt allows users to define their organizational 
 - [x] Real-time WebSocket message display in sidebar
 - [x] Source indicators ("typed"/"voice") for messages
 - [x] Model selector dropdown in header for quick model switching (persists to settings)
+- [x] Stop button to cancel in-flight LLM requests during processing
 
 ---
 

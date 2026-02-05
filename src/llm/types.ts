@@ -168,7 +168,12 @@ export interface LLMProvider {
    * @returns Response from the LLM
    * @throws LLMError on failure
    */
-  sendMessage(messages: LLMMessage[], tools?: Tool[], systemPrompt?: string): Promise<LLMResponse>;
+  sendMessage(
+    messages: LLMMessage[],
+    tools?: Tool[],
+    systemPrompt?: string,
+    signal?: AbortSignal
+  ): Promise<LLMResponse>;
 }
 
 // =============================================================================
@@ -183,7 +188,13 @@ export interface LLMProvider {
  * - invalid_request: Malformed request (e.g., too many tokens)
  * - unknown: Unclassified error
  */
-export type LLMErrorCode = "auth_error" | "rate_limit" | "network" | "invalid_request" | "unknown";
+export type LLMErrorCode =
+  | "auth_error"
+  | "rate_limit"
+  | "network"
+  | "invalid_request"
+  | "aborted"
+  | "unknown";
 
 /**
  * Error class for LLM-related failures.
@@ -241,6 +252,14 @@ export class LLMError extends Error {
    */
   static unknown(message: string): LLMError {
     return new LLMError(message, "unknown", false);
+  }
+
+  /**
+   * Create an aborted error (non-retryable).
+   * Used when a request is cancelled by the user.
+   */
+  static aborted(message: string): LLMError {
+    return new LLMError(message, "aborted", false);
   }
 }
 

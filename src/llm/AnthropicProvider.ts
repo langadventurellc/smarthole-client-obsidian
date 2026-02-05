@@ -63,7 +63,8 @@ export class AnthropicProvider implements LLMProvider {
   async sendMessage(
     messages: LLMMessage[],
     tools?: Tool[],
-    systemPrompt?: string
+    systemPrompt?: string,
+    signal?: AbortSignal
   ): Promise<LLMResponse> {
     if (!this.client) {
       throw LLMError.authError("Provider not initialized. Call initialize() with API key first.");
@@ -76,13 +77,16 @@ export class AnthropicProvider implements LLMProvider {
 
     for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
       try {
-        const response = await this.client.messages.create({
-          model: this.model,
-          max_tokens: DEFAULT_MAX_TOKENS,
-          messages: anthropicMessages,
-          ...(anthropicTools && anthropicTools.length > 0 && { tools: anthropicTools }),
-          ...(systemPrompt && { system: systemPrompt }),
-        });
+        const response = await this.client.messages.create(
+          {
+            model: this.model,
+            max_tokens: DEFAULT_MAX_TOKENS,
+            messages: anthropicMessages,
+            ...(anthropicTools && anthropicTools.length > 0 && { tools: anthropicTools }),
+            ...(systemPrompt && { system: systemPrompt }),
+          },
+          { signal }
+        );
 
         return this.convertResponse(response);
       } catch (error) {
@@ -220,6 +224,11 @@ export class AnthropicProvider implements LLMProvider {
    * Classify an error from the Anthropic SDK into an LLMError.
    */
   private classifyError(error: unknown): LLMError {
+    // Handle user-initiated abort (must check before APIError since APIUserAbortError extends APIError)
+    if (error instanceof Anthropic.APIUserAbortError) {
+      return LLMError.aborted("Request was cancelled by user.");
+    }
+
     // Handle Anthropic API errors
     if (error instanceof Anthropic.APIError) {
       const status = error.status;
