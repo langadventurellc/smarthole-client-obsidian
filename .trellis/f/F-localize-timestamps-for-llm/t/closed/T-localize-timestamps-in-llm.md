@@ -2,13 +2,38 @@
 id: T-localize-timestamps-in-llm
 title: Localize timestamps in LLM tool outputs (getConversation, getFileInfo,
   getActiveNote, listFiles)
-status: open
+status: done
 priority: medium
 parent: F-localize-timestamps-for-llm
 prerequisites:
   - T-create-formatlocaltimestamp
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/tools/getConversation.ts: Added formatLocalTimestamp import; applied to
+    startedAt, endedAt, and message timestamps in both single-conversation
+    retrieval and list-recent modes
+  src/llm/tools/getFileInfo.ts: Replaced 12-line manual formatDate function with
+    thin formatEpochTimestamp wrapper using formatLocalTimestamp from shared
+    utils; added import
+  src/llm/tools/getActiveNote.ts: Replaced 12-line manual formatDate function with
+    thin formatEpochTimestamp wrapper using formatLocalTimestamp from shared
+    utils; added import
+  src/llm/tools/listFiles.ts: Removed formatDate that used UTC
+    toISOString().split('T')[0]; replaced with imported formatLocalDate for
+    local date display; added import
+log:
+  - Research complete. All four target files read and verified. Utility
+    functions in src/utils/time.ts confirmed. Beginning implementation.
+  - 'Localized all timestamps in LLM tool outputs to use the shared formatting
+    utilities from src/utils/time.ts. Changes: (1) getConversation.ts - added
+    formatLocalTimestamp import and applied it to startedAt, endedAt, and
+    message timestamps in both single-conversation and list-recent modes; (2)
+    getFileInfo.ts - removed 12-line manual formatDate function, replaced with
+    thin formatEpochTimestamp wrapper that converts epoch ms to ISO then calls
+    formatLocalTimestamp; (3) getActiveNote.ts - same pattern as getFileInfo,
+    removed duplicate formatDate and replaced with formatEpochTimestamp wrapper;
+    (4) listFiles.ts - removed formatDate that used UTC
+    toISOString().split("T")[0], replaced with imported formatLocalDate which
+    returns local dates. All quality checks and tests pass.'
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T21:27:32.516Z

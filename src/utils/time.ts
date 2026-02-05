@@ -20,6 +20,11 @@ export function formatLocalTimestamp(isoString: string): string {
   });
 }
 
+/** Converts epoch milliseconds to local time like "Feb 5, 2026 10:30 AM". */
+export function formatEpochTimestamp(timestamp: number): string {
+  return formatLocalTimestamp(new Date(timestamp).toISOString());
+}
+
 /** Converts epoch milliseconds to a local date like "Feb 5, 2026". */
 export function formatLocalDate(mtime: number): string {
   const date = new Date(mtime);

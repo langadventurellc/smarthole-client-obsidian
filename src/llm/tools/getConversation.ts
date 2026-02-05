@@ -9,6 +9,7 @@
 import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
 import type { ConversationManager } from "../../context";
+import { formatLocalTimestamp } from "../../utils/time";
 
 // =============================================================================
 // Context Interface
@@ -154,10 +155,10 @@ export function createGetConversationTool(context: GetConversationContext): Tool
           id: conversation.id,
           title: conversation.title,
           summary: conversation.summary,
-          startedAt: conversation.startedAt,
-          endedAt: conversation.endedAt,
+          startedAt: formatLocalTimestamp(conversation.startedAt),
+          endedAt: conversation.endedAt ? formatLocalTimestamp(conversation.endedAt) : null,
           messages: conversation.messages.map((msg) => ({
-            timestamp: msg.timestamp,
+            timestamp: formatLocalTimestamp(msg.timestamp),
             role: msg.role,
             content: msg.content,
             ...(msg.toolsUsed && msg.toolsUsed.length > 0 ? { toolsUsed: msg.toolsUsed } : {}),
@@ -184,8 +185,8 @@ export function createGetConversationTool(context: GetConversationContext): Tool
           id: conv.id,
           title: conv.title,
           summary: conv.summary,
-          startedAt: conv.startedAt,
-          endedAt: conv.endedAt,
+          startedAt: formatLocalTimestamp(conv.startedAt),
+          endedAt: conv.endedAt ? formatLocalTimestamp(conv.endedAt) : null,
           messageCount: conv.messages.length,
         })),
       };

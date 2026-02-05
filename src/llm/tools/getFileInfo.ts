@@ -10,6 +10,7 @@ import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
 import { findFileInsensitive, findFolderInsensitive } from "./pathUtils";
 import { assertNotProtected } from "./protected";
+import { formatEpochTimestamp } from "../../utils/time";
 
 const toolDefinition: Tool = {
   name: "get_file_info",
@@ -41,19 +42,6 @@ function formatBytes(bytes: number): string {
 
   const mb = bytes / (1024 * 1024);
   return `${mb.toFixed(1)} MB (${rawFormatted} bytes)`;
-}
-
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp);
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -97,8 +85,8 @@ export function createGetFileInfoTool(app: App): ToolHandler {
           `File: ${resolvedPath}`,
           `Type: file`,
           `Size: ${formatBytes(stat.size)}`,
-          `Created: ${formatDate(stat.ctime)}`,
-          `Modified: ${formatDate(stat.mtime)}`,
+          `Created: ${formatEpochTimestamp(stat.ctime)}`,
+          `Modified: ${formatEpochTimestamp(stat.mtime)}`,
         ].join("\n");
       }
 
@@ -116,8 +104,8 @@ export function createGetFileInfoTool(app: App): ToolHandler {
         return [
           `Folder: ${resolvedPath}/`,
           `Type: folder`,
-          `Created: ${formatDate(stat.ctime)}`,
-          `Modified: ${formatDate(stat.mtime)}`,
+          `Created: ${formatEpochTimestamp(stat.ctime)}`,
+          `Modified: ${formatEpochTimestamp(stat.mtime)}`,
         ].join("\n");
       }
 

@@ -10,6 +10,7 @@ import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
 import { findFolderInsensitive, matchGlob, normalizePath } from "./pathUtils";
 import { isProtectedPath } from "./protected";
+import { formatLocalDate } from "../../utils/time";
 
 /** Default pattern when none specified */
 const DEFAULT_PATTERN = "*";
@@ -50,14 +51,6 @@ function adjustPatternForPath(pattern: string, basePath: string): string {
 }
 
 /**
- * Formats a modification time as a date string.
- */
-function formatDate(mtime: number): string {
-  const date = new Date(mtime);
-  return date.toISOString().split("T")[0];
-}
-
-/**
  * Formats the list of items for output.
  */
 function formatResults(items: ListItem[], pattern: string, basePath: string): string {
@@ -72,7 +65,7 @@ function formatResults(items: ListItem[], pattern: string, basePath: string): st
     if (item.type === "folder") {
       lines.push(`[folder] ${item.path}/`);
     } else {
-      lines.push(`[file] ${item.path} (modified: ${formatDate(item.mtime)})`);
+      lines.push(`[file] ${item.path} (modified: ${formatLocalDate(item.mtime)})`);
     }
   }
 

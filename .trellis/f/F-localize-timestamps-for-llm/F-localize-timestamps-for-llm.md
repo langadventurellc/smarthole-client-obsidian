@@ -1,7 +1,7 @@
 ---
 id: F-localize-timestamps-for-llm
 title: Localize timestamps for LLM context
-status: in-progress
+status: done
 priority: medium
 parent: none
 prerequisites: []
@@ -23,12 +23,25 @@ affectedFiles:
     localized timestamps in generateConversationSummary() (line 193),
     getContextPrompt() recent conversations endedAt (line 273), and
     getContextPrompt() current conversation messages (line 284)
-log: []
+  src/llm/tools/getConversation.ts: Added formatLocalTimestamp import; applied to
+    startedAt, endedAt, and message timestamps in both single-conversation
+    retrieval and list-recent modes
+  src/llm/tools/getFileInfo.ts: Replaced 12-line manual formatDate function with
+    thin formatEpochTimestamp wrapper using formatLocalTimestamp from shared
+    utils; added import
+  src/llm/tools/getActiveNote.ts: Replaced 12-line manual formatDate function with
+    thin formatEpochTimestamp wrapper using formatLocalTimestamp from shared
+    utils; added import
+  src/llm/tools/listFiles.ts: Removed formatDate that used UTC
+    toISOString().split('T')[0]; replaced with imported formatLocalDate for
+    local date display; added import
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-add-local-timetimezone-to
-  - T-localize-timestamps-in-llm
   - T-create-formatlocaltimestamp
+  - T-localize-timestamps-in-llm
 created: 2026-02-05T21:25:40.989Z
 updated: 2026-02-05T21:25:40.989Z
 ---
