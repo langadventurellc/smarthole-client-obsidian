@@ -16,12 +16,19 @@ affectedFiles:
   mise.toml: Updated test task from placeholder echo to 'npx vitest run'
   eslint.config.mjs: Added *.config.ts to ignores so vitest config is not linted
   package.json: vitest added as devDependency via npm install
+  src/llm/LLMService.ts: "Added formatCurrentLocalTime() private method and
+    integrated it into buildSystemPrompt() to include 'The current local time
+    is: ...' with IANA timezone name and UTC offset"
+  src/context/ConversationManager.ts: Added import for formatLocalTimestamp;
+    localized timestamps in generateConversationSummary() (line 193),
+    getContextPrompt() recent conversations endedAt (line 273), and
+    getContextPrompt() current conversation messages (line 284)
 log: []
 schema: v1.0
 childrenIds:
   - T-add-local-timetimezone-to
-  - T-create-formatlocaltimestamp
   - T-localize-timestamps-in-llm
+  - T-create-formatlocaltimestamp
 created: 2026-02-05T21:25:40.989Z
 updated: 2026-02-05T21:25:40.989Z
 ---
