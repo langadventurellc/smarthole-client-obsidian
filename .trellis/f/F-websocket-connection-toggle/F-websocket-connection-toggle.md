@@ -5,7 +5,9 @@ status: in-progress
 priority: medium
 parent: none
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/types.ts: Added "disabled" to ConnectionStatus type union
+  src/main.ts: Added "disabled" entry to statusText Record in updateStatusBar() method
 log: []
 schema: v1.0
 childrenIds:
