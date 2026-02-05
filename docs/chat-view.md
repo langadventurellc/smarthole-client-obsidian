@@ -14,6 +14,7 @@ In-Obsidian sidebar interface for direct interaction with the SmartHole agent, c
 - Conversation history on open
 - Edit previous messages with conversation forking
 - Copy message content to clipboard
+- File drag-and-drop inserts vault-relative paths
 
 ## Activation
 
@@ -145,6 +146,19 @@ Users can edit their previous messages, which forks the conversation:
    - LLM context reflects conversation up to (but not including) the edited message
 
 Archived branches are preserved in `Conversation.archivedBranches` but not displayed. The fork operation uses `ConversationManager.forkConversation()` - see [Conversation History](conversation-history.md#forking-conversations) for details.
+
+## File Drag-and-Drop
+
+Dragging files or folders from Obsidian's file explorer into the input textarea inserts clean vault-relative paths instead of `obsidian://` URLs:
+
+1. Drag a file or folder from Obsidian's file explorer onto the input textarea
+2. The `obsidian://` URL is intercepted and parsed to extract the `file` parameter
+3. The vault-relative path is inserted at the current cursor position (replacing any selection)
+4. URL-encoded characters are automatically decoded (e.g., `%20` becomes a space)
+
+For example, dropping a file inserts `Projects/SmartHole-Obsidian-Plugin/Feature-Backlog` rather than `obsidian://open?vault=the%20void&file=Projects%2FSmartHole-Obsidian-Plugin%2FFeature-Backlog`.
+
+Non-Obsidian drops (e.g., plain text from external apps) fall through to default browser behavior.
 
 ## Copy to Clipboard
 
