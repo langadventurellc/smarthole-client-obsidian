@@ -136,11 +136,18 @@ The fork operation is atomic - archiving and truncation happen in a single save.
 
 #### Getting Context for LLM
 
-Returns formatted context from the active conversation for the system prompt:
+Returns formatted context for the system prompt, including summaries of the last 2 ended conversations (if available) and the active conversation's messages:
 
 ```typescript
 const contextPrompt = conversationManager.getContextPrompt();
 // Returns:
+// ## Recent Conversations
+// ### Meeting Notes Setup (ended 2025-01-15T09:00:00Z)
+// User asked to set up a meeting notes template. Created template in Templates folder.
+//
+// ### Daily Journal Configuration (ended 2025-01-14T16:30:00Z)
+// User configured daily journal settings. Updated frontmatter template and folder path.
+//
 // ## Current Conversation
 // [2025-01-15T10:00:00Z]
 // User: Create a note about today's meeting
@@ -148,6 +155,8 @@ const contextPrompt = conversationManager.getContextPrompt();
 // [2025-01-15T10:00:05Z]
 // Assistant: I've created 'Meeting Notes.md' in your Journal folder. [used: write_file]
 ```
+
+The `## Recent Conversations` section is omitted when there are no ended conversations with both a title and summary. The `## Current Conversation` section is omitted when there is no active conversation. If neither section has content, an empty string is returned.
 
 #### Retrieving Conversations
 
