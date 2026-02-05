@@ -12,6 +12,7 @@ In-Obsidian sidebar interface for direct interaction with the SmartHole agent, c
 - Real-time WebSocket message display
 - Real-time agent messages during task execution (via `send_message` tool)
 - Conversation history on open
+- Edit previous messages with conversation forking
 
 ## Activation
 
@@ -129,6 +130,21 @@ const unsubscribe = plugin.onAgentMessage((message) => {
 });
 ```
 
+## Message Editing and Forking
+
+Users can edit their previous messages, which forks the conversation:
+
+1. Hover over a user message to reveal the edit button (pencil icon) in the footer action bar
+2. Click the edit button to enter edit mode:
+   - The message text populates the input textarea (selected for easy replacement)
+   - The original message displays a visual editing indicator (outline)
+3. Press Escape to cancel edit mode, or modify and send to fork:
+   - Messages from the edit point onward are archived to a branch
+   - The edited message is sent as a new message
+   - LLM context reflects conversation up to (but not including) the edited message
+
+Archived branches are preserved in `Conversation.archivedBranches` but not displayed. The fork operation uses `ConversationManager.forkConversation()` - see [Conversation History](conversation-history.md#forking-conversations) for details.
+
 ## Styling
 
 All styles are in `styles.css` at project root:
@@ -148,6 +164,9 @@ All styles are in `styles.css` at project root:
 | `.smarthole-chat-message-assistant` | Assistant message styling |
 | `.smarthole-chat-input` | Input container |
 | `.smarthole-chat-tools` | Tool usage display |
+| `.smarthole-chat-message-footer` | Footer action bar (shows on hover) |
+| `.smarthole-chat-action-btn` | Action button in footer |
+| `.smarthole-chat-message-editing` | Editing state indicator |
 
 ## Implementation
 
