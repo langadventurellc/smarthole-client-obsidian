@@ -1,15 +1,22 @@
 ---
 id: F-copy-message-button
 title: Copy Message Button
-status: open
+status: done
 priority: medium
 parent: E-chatview-uiux-improvements
 prerequisites:
   - F-edit-message-and-fork
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/views/ChatView.ts: Added copy button with click handler after the edit
+    button block in renderMessage(). The copy button appears on ALL messages
+    (user and assistant), uses navigator.clipboard.writeText() with try/catch
+    error handling, and provides visual feedback via icon swap (copy -> check ->
+    copy after 1500ms).
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-copy-to-clipboard-button
 created: 2026-02-05T17:53:31.514Z
 updated: 2026-02-05T17:53:31.514Z
 ---

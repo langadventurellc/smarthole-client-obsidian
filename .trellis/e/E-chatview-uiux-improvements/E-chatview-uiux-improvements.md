@@ -19,7 +19,11 @@ affectedFiles:
     handleSend() to async function that detects edit mode and triggers
     forkConversation() before sending. Added removeMessagesFromIndex() method to
     remove archived messages from UI display (DOM elements, renderedMessageIds
-    set, messageElements map, and messages array).
+    set, messageElements map, and messages array).; Added copy button with click
+    handler after the edit button block in renderMessage(). The copy button
+    appears on ALL messages (user and assistant), uses
+    navigator.clipboard.writeText() with try/catch error handling, and provides
+    visual feedback via icon swap (copy -> check -> copy after 1500ms).
   styles.css: Added .smarthole-chat-message-footer styles (flex container, hidden
     by default, visible on hover with opacity transition),
     .smarthole-chat-action-btn styles (transparent icon button with hover

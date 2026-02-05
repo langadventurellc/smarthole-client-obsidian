@@ -13,6 +13,7 @@ In-Obsidian sidebar interface for direct interaction with the SmartHole agent, c
 - Real-time agent messages during task execution (via `send_message` tool)
 - Conversation history on open
 - Edit previous messages with conversation forking
+- Copy message content to clipboard
 
 ## Activation
 
@@ -144,6 +145,16 @@ Users can edit their previous messages, which forks the conversation:
    - LLM context reflects conversation up to (but not including) the edited message
 
 Archived branches are preserved in `Conversation.archivedBranches` but not displayed. The fork operation uses `ConversationManager.forkConversation()` - see [Conversation History](conversation-history.md#forking-conversations) for details.
+
+## Copy to Clipboard
+
+Every message (both user and assistant) has a copy button in the footer action bar:
+
+1. Hover over any message to reveal the copy button (copy icon) in the footer
+2. Click the copy button to copy the message text content to the clipboard
+   - Only the message `content` text is copied (no timestamps, role labels, tool usage info, or source indicators)
+3. Visual feedback: the icon swaps from "copy" to "check" for 1.5 seconds, then reverts
+4. Clipboard API failures are handled gracefully (logged to console, no user-facing error)
 
 ## Styling
 
