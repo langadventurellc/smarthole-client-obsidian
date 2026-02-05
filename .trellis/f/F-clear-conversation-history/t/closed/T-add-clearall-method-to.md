@@ -1,12 +1,22 @@
 ---
 id: T-add-clearall-method-to
 title: Add clearAll() method to ConversationManager
-status: open
+status: done
 priority: medium
 parent: F-clear-conversation-history
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/context/ConversationManager.ts: Added clearAll() method that resets
+    conversations to empty array, sets activeConversationId to null, and
+    persists the cleared state
+log:
+  - Added the `clearAll()` public method to the `ConversationManager` class. The
+    method resets the `conversations` array to empty, sets
+    `activeConversationId` to null, and persists the cleared state by calling
+    the private `save()` method. The method includes a JSDoc comment explaining
+    its purpose. The implementation follows the pattern established by the
+    legacy `ConversationHistory.clear()` method and is placed after the
+    `endConversation()` method (at line 122) among the other public methods.
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T06:08:30.150Z

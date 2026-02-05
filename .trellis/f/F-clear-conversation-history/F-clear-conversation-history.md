@@ -1,14 +1,20 @@
 ---
 id: F-clear-conversation-history
 title: Clear Conversation History Button
-status: open
+status: in-progress
 priority: medium
 parent: none
 prerequisites: []
-affectedFiles: {}
+affectedFiles:
+  src/context/ConversationManager.ts: Added clearAll() method that resets
+    conversations to empty array, sets activeConversationId to null, and
+    persists the cleared state
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-clear-conversation
+  - T-add-clearall-method-to
+  - T-create-clearhistorymodal
 created: 2026-02-05T06:06:19.835Z
 updated: 2026-02-05T06:06:19.835Z
 ---
