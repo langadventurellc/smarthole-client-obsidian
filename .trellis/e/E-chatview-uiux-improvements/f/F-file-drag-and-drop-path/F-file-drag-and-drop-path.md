@@ -1,14 +1,20 @@
 ---
 id: F-file-drag-and-drop-path
 title: File Drag-and-Drop Path Normalization
-status: open
+status: done
 priority: medium
 parent: E-chatview-uiux-improvements
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/views/ChatView.ts: "Added dragover and drop event listeners in onOpen() for
+    file drag-and-drop path normalization, and added private
+    insertAtCursor(text: string) method for inserting text at the textarea
+    cursor position."
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-implement-drag-and-drop-path
 created: 2026-02-05T17:53:53.629Z
 updated: 2026-02-05T17:53:53.629Z
 ---

@@ -86,6 +86,39 @@ export class ChatView extends ItemView {
       this.autoResizeTextarea();
     });
 
+    // Drag-and-drop: allow drops on the input textarea
+    this.inputEl.addEventListener("dragover", (e: DragEvent) => {
+      e.preventDefault();
+    });
+
+    // Drag-and-drop: normalize obsidian:// URLs to vault-relative paths.
+    // Obsidian's file explorer provides dragged file paths via the "text/plain"
+    // dataTransfer type as obsidian:// URLs. Other MIME types (text/uri-list,
+    // Obsidian-internal types) do not carry the vault-relative path directly,
+    // so we parse the URL's "file" search param instead.
+    this.inputEl.addEventListener("drop", (e: DragEvent) => {
+      const text = e.dataTransfer?.getData("text/plain") ?? "";
+
+      if (text.startsWith("obsidian://")) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+          const url = new URL(text);
+          // URL.searchParams.get() already percent-decodes the value per the
+          // WHATWG URL spec, so no additional decodeURIComponent() is needed.
+          const filePath = url.searchParams.get("file");
+          if (filePath) {
+            this.insertAtCursor(filePath);
+          }
+        } catch {
+          // If URL parsing fails, insert the raw text as fallback
+          this.insertAtCursor(text);
+        }
+      }
+      // Non-obsidian:// drops fall through to default browser behavior
+    });
+
     // Load persisted conversation history from active conversation
     const conversationManager = this.plugin.getConversationManager();
     const activeConversation = conversationManager?.getActiveConversation();
@@ -520,5 +553,18 @@ export class ChatView extends ItemView {
     this.inputEl.style.height = "auto";
     // Set height to scrollHeight, capped by CSS max-height
     this.inputEl.style.height = `${this.inputEl.scrollHeight}px`;
+  }
+
+  private insertAtCursor(text: string): void {
+    if (!this.inputEl) return;
+
+    const start = this.inputEl.selectionStart;
+    const end = this.inputEl.selectionEnd;
+    const value = this.inputEl.value;
+
+    this.inputEl.value = value.slice(0, start) + text + value.slice(end);
+    this.inputEl.selectionStart = this.inputEl.selectionEnd = start + text.length;
+    this.inputEl.focus();
+    this.autoResizeTextarea();
   }
 }
