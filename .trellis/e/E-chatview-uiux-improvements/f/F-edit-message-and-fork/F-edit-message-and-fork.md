@@ -22,14 +22,18 @@ affectedFiles:
     state), and parent hover rule to show footer.; Added
     .smarthole-chat-message-editing style with outline indicator and rule to
     keep footer visible when editing
+  src/context/ConversationManager.ts: "Added ConversationBranch import and
+    implemented forkConversation(messageId: string) method (lines 133-177) that
+    archives messages from a specified point into archivedBranches and truncates
+    the active conversation."
 log: []
 schema: v1.0
 childrenIds:
-  - T-implement-edit-mode-state-and
   - T-implement-fork-on-send-logic
   - T-implement-forkconversation
   - T-add-conversationbranch-type
   - T-add-footer-action-bar-with
+  - T-implement-edit-mode-state-and
 created: 2026-02-05T17:52:37.649Z
 updated: 2026-02-05T17:52:37.649Z
 ---
