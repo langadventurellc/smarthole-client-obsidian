@@ -84,6 +84,21 @@ processor.onAgentMessage((message) => {
 });
 ```
 
+### Cancelling Processing
+
+```typescript
+// Cancel the in-flight LLM request (safe to call at any time, no-op if idle)
+processor.cancelCurrentProcessing();
+```
+
+When cancelled, the processor:
+- Calls `LLMService.abort()` on the active service instance
+- Returns `{ success: true, response: "", toolsUsed: [] }` (no error notification)
+- Skips retry logic entirely (abort errors are non-retryable)
+- Does not record messages to ConversationManager
+
+This is exposed on the Plugin as `plugin.cancelCurrentProcessing()` for use by the ChatView stop button.
+
 ## Process Result
 
 ```typescript
@@ -117,6 +132,7 @@ When `isWaitingForResponse` is `true`, the agent has asked a question and is wai
 
 - Authentication failures (`auth_error`)
 - Invalid requests (`invalid_request`)
+- User-initiated cancellation (`aborted`) -- returns success, no error notification
 
 ## Error Messages
 

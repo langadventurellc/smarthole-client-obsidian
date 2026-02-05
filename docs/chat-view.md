@@ -16,6 +16,7 @@ In-Obsidian sidebar interface for direct interaction with the SmartHole agent, c
 - Edit previous messages with conversation forking
 - Copy message content to clipboard
 - File drag-and-drop inserts vault-relative paths
+- Stop button to cancel in-flight LLM requests
 
 ## Activation
 
@@ -47,7 +48,7 @@ Run "SmartHole: Open Chat" from the command palette (Ctrl/Cmd+P).
 │  └─────────────────────────────┘   │
 │                                     │
 ├─────────────────────────────────────┤
-│  [Message input...        ] [Send]  │
+│  [Message input...  ] [Send]/[Stop]  │
 └─────────────────────────────────────┘
 ```
 
@@ -90,6 +91,9 @@ plugin.processDirectMessage("Create a note about X");
 plugin.onMessageResponse((messageId, response, tools) => {
   // Update chat UI
 });
+
+// Cancel in-flight LLM processing (used by stop button)
+plugin.cancelCurrentProcessing();
 
 // Subscribe to incoming WebSocket messages
 plugin.onMessageReceived((message) => {
@@ -181,6 +185,18 @@ Every message (both user and assistant) has a copy button in the footer action b
 3. Visual feedback: the icon swaps from "copy" to "check" for 1.5 seconds, then reverts
 4. Clipboard API failures are handled gracefully (logged to console, no user-facing error)
 
+## Stop / Cancel Processing
+
+When the agent is processing a message, a stop button replaces the send button in the input area:
+
+1. When processing begins (typing indicator shown), the send button hides and a red stop button (square icon) appears
+2. Clicking the stop button aborts the in-flight Anthropic API request via AbortController
+3. The typing indicator disappears and the send button returns immediately
+4. The user's original message is preserved in conversation history
+5. No error notifications are shown for cancelled requests
+
+The cancellation propagates through the full stack: `ChatView -> Plugin.cancelCurrentProcessing() -> MessageProcessor.cancelCurrentProcessing() -> LLMService.abort() -> AbortController.abort()`. If the agent is in a multi-turn tool-use loop, pending tool calls are also short-circuited.
+
 ## Styling
 
 All styles are in `styles.css` at project root:
@@ -206,6 +222,7 @@ All styles are in `styles.css` at project root:
 | `.smarthole-chat-message-footer` | Footer action bar (shows on hover) |
 | `.smarthole-chat-action-btn` | Action button in footer |
 | `.smarthole-chat-message-editing` | Editing state indicator |
+| `.smarthole-chat-stop` | Stop/cancel button (red, replaces send during processing) |
 
 ## Implementation
 
