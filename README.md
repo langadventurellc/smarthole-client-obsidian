@@ -49,6 +49,7 @@ After enabling the plugin, go to Settings → SmartHole Client to configure:
 | **Client Name** | Name shown in SmartHole (default: "Miss Simone") |
 | **Routing Description** | Tells SmartHole what kinds of commands to route to this plugin |
 | **Information Architecture** | Defines how you want your notes organized |
+| **Clear Conversation History** | Permanently delete all stored conversations (with confirmation) |
 
 ## Usage
 

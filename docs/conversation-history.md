@@ -92,6 +92,16 @@ await conversationManager.endConversation(llmService);
 await conversationManager.endConversation();
 ```
 
+#### Clearing All History
+
+To permanently delete all conversation history:
+
+```typescript
+await conversationManager.clearAll();
+```
+
+This resets the conversations array to empty, clears the active conversation, and persists the empty state. Users can also clear history via the Settings UI button with confirmation dialog.
+
 #### Getting Context for LLM
 
 Returns formatted context from the active conversation for the system prompt:
