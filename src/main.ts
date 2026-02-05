@@ -186,6 +186,7 @@ export default class SmartHolePlugin extends Plugin {
       connecting: "SmartHole: Connecting...",
       connected: "SmartHole: Connected",
       error: "SmartHole: Error",
+      disabled: "SmartHole: Disabled",
     };
     this.statusBarEl.setText(statusText[status]);
   }

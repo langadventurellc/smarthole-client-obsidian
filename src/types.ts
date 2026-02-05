@@ -1,4 +1,4 @@
-export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
+export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error" | "disabled";
 
 export const CLAUDE_MODELS = {
   "claude-haiku-4-5-20251001": "Claude Haiku 4.5 (Fast, cost-efficient)",
