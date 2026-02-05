@@ -5,6 +5,8 @@ import type SmartHolePlugin from "./main";
 import { CLAUDE_MODELS, type ClaudeModelId } from "./types";
 
 export interface SmartHoleSettings {
+  /** Whether to enable WebSocket connection to SmartHole desktop app */
+  enableSmartHoleConnection: boolean;
   anthropicApiKeyName: string;
   model: ClaudeModelId;
   clientName: string;
@@ -35,6 +37,7 @@ When encountering information that doesn't fit clearly into existing categories,
 The goal is an evolving personal wiki where information is easy to find and naturally connected.`;
 
 export const DEFAULT_SETTINGS: SmartHoleSettings = {
+  enableSmartHoleConnection: true,
   anthropicApiKeyName: "",
   model: "claude-haiku-4-5-20251001",
   clientName: "obsidian",
@@ -57,6 +60,20 @@ export class SmartHoleSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    // Enable SmartHole Connection toggle
+    new Setting(containerEl)
+      .setName("Enable SmartHole Connection")
+      .setDesc(
+        "Connect to SmartHole desktop app. When disabled, the plugin will not attempt to connect or ping the desktop app."
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.enableSmartHoleConnection).onChange(async (value) => {
+          this.plugin.settings.enableSmartHoleConnection = value;
+          await this.plugin.saveSettings();
+          this.plugin.setSmartHoleConnectionEnabled(value);
+        })
+      );
 
     // API Key setting using SecretComponent
     new Setting(containerEl)

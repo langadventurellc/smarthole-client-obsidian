@@ -1,13 +1,24 @@
 ---
 id: T-add-setsmartholeconnectionenab
 title: Add setSmartHoleConnectionEnabled method and update status bar handling
-status: open
+status: done
 priority: medium
 parent: F-websocket-connection-toggle
 prerequisites:
   - T-add-disabled-status-to
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/main.ts: Added enableSmartHoleConnection extraction in extractSettings(),
+    added setSmartHoleConnectionEnabled() method for dynamic connection control,
+    modified onload() to conditionally start connection based on
+    enableSmartHoleConnection setting
+log:
+  - Implemented the setSmartHoleConnectionEnabled method and updated status bar
+    handling in src/main.ts. Added extraction logic for
+    enableSmartHoleConnection boolean in extractSettings(), added the
+    setSmartHoleConnectionEnabled() method that dynamically enables/disables
+    WebSocket connection with proper reconnection handling, and modified
+    onload() to conditionally start connection based on the setting value. All
+    quality checks pass.
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T06:03:40.980Z

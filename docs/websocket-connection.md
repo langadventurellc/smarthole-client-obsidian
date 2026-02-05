@@ -26,10 +26,19 @@ connection.connect();
 ## Connection Status
 
 ```typescript
-type ConnectionStatus = "disconnected" | "connecting" | "connected";
+type ConnectionStatus = "disconnected" | "connecting" | "connected" | "disabled";
 ```
 
 The connection manager tracks status and notifies via the `onStatusChange` callback.
+
+| Status | Description |
+|--------|-------------|
+| `disconnected` | Connection lost or failed |
+| `connecting` | Attempting to establish connection |
+| `connected` | Successfully connected and registered |
+| `disabled` | User has disabled connection in settings |
+
+The `disabled` status is set by the plugin when the user turns off "Enable SmartHole Connection" in settings. This is distinct from `disconnected`, which indicates a connection failure.
 
 ## Features
 
@@ -68,6 +77,26 @@ connection.disconnect();
 // Check current status
 const status = connection.getStatus(); // "disconnected" | "connecting" | "connected"
 ```
+
+### Dynamic Enable/Disable
+
+The plugin provides a method to dynamically enable or disable the connection based on user settings:
+
+```typescript
+// In main.ts
+plugin.setSmartHoleConnectionEnabled(false); // Disconnect and stop reconnection
+plugin.setSmartHoleConnectionEnabled(true);  // Enable reconnection and connect
+```
+
+When disabled:
+- WebSocket disconnects immediately
+- Reconnection attempts stop
+- Status bar shows "SmartHole: Disabled"
+
+When re-enabled:
+- Reconnection is enabled
+- Connection attempt starts immediately
+- Status returns to normal connected/disconnected states
 
 ## Protocol Messages
 

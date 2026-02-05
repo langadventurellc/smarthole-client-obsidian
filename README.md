@@ -43,6 +43,7 @@ After enabling the plugin, go to Settings → SmartHole Client to configure:
 
 | Setting | Description |
 |---------|-------------|
+| **Enable SmartHole Connection** | Toggle WebSocket connection to SmartHole desktop app (enabled by default) |
 | **API Key** | Your Anthropic API key |
 | **Model** | Claude model to use (Haiku 4.5, Sonnet 4.5, or Opus 4.5) |
 | **Client Name** | Name shown in SmartHole (default: "Miss Simone") |
@@ -112,6 +113,12 @@ Claude can perform these operations on your vault:
 - **Organize notes**: Rename or move notes between folders
 
 ## Troubleshooting
+
+### Plugin shows "Disabled"
+
+- The SmartHole connection is intentionally turned off in settings
+- Go to Settings → SmartHole Client and toggle "Enable SmartHole Connection" on
+- The plugin will immediately attempt to connect
 
 ### Plugin shows "Disconnected"
 

@@ -1,12 +1,18 @@
 ---
 id: T-add-disabled-status-to
 title: Add disabled status to ConnectionStatus type
-status: open
+status: done
 priority: medium
 parent: F-websocket-connection-toggle
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/types.ts: Added "disabled" to ConnectionStatus type union
+  src/main.ts: Added "disabled" entry to statusText Record in updateStatusBar() method
+log:
+  - 'Extended the ConnectionStatus type to include "disabled" as a valid value,
+    distinguishing intentional user disabling from connection failures. Also
+    added the corresponding "SmartHole: Disabled" entry to the status bar Record
+    in main.ts to maintain type safety.'
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T06:03:29.895Z
