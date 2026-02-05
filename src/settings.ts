@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, SecretComponent, Setting } from "obsidian";
+import { App, Modal, PluginSettingTab, SecretComponent, Setting } from "obsidian";
 
 import { extractTextContent, LLMError, LLMService } from "./llm";
 import type SmartHolePlugin from "./main";
@@ -48,6 +48,45 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   maxConversationsRetained: 1000,
   conversationStateTimeoutMinutes: 60,
 };
+
+export class ClearHistoryModal extends Modal {
+  private onConfirm: () => void;
+
+  constructor(app: App, onConfirm: () => void) {
+    super(app);
+    this.onConfirm = onConfirm;
+  }
+
+  onOpen(): void {
+    const { contentEl } = this;
+
+    // Warning heading
+    contentEl.createEl("h2", { text: "Clear Conversation History" });
+
+    // Warning message
+    contentEl.createEl("p", {
+      text: "This will permanently delete all conversation history. This action cannot be undone.",
+    });
+
+    // Button container using Obsidian's Setting component
+    new Setting(contentEl)
+      .addButton((btn) => btn.setButtonText("Cancel").onClick(() => this.close()))
+      .addButton((btn) =>
+        btn
+          .setButtonText("Clear All")
+          .setWarning()
+          .onClick(() => {
+            this.onConfirm();
+            this.close();
+          })
+      );
+  }
+
+  onClose(): void {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+}
 
 export class SmartHoleSettingTab extends PluginSettingTab {
   plugin: SmartHolePlugin;
@@ -298,5 +337,55 @@ Generate only the routing description text, nothing else. Do not include any pre
             }
           })
       );
+
+    // Clear Conversation History section
+    const clearHistorySetting = new Setting(containerEl)
+      .setName("Clear Conversation History")
+      .setDesc("Permanently delete all conversation history");
+
+    // Status text element for inline feedback
+    const clearStatusEl = clearHistorySetting.descEl.createSpan();
+    clearStatusEl.style.marginLeft = "8px";
+    clearStatusEl.style.fontWeight = "500";
+
+    const setClearStatusError = (message: string) => {
+      clearStatusEl.setText(message);
+      clearStatusEl.style.color = "var(--text-error)";
+    };
+
+    const setClearStatusSuccess = (message: string) => {
+      clearStatusEl.setText(message);
+      clearStatusEl.style.color = "var(--text-success)";
+    };
+
+    const clearClearStatus = () => {
+      clearStatusEl.setText("");
+      clearStatusEl.style.color = "";
+    };
+
+    clearHistorySetting.addButton((button) =>
+      button
+        .setButtonText("Clear All")
+        .setWarning()
+        .onClick(() => {
+          clearClearStatus();
+
+          new ClearHistoryModal(this.app, async () => {
+            try {
+              const conversationManager = this.plugin.getConversationManager();
+              if (!conversationManager) {
+                setClearStatusError("Error: ConversationManager unavailable");
+                return;
+              }
+
+              await conversationManager.clearAll();
+              setClearStatusSuccess("Conversation history cleared");
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : "Unknown error";
+              setClearStatusError(`Error: ${errorMessage}`);
+            }
+          }).open();
+        })
+    );
   }
 }

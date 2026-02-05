@@ -119,6 +119,16 @@ export class ConversationManager {
     await this.save();
   }
 
+  /**
+   * Clear all conversation history.
+   * Resets conversations to empty and persists the cleared state.
+   */
+  async clearAll(): Promise<void> {
+    this.conversations = [];
+    this.activeConversationId = null;
+    await this.save();
+  }
+
   async generateConversationSummary(
     conversationId: string,
     llmService: LLMService
