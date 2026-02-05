@@ -201,6 +201,8 @@ This is useful when:
 - The user indicates they're done
 - The topic is changing significantly
 
+Both explicit endings and idle-timeout endings can trigger background retrospection if enabled. See [Message Processor - Conversation Retrospection](message-processor.md#conversation-retrospection) for details.
+
 ### Summary Generation
 
 When a conversation ends with an LLM service available, a summary is generated:
@@ -233,6 +235,8 @@ Existing data in the old `HistoryEntry` format is automatically migrated:
 | `conversationIdleTimeoutMinutes` | number | 30 | Minutes of inactivity before a conversation ends |
 | `maxConversationsRetained` | number | 1000 | Maximum conversations to keep (oldest deleted when exceeded) |
 | `conversationStateTimeoutMinutes` | number | 60 | Minutes before a pending conversation state is considered stale |
+| `enableConversationRetrospection` | boolean | false | Run background LLM reflection when conversations end |
+| `retrospectionPrompt` | string | (see settings) | Prompt used for retrospection LLM call |
 
 ### Conversation State vs Conversation History
 

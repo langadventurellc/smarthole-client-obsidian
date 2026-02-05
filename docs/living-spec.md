@@ -162,6 +162,16 @@ The information architecture prompt allows users to define their organizational 
 - [x] Model selector dropdown in header for quick model switching (persists to settings)
 - [x] Stop button to cancel in-flight LLM requests during processing
 
+**Conversation Retrospection**
+- [x] `enableConversationRetrospection` toggle in settings, defaults to `false`
+- [x] `retrospectionPrompt` textarea in settings with default prompt
+- [x] Retrospection fires on explicit `end_conversation` tool calls (when enabled)
+- [x] Retrospection fires on idle-timeout conversation endings (when enabled)
+- [x] Retrospection runs in background (fire-and-forget, no delay to response delivery)
+- [x] Insights persisted to `.smarthole/retrospection.md` as dated Markdown sections
+- [x] Visually distinct system message in ChatView when retrospection completes
+- [x] Feature is completely inert when the setting is disabled
+
 ---
 
 ## Settings Specification
@@ -173,11 +183,25 @@ The information architecture prompt allows users to define their organizational 
 | `clientName` | string | `Miss Simone` | Name for SmartHole registration |
 | `routingDescription` | textarea | (see below) | Description for SmartHole routing |
 | `informationArchitecture` | textarea | (see below) | Prompt defining vault organization |
+| `enableConversationRetrospection` | toggle | `false` | Run background LLM retrospection when conversations end |
+| `retrospectionPrompt` | textarea | (see below) | Prompt used for the retrospection LLM call |
 | `maxConversationHistory` | number | `50` | Maximum recent conversations to retain (older ones are summarized) |
 
 ### Default Routing Description
 ```
 I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.
+```
+
+### Default Retrospection Prompt
+```
+Review this conversation and reflect on opportunities for improvement. Consider:
+
+1. System Prompt Improvements: Were there missing instructions, unclear guidance, or information that should be added to the system prompt to handle this type of request better?
+2. Vault Knowledge Gaps: What did you not know about the vault's structure, naming conventions, or content that would have helped?
+3. Tooling Opportunities: Were there actions you wished you could take but couldn't? Tools that would have made the interaction smoother?
+4. Workflow Improvements: Could this type of request be handled more efficiently?
+
+Provide specific, actionable insights. Focus on what would make future similar conversations more effective.
 ```
 
 ### Default Information Architecture Prompt

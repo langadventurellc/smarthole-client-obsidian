@@ -33,6 +33,7 @@ src/
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
 ├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
 ├── context/       # Conversation management (ConversationManager for grouped conversations, ConversationHistory legacy)
+├── retrospection/ # Background conversation retrospection (RetrospectionService, persists to .smarthole/retrospection.md)
 ├── utils/         # Shared utilities (time formatting for LLM context)
 └── views/         # UI components (ChatView sidebar for direct interaction)
 tests/             # Unit tests (Vitest)
