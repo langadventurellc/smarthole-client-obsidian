@@ -1,14 +1,17 @@
 ---
 id: F-websocket-connection-toggle
 title: WebSocket Connection Toggle Setting
-status: open
+status: in-progress
 priority: medium
 parent: none
 prerequisites: []
 affectedFiles: {}
 log: []
 schema: v1.0
-childrenIds: []
+childrenIds:
+  - T-add-disabled-status-to
+  - T-add-enablesmartholeconnection
+  - T-add-setsmartholeconnectionenab
 created: 2026-02-05T06:01:23.639Z
 updated: 2026-02-05T06:01:23.639Z
 ---

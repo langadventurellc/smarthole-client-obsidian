@@ -1,7 +1,7 @@
 ---
 id: T-add-disabled-status-to
 title: Add disabled status to ConnectionStatus type
-status: open
+status: in-progress
 priority: medium
 parent: F-websocket-connection-toggle
 prerequisites: []
