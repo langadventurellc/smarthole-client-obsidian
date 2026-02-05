@@ -276,7 +276,7 @@ Tool input:
 
 ### get_conversation
 
-Allows the agent to retrieve past conversation details when context from previous conversations is needed. Since past conversations are no longer included in the system prompt, the agent uses this tool to access them on demand. See [Conversation History](conversation-history.md) for detailed documentation.
+Allows the agent to retrieve past conversation details when deeper context from previous conversations is needed. The system prompt includes summaries of the last 2 recent conversations for passive awareness, but this tool provides full message history and access to older conversations. See [Conversation History](conversation-history.md) for detailed documentation.
 
 ```typescript
 import { createGetConversationTool, GetConversationContext } from "./llm/tools";
