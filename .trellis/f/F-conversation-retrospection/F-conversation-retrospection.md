@@ -1,7 +1,7 @@
 ---
 id: F-conversation-retrospection
 title: Conversation Retrospection
-status: in-progress
+status: done
 priority: medium
 parent: none
 prerequisites: []
@@ -27,6 +27,16 @@ affectedFiles:
     subscribe method, notifyRetrospection() and runRetrospection() methods;
     wired Trigger Path A (end_conversation tool) and Trigger Path B (idle
     timeout) into processWithRetry()
+  src/views/ChatView.ts: "Extended ChatMessage interface with type?:
+    'retrospection'; added unsubscribeRetrospection field; subscribed to
+    plugin.onRetrospection() in onOpen(); added cleanup in onClose(); updated
+    renderMessage() to detect retrospection type and apply distinct CSS class,
+    role label, and conditional rendering (skip source, tools, edit; keep copy)"
+  styles.css: Added CSS rules for .smarthole-chat-message-retrospection
+    (full-width, accent border, reduced opacity),
+    .smarthole-chat-message-retrospection .smarthole-chat-message-role (italic,
+    accent color), and .smarthole-chat-message-retrospection
+    .smarthole-chat-message-content (muted color, smaller font)
 log:
   - >-
     Completed comprehensive implementation plan for all 4 tasks. Each task body
@@ -74,12 +84,13 @@ log:
 
     - vault.adapter.read/write handles both existing and non-existing files
     cleanly
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-add-retrospection-display-to
-  - T-integrate-retrospection
   - T-add-retrospection-settings
   - T-create-retrospectionservice
+  - T-integrate-retrospection
 created: 2026-02-05T23:01:17.797Z
 updated: 2026-02-05T23:01:17.797Z
 ---

@@ -12,6 +12,8 @@ export interface ChatMessage {
   timestamp: string;
   toolsUsed?: string[];
   source?: "direct" | "websocket";
+  type?: "retrospection";
+  conversationTitle?: string;
 }
 
 export class ChatView extends ItemView {
@@ -24,6 +26,7 @@ export class ChatView extends ItemView {
   private unsubscribe: (() => void) | null = null;
   private unsubscribeMessageReceived: (() => void) | null = null;
   private unsubscribeAgentMessage: (() => void) | null = null;
+  private unsubscribeRetrospection: (() => void) | null = null;
   private renderedMessageIds = new Set<string>();
   private messageElements = new Map<string, HTMLElement>();
   private editingMessageId: string | null = null;
@@ -203,6 +206,18 @@ export class ChatView extends ItemView {
       });
     });
 
+    // Subscribe to retrospection completion
+    this.unsubscribeRetrospection = this.plugin.onRetrospection((result) => {
+      this.addMessage({
+        id: `retrospection-${crypto.randomUUID()}`,
+        role: "assistant",
+        content: result.content,
+        timestamp: result.timestamp,
+        type: "retrospection",
+        conversationTitle: result.conversationTitle,
+      });
+    });
+
     // Set the send callback to process direct messages
     this.setOnSendCallback(async (text) => {
       // Add user message immediately (optimistic UI)
@@ -242,6 +257,10 @@ export class ChatView extends ItemView {
     // Clean up agent message subscription
     this.unsubscribeAgentMessage?.();
     this.unsubscribeAgentMessage = null;
+
+    // Clean up retrospection subscription
+    this.unsubscribeRetrospection?.();
+    this.unsubscribeRetrospection = null;
 
     this.messages = [];
     this.renderedMessageIds.clear();
@@ -432,8 +451,14 @@ export class ChatView extends ItemView {
   private async renderMessage(message: ChatMessage): Promise<void> {
     if (!this.messagesEl) return;
 
+    // Determine CSS class based on message type
+    const isRetrospection = message.type === "retrospection";
+    const roleClass = isRetrospection
+      ? "smarthole-chat-message-retrospection"
+      : `smarthole-chat-message-${message.role}`;
+
     const messageEl = this.messagesEl.createEl("div", {
-      cls: `smarthole-chat-message smarthole-chat-message-${message.role}`,
+      cls: `smarthole-chat-message ${roleClass}`,
     });
 
     // Store reference for edit mode highlighting
@@ -443,7 +468,14 @@ export class ChatView extends ItemView {
     const headerEl = messageEl.createEl("div", { cls: "smarthole-chat-message-header" });
 
     const roleEl = headerEl.createEl("span", { cls: "smarthole-chat-message-role" });
-    roleEl.setText(message.role === "user" ? "You" : "Assistant");
+    const roleLabel = isRetrospection
+      ? message.conversationTitle
+        ? `Retrospection: ${message.conversationTitle}`
+        : "Retrospection"
+      : message.role === "user"
+        ? "You"
+        : "Assistant";
+    roleEl.setText(roleLabel);
 
     const timestampEl = headerEl.createEl("span", { cls: "smarthole-chat-message-timestamp" });
     timestampEl.setText(this.formatTimestamp(message.timestamp));
@@ -454,14 +486,19 @@ export class ChatView extends ItemView {
     });
     await MarkdownRenderer.render(this.app, message.content, contentEl, "", this);
 
-    // Source indicator for user messages
-    if (message.role === "user" && message.source) {
+    // Source indicator for user messages (skip for retrospection)
+    if (!isRetrospection && message.role === "user" && message.source) {
       const sourceEl = messageEl.createEl("div", { cls: "smarthole-chat-source" });
       sourceEl.setText(message.source === "direct" ? "typed" : "voice");
     }
 
-    // Tool actions for assistant messages
-    if (message.role === "assistant" && message.toolsUsed && message.toolsUsed.length > 0) {
+    // Tool actions for assistant messages (skip for retrospection)
+    if (
+      !isRetrospection &&
+      message.role === "assistant" &&
+      message.toolsUsed &&
+      message.toolsUsed.length > 0
+    ) {
       const toolsContainer = messageEl.createEl("details", { cls: "smarthole-chat-tools" });
 
       const summary = toolsContainer.createEl("summary");
@@ -477,8 +514,8 @@ export class ChatView extends ItemView {
     // Footer action bar
     const footerEl = messageEl.createEl("div", { cls: "smarthole-chat-message-footer" });
 
-    // Edit button for user messages only
-    if (message.role === "user") {
+    // Edit button for user messages only (skip for retrospection)
+    if (!isRetrospection && message.role === "user") {
       const editBtn = footerEl.createEl("button", {
         cls: "smarthole-chat-action-btn",
         attr: { "data-message-id": message.id, "aria-label": "Edit message" },
@@ -490,7 +527,7 @@ export class ChatView extends ItemView {
       });
     }
 
-    // Copy button for all messages
+    // Copy button for all messages (including retrospection)
     const copyBtn = footerEl.createEl("button", {
       cls: "smarthole-chat-action-btn",
       attr: { "aria-label": "Copy message" },

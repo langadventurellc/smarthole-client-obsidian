@@ -1,13 +1,53 @@
 ---
 id: T-add-retrospection-display-to
 title: Add retrospection display to ChatView
-status: open
+status: done
 priority: medium
 parent: F-conversation-retrospection
 prerequisites:
   - T-integrate-retrospection
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/views/ChatView.ts: "Extended ChatMessage interface with type?:
+    'retrospection'; added unsubscribeRetrospection field; subscribed to
+    plugin.onRetrospection() in onOpen(); added cleanup in onClose(); updated
+    renderMessage() to detect retrospection type and apply distinct CSS class,
+    role label, and conditional rendering (skip source, tools, edit; keep copy)"
+  styles.css: Added CSS rules for .smarthole-chat-message-retrospection
+    (full-width, accent border, reduced opacity),
+    .smarthole-chat-message-retrospection .smarthole-chat-message-role (italic,
+    accent color), and .smarthole-chat-message-retrospection
+    .smarthole-chat-message-content (muted color, smaller font)
+log:
+  - >-
+    Research complete. Verified:
+
+    - RetrospectionCallback type: { conversationTitle: string; content: string;
+    timestamp: string; }
+
+    - plugin.onRetrospection() delegation method exists in main.ts (line 319)
+
+    - Existing subscribe/unsubscribe pattern confirmed in ChatView
+    (onAgentMessage, onMessageResponse, onMessageReceived)
+
+    - ChatMessage interface at ChatView.ts line 8-15
+
+    - styles.css uses Obsidian CSS variables throughout
+
+
+    Starting implementation.
+  - 'Added retrospection display to ChatView. Extended ChatMessage interface
+    with optional `type?: "retrospection"` field. Added subscription to
+    `plugin.onRetrospection()` in `onOpen()` following the existing callback
+    pattern (matching onAgentMessage, onMessageResponse, onMessageReceived). The
+    callback creates a ChatMessage with `type: "retrospection"`, `role:
+    "assistant"`, and a unique `retrospection-` prefixed ID. Added cleanup in
+    `onClose()`. Updated `renderMessage()` to detect retrospection messages and
+    apply `smarthole-chat-message-retrospection` CSS class, show "Retrospection"
+    as the role label, and skip source indicator, tool actions, and edit button
+    while keeping the copy button. Added CSS styling for retrospection messages:
+    full-width stretch, accent-colored left border, reduced opacity, italic role
+    label with accent color, and muted/smaller content text. All quality checks
+    and tests pass.'
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T23:05:38.026Z
