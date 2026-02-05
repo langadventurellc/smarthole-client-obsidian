@@ -1,13 +1,42 @@
 ---
 id: T-add-stop-button-ui-to
 title: Add stop button UI to ChatView with styles
-status: open
+status: done
 priority: high
 parent: F-stop-agent-while-processing
 prerequisites:
   - T-add-cancellation-support-to
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/views/ChatView.ts: Added isProcessing, sendButton, stopButton class fields.
+    Promoted local sendButton to class field. Created hidden stop button with
+    square icon and click handler that calls plugin.cancelCurrentProcessing()
+    with isProcessing guard. Added setProcessingState(processing) method to
+    toggle send/stop button visibility and manage typing indicator. Updated
+    showTypingIndicator() to call setProcessingState(true). Replaced
+    hideTypingIndicator() calls with setProcessingState(false) in response
+    callback and error handler. Added cleanup of new fields in onClose().
+  styles.css: "Added .smarthole-chat-stop styles: 40x40 flex-centered button with
+    var(--text-error) background, var(--text-on-accent) icon color,
+    brightness(1.1) hover effect, scale(0.95) active state, and 18x18 SVG
+    sizing. Matches send button dimensions and positioning."
+log:
+  - "Research complete. Verified: ChatView.ts (589 lines), styles.css (263
+    lines), cancelCurrentProcessing() exists on plugin (main.ts:270). Beginning
+    implementation."
+  - "Added stop button UI to ChatView that appears when the agent is processing,
+    replacing the send button. The stop button uses Obsidian's \"square\" Lucide
+    icon with destructive red styling (var(--text-error)). Clicking it calls
+    plugin.cancelCurrentProcessing() and returns the UI to the ready state via
+    setProcessingState(false). The implementation includes: (1) three new class
+    fields (isProcessing, sendButton, stopButton), (2) promotion of the local
+    sendButton variable to a class field, (3) a new setProcessingState() method
+    that toggles button visibility and manages typing indicator, (4) integration
+    with showTypingIndicator() to automatically enter processing state, (5)
+    replacement of hideTypingIndicator() calls with setProcessingState(false) in
+    response and error handlers, (6) proper cleanup in onClose(), and (7) CSS
+    styles matching the send button dimensions with error-colored background.
+    The guard check (if !this.isProcessing return) in the stop button click
+    handler prevents redundant cancellation calls."
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T20:14:18.084Z

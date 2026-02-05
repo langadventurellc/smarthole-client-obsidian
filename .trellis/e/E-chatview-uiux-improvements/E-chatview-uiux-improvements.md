@@ -1,7 +1,7 @@
 ---
 id: E-chatview-uiux-improvements
 title: ChatView UI/UX Improvements
-status: in-progress
+status: done
 priority: medium
 parent: none
 prerequisites: []
@@ -30,7 +30,15 @@ affectedFiles:
     CLAUDE_MODELS and ClaudeModelId from types. Added header section in onOpen()
     before messages area with title span and model select dropdown. Dropdown
     populates from CLAUDE_MODELS with short names, pre-selects current model,
-    and persists changes on selection."
+    and persists changes on selection.; Added isProcessing, sendButton,
+    stopButton class fields. Promoted local sendButton to class field. Created
+    hidden stop button with square icon and click handler that calls
+    plugin.cancelCurrentProcessing() with isProcessing guard. Added
+    setProcessingState(processing) method to toggle send/stop button visibility
+    and manage typing indicator. Updated showTypingIndicator() to call
+    setProcessingState(true). Replaced hideTypingIndicator() calls with
+    setProcessingState(false) in response callback and error handler. Added
+    cleanup of new fields in onClose()."
   styles.css: "Added .smarthole-chat-message-footer styles (flex container, hidden
     by default, visible on hover with opacity transition),
     .smarthole-chat-action-btn styles (transparent icon button with hover
@@ -40,7 +48,11 @@ affectedFiles:
     border-bottom, flex-shrink: 0), .smarthole-chat-header-title (semibold,
     medium font), .smarthole-chat-model-select (small font, themed
     border/background, cursor pointer), and .smarthole-chat-model-select:focus
-    (accent border, no outline) styles."
+    (accent border, no outline) styles.; Added .smarthole-chat-stop styles:
+    40x40 flex-centered button with var(--text-error) background,
+    var(--text-on-accent) icon color, brightness(1.1) hover effect, scale(0.95)
+    active state, and 18x18 SVG sizing. Matches send button dimensions and
+    positioning."
   src/context/ConversationManager.ts: "Added ConversationBranch import and
     implemented forkConversation(messageId: string) method (lines 133-177) that
     archives messages from a specified point into archivedBranches and truncates
@@ -63,7 +75,8 @@ affectedFiles:
     before retry logic in catch block returning success:true with empty response
   src/main.ts: Added public `cancelCurrentProcessing()` method that delegates to
     `this.messageProcessor?.cancelCurrentProcessing()`
-log: []
+log:
+  - "Auto-completed: All child features are complete"
 schema: v1.0
 childrenIds:
   - F-copy-message-button

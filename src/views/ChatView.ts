@@ -27,6 +27,9 @@ export class ChatView extends ItemView {
   private renderedMessageIds = new Set<string>();
   private messageElements = new Map<string, HTMLElement>();
   private editingMessageId: string | null = null;
+  private isProcessing = false;
+  private sendButton: HTMLButtonElement | null = null;
+  private stopButton: HTMLButtonElement | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: SmartHolePlugin) {
     super(leaf);
@@ -80,8 +83,18 @@ export class ChatView extends ItemView {
       attr: { placeholder: "Type a message..." },
     });
 
-    const sendButton = inputArea.createEl("button", { cls: "smarthole-chat-send" });
-    setIcon(sendButton, "send");
+    this.sendButton = inputArea.createEl("button", { cls: "smarthole-chat-send" });
+    setIcon(this.sendButton, "send");
+
+    this.stopButton = inputArea.createEl("button", { cls: "smarthole-chat-stop" });
+    setIcon(this.stopButton, "square");
+    this.stopButton.style.display = "none";
+
+    this.stopButton.addEventListener("click", () => {
+      if (!this.isProcessing) return;
+      this.plugin.cancelCurrentProcessing();
+      this.setProcessingState(false);
+    });
 
     // Input event handlers
     this.inputEl.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -96,7 +109,7 @@ export class ChatView extends ItemView {
       }
     });
 
-    sendButton.addEventListener("click", () => {
+    this.sendButton.addEventListener("click", () => {
       this.handleSend();
     });
 
@@ -163,7 +176,7 @@ export class ChatView extends ItemView {
         timestamp: new Date().toISOString(),
         toolsUsed: result.toolsUsed,
       });
-      this.hideTypingIndicator();
+      this.setProcessingState(false);
     });
 
     // Subscribe to incoming messages (for WebSocket-originated messages)
@@ -207,7 +220,7 @@ export class ChatView extends ItemView {
       try {
         await this.plugin.processDirectMessage(text);
       } catch (error) {
-        this.hideTypingIndicator();
+        this.setProcessingState(false);
         this.addMessage({
           id: crypto.randomUUID(),
           role: "assistant",
@@ -239,6 +252,9 @@ export class ChatView extends ItemView {
     this.inputEl = null;
     this.typingEl = null;
     this.onSendCallback = null;
+    this.sendButton = null;
+    this.stopButton = null;
+    this.isProcessing = false;
   }
 
   setOnSendCallback(callback: (text: string) => void): void {
@@ -263,12 +279,28 @@ export class ChatView extends ItemView {
     this.typingEl = this.messagesEl.createEl("div", { cls: "smarthole-chat-typing" });
     this.typingEl.setText("Thinking...");
     this.scrollToBottom();
+    this.setProcessingState(true);
   }
 
   hideTypingIndicator(): void {
     if (this.typingEl) {
       this.typingEl.remove();
       this.typingEl = null;
+    }
+  }
+
+  private setProcessingState(processing: boolean): void {
+    this.isProcessing = processing;
+
+    if (this.sendButton) {
+      this.sendButton.style.display = processing ? "none" : "flex";
+    }
+    if (this.stopButton) {
+      this.stopButton.style.display = processing ? "flex" : "none";
+    }
+
+    if (!processing) {
+      this.hideTypingIndicator();
     }
   }
 

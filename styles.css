@@ -194,6 +194,36 @@
   height: 18px;
 }
 
+/* Stop button - same dimensions as send, destructive color */
+.smarthole-chat-stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-s);
+  background-color: var(--text-error);
+  color: var(--text-on-accent);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.smarthole-chat-stop:hover {
+  filter: brightness(1.1);
+}
+
+.smarthole-chat-stop:active {
+  transform: scale(0.95);
+}
+
+.smarthole-chat-stop svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* Typing indicator */
 .smarthole-chat-typing {
   padding: var(--size-4-2) var(--size-4-3);

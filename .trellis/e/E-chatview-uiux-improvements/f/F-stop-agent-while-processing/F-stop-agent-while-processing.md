@@ -1,7 +1,7 @@
 ---
 id: F-stop-agent-while-processing
 title: Stop Agent While Processing
-status: in-progress
+status: done
 priority: medium
 parent: E-chatview-uiux-improvements
 prerequisites: []
@@ -24,6 +24,18 @@ affectedFiles:
     before retry logic in catch block returning success:true with empty response
   src/main.ts: Added public `cancelCurrentProcessing()` method that delegates to
     `this.messageProcessor?.cancelCurrentProcessing()`
+  src/views/ChatView.ts: Added isProcessing, sendButton, stopButton class fields.
+    Promoted local sendButton to class field. Created hidden stop button with
+    square icon and click handler that calls plugin.cancelCurrentProcessing()
+    with isProcessing guard. Added setProcessingState(processing) method to
+    toggle send/stop button visibility and manage typing indicator. Updated
+    showTypingIndicator() to call setProcessingState(true). Replaced
+    hideTypingIndicator() calls with setProcessingState(false) in response
+    callback and error handler. Added cleanup of new fields in onClose().
+  styles.css: "Added .smarthole-chat-stop styles: 40x40 flex-centered button with
+    var(--text-error) background, var(--text-on-accent) icon color,
+    brightness(1.1) hover effect, scale(0.95) active state, and 18x18 SVG
+    sizing. Matches send button dimensions and positioning."
 log:
   - Implementation plan completed. Analyzed all 7 source files that will be
     modified, verified Anthropic SDK's APIUserAbortError inheritance chain and
@@ -31,11 +43,12 @@ log:
     specifications for all 3 child tasks. Plan includes signal propagation chain
     diagram showing the full abort flow from UI click through to SDK
     cancellation.
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
+  - T-add-abortcontroller-support
   - T-add-cancellation-support-to
   - T-add-stop-button-ui-to
-  - T-add-abortcontroller-support
 created: 2026-02-05T17:52:56.417Z
 updated: 2026-02-05T17:52:56.417Z
 ---
