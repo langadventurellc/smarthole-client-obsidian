@@ -45,6 +45,18 @@ affectedFiles:
     implemented forkConversation(messageId: string) method (lines 133-177) that
     archives messages from a specified point into archivedBranches and truncates
     the active conversation."
+  src/llm/types.ts: "Added 'aborted' to LLMErrorCode union type, added
+    LLMError.aborted() static factory method (non-retryable), and added signal?:
+    AbortSignal parameter to LLMProvider.sendMessage() interface"
+  src/llm/AnthropicProvider.ts: "Added signal?: AbortSignal parameter to
+    sendMessage(), passed { signal } as RequestOptions second argument to
+    client.messages.create(), and added APIUserAbortError check BEFORE APIError
+    check in classifyError() to prevent misclassification"
+  src/llm/LLMService.ts: Added abortController field, create new AbortController
+    at start of processMessage(), pass signal to both provider.sendMessage()
+    calls, check abort before tool loop iterations, wrapped body in try/catch
+    for abort errors (returns empty response), cleanup AbortController after
+    processing, and added public abort() method
 log: []
 schema: v1.0
 childrenIds:

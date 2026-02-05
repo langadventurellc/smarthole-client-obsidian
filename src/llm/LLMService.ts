@@ -51,6 +51,7 @@ export class LLMService {
   private settings: SmartHoleSettings;
   private initialized = false;
   private conversationContext = "";
+  private abortController: AbortController | null = null;
 
   // Conversation state tracking
   private waitingForResponse = false;
@@ -129,64 +130,100 @@ export class LLMService {
       throw LLMError.authError("LLMService not initialized. Call initialize() first.");
     }
 
+    // Create a new AbortController for this request
+    this.abortController = new AbortController();
+
     // Add user message to history
     this.conversationHistory.push({
       role: "user",
       content: userMessage,
     });
 
-    // Get tool definitions
-    const toolDefs = this.getToolDefinitions();
+    try {
+      // Get tool definitions
+      const toolDefs = this.getToolDefinitions();
 
-    // Build system prompt
-    const systemPrompt = this.buildSystemPrompt();
+      // Build system prompt
+      const systemPrompt = this.buildSystemPrompt();
 
-    // Send to LLM
-    let response = await this.provider.sendMessage(
-      this.conversationHistory,
-      toolDefs.length > 0 ? toolDefs : undefined,
-      systemPrompt
-    );
+      // Send to LLM
+      let response = await this.provider.sendMessage(
+        this.conversationHistory,
+        toolDefs.length > 0 ? toolDefs : undefined,
+        systemPrompt,
+        this.abortController.signal
+      );
 
-    // Handle tool use loop
-    let iterations = 0;
-    while (response.stopReason === "tool_use" && iterations < MAX_TOOL_ITERATIONS) {
-      iterations++;
+      // Handle tool use loop
+      let iterations = 0;
+      while (response.stopReason === "tool_use" && iterations < MAX_TOOL_ITERATIONS) {
+        // Check if abort was requested before processing more tool calls
+        if (this.abortController?.signal.aborted) {
+          break;
+        }
 
-      // Add assistant response to history
+        iterations++;
+
+        // Add assistant response to history
+        this.conversationHistory.push({
+          role: "assistant",
+          content: response.content,
+        });
+
+        // Extract and execute tool calls
+        const toolCalls = extractToolCalls(response);
+        const toolResults = await this.executeToolCalls(toolCalls);
+
+        // Add tool results to history
+        this.conversationHistory.push({
+          role: "user",
+          content: toolResults,
+        });
+
+        // Continue conversation
+        response = await this.provider.sendMessage(
+          this.conversationHistory,
+          toolDefs.length > 0 ? toolDefs : undefined,
+          systemPrompt,
+          this.abortController.signal
+        );
+      }
+
+      // If aborted via break from the tool loop, return a benign response
+      if (this.abortController?.signal.aborted) {
+        this.abortController = null;
+        return {
+          content: [],
+          stopReason: "end_turn",
+        };
+      }
+
+      // Add final assistant response to history
       this.conversationHistory.push({
         role: "assistant",
         content: response.content,
       });
 
-      // Extract and execute tool calls
-      const toolCalls = extractToolCalls(response);
-      const toolResults = await this.executeToolCalls(toolCalls);
+      // Clean up AbortController
+      this.abortController = null;
 
-      // Add tool results to history
-      this.conversationHistory.push({
-        role: "user",
-        content: toolResults,
-      });
+      // Trim history if it exceeds maximum length
+      this.trimHistory();
 
-      // Continue conversation
-      response = await this.provider.sendMessage(
-        this.conversationHistory,
-        toolDefs.length > 0 ? toolDefs : undefined,
-        systemPrompt
-      );
+      return response;
+    } catch (error) {
+      this.abortController = null;
+
+      if (error instanceof LLMError && error.code === "aborted") {
+        // Return a benign response -- the user message is already in history
+        return {
+          content: [],
+          stopReason: "end_turn",
+        };
+      }
+
+      throw error;
     }
-
-    // Add final assistant response to history
-    this.conversationHistory.push({
-      role: "assistant",
-      content: response.content,
-    });
-
-    // Trim history if it exceeds maximum length
-    this.trimHistory();
-
-    return response;
   }
 
   /**
@@ -195,6 +232,15 @@ export class LLMService {
    */
   clearHistory(): void {
     this.conversationHistory = [];
+  }
+
+  /**
+   * Abort the current in-flight LLM request.
+   * Safe to call at any time -- no-op if not currently processing.
+   */
+  abort(): void {
+    this.abortController?.abort();
+    this.abortController = null;
   }
 
   /**
@@ -324,6 +370,11 @@ ${toolsSection}${contextSection}`.trim();
     const results: ToolResultContentBlock[] = [];
 
     for (const call of toolCalls) {
+      // Short-circuit remaining tool calls if abort was requested
+      if (this.abortController?.signal.aborted) {
+        break;
+      }
+
       const result = await this.executeToolCall(call);
       results.push(result);
       this.toolCallsInSession++;
