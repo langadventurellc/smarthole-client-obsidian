@@ -337,5 +337,55 @@ Generate only the routing description text, nothing else. Do not include any pre
             }
           })
       );
+
+    // Clear Conversation History section
+    const clearHistorySetting = new Setting(containerEl)
+      .setName("Clear Conversation History")
+      .setDesc("Permanently delete all conversation history");
+
+    // Status text element for inline feedback
+    const clearStatusEl = clearHistorySetting.descEl.createSpan();
+    clearStatusEl.style.marginLeft = "8px";
+    clearStatusEl.style.fontWeight = "500";
+
+    const setClearStatusError = (message: string) => {
+      clearStatusEl.setText(message);
+      clearStatusEl.style.color = "var(--text-error)";
+    };
+
+    const setClearStatusSuccess = (message: string) => {
+      clearStatusEl.setText(message);
+      clearStatusEl.style.color = "var(--text-success)";
+    };
+
+    const clearClearStatus = () => {
+      clearStatusEl.setText("");
+      clearStatusEl.style.color = "";
+    };
+
+    clearHistorySetting.addButton((button) =>
+      button
+        .setButtonText("Clear All")
+        .setWarning()
+        .onClick(() => {
+          clearClearStatus();
+
+          new ClearHistoryModal(this.app, async () => {
+            try {
+              const conversationManager = this.plugin.getConversationManager();
+              if (!conversationManager) {
+                setClearStatusError("Error: ConversationManager unavailable");
+                return;
+              }
+
+              await conversationManager.clearAll();
+              setClearStatusSuccess("Conversation history cleared");
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : "Unknown error";
+              setClearStatusError(`Error: ${errorMessage}`);
+            }
+          }).open();
+        })
+    );
   }
 }

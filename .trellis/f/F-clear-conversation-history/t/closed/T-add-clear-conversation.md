@@ -1,14 +1,23 @@
 ---
 id: T-add-clear-conversation
 title: Add Clear Conversation History button to settings UI
-status: open
+status: done
 priority: medium
 parent: F-clear-conversation-history
 prerequisites:
   - T-add-clearall-method-to
   - T-create-clearhistorymodal
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/settings.ts: Added Clear Conversation History section (lines 341-389) with
+    Setting, inline status feedback elements, and a button that opens
+    ClearHistoryModal and calls ConversationManager.clearAll() on confirmation
+log:
+  - Added "Clear Conversation History" button to the settings UI. The button
+    appears after the "Max Conversations Retained" setting and follows the same
+    inline status feedback pattern as the "Generate from IA" button. When
+    clicked, it opens the ClearHistoryModal for confirmation. On confirmation,
+    it calls ConversationManager.clearAll() and displays success or error
+    messages inline.
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T06:09:05.427Z

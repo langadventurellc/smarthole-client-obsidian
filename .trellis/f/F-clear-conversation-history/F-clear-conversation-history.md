@@ -1,7 +1,7 @@
 ---
 id: F-clear-conversation-history
 title: Clear Conversation History Button
-status: in-progress
+status: done
 priority: medium
 parent: none
 prerequisites: []
@@ -12,13 +12,17 @@ affectedFiles:
   src/settings.ts: Added Modal to import from obsidian. Created new
     ClearHistoryModal class (lines 52-89) with constructor accepting App and
     onConfirm callback, onOpen() method that displays warning heading/message
-    and Cancel/Clear All buttons, and onClose() method that cleans up contentEl.
-log: []
+    and Cancel/Clear All buttons, and onClose() method that cleans up
+    contentEl.; Added Clear Conversation History section (lines 341-389) with
+    Setting, inline status feedback elements, and a button that opens
+    ClearHistoryModal and calls ConversationManager.clearAll() on confirmation
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-add-clear-conversation
-  - T-create-clearhistorymodal
   - T-add-clearall-method-to
+  - T-create-clearhistorymodal
 created: 2026-02-05T06:06:19.835Z
 updated: 2026-02-05T06:06:19.835Z
 ---
