@@ -15,7 +15,11 @@ affectedFiles:
     that calls new enterEditMode stub method.; Added editingMessageId and
     messageElements state tracking, implemented enterEditMode() and
     cancelEditMode() methods, added Escape key handler, updated renderMessage to
-    store element references, updated onClose to clean up new state
+    store element references, updated onClose to clean up new state; Modified
+    handleSend() to async function that detects edit mode and triggers
+    forkConversation() before sending. Added removeMessagesFromIndex() method to
+    remove archived messages from UI display (DOM elements, renderedMessageIds
+    set, messageElements map, and messages array).
   styles.css: Added .smarthole-chat-message-footer styles (flex container, hidden
     by default, visible on hover with opacity transition),
     .smarthole-chat-action-btn styles (transparent icon button with hover

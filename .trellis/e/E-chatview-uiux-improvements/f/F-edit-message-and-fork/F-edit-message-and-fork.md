@@ -1,7 +1,7 @@
 ---
 id: F-edit-message-and-fork
 title: Edit Message and Fork Conversation
-status: in-progress
+status: done
 priority: medium
 parent: E-chatview-uiux-improvements
 prerequisites: []
@@ -15,7 +15,11 @@ affectedFiles:
     that calls new enterEditMode stub method.; Added editingMessageId and
     messageElements state tracking, implemented enterEditMode() and
     cancelEditMode() methods, added Escape key handler, updated renderMessage to
-    store element references, updated onClose to clean up new state
+    store element references, updated onClose to clean up new state; Modified
+    handleSend() to async function that detects edit mode and triggers
+    forkConversation() before sending. Added removeMessagesFromIndex() method to
+    remove archived messages from UI display (DOM elements, renderedMessageIds
+    set, messageElements map, and messages array).
   styles.css: Added .smarthole-chat-message-footer styles (flex container, hidden
     by default, visible on hover with opacity transition),
     .smarthole-chat-action-btn styles (transparent icon button with hover
@@ -26,14 +30,15 @@ affectedFiles:
     implemented forkConversation(messageId: string) method (lines 133-177) that
     archives messages from a specified point into archivedBranches and truncates
     the active conversation."
-log: []
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
-  - T-implement-fork-on-send-logic
-  - T-implement-forkconversation
   - T-add-conversationbranch-type
   - T-add-footer-action-bar-with
   - T-implement-edit-mode-state-and
+  - T-implement-fork-on-send-logic
+  - T-implement-forkconversation
 created: 2026-02-05T17:52:37.649Z
 updated: 2026-02-05T17:52:37.649Z
 ---
