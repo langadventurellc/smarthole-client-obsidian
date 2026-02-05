@@ -71,6 +71,17 @@ export interface ConversationMessage {
 }
 
 /**
+ * An archived branch of a conversation created when forking.
+ * Contains the messages that were archived from the fork point onward.
+ */
+export interface ConversationBranch {
+  /** Messages that were archived in this branch */
+  messages: ConversationMessage[];
+  /** ISO 8601 timestamp when this branch was archived */
+  archivedAt: string;
+}
+
+/**
  * A discrete conversation session containing grouped messages.
  * Conversations are bounded by idle timeouts or explicit endings.
  */
@@ -87,6 +98,8 @@ export interface Conversation {
   summary: string | null;
   /** Messages in this conversation */
   messages: ConversationMessage[];
+  /** Archived branches created when forking the conversation */
+  archivedBranches?: ConversationBranch[];
 }
 
 /**

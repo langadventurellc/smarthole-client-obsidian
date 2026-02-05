@@ -8,7 +8,12 @@
 export type { HistoryEntry, ConversationSummary, PersistedHistory } from "./types";
 
 // Type Definitions (New conversation-based model)
-export type { Conversation, ConversationMessage, PersistedConversations } from "./types";
+export type {
+  Conversation,
+  ConversationBranch,
+  ConversationMessage,
+  PersistedConversations,
+} from "./types";
 
 // Type Definitions (Conversation state tracking)
 export type { ConversationState, PendingContext } from "./types";
