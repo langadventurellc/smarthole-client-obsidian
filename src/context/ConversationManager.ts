@@ -3,6 +3,7 @@ import type { LLMService } from "../llm";
 import { extractTextContent } from "../llm";
 import type {
   Conversation,
+  ConversationBranch,
   ConversationMessage,
   PersistedConversations,
   PersistedHistory,
@@ -127,6 +128,52 @@ export class ConversationManager {
     this.conversations = [];
     this.activeConversationId = null;
     await this.save();
+  }
+
+  /**
+   * Fork the active conversation from a specific message point.
+   * Archives messages from the fork point onward into a new branch and
+   * removes them from the active conversation.
+   *
+   * @param messageId - The ID of the message to fork from (this message and all after it are archived)
+   * @returns The archived messages and the fork point index
+   * @throws Error if no active conversation or message not found
+   */
+  async forkConversation(
+    messageId: string
+  ): Promise<{ archivedMessages: ConversationMessage[]; forkPoint: number }> {
+    const active = this.getActiveConversation();
+    if (!active) {
+      throw new Error("No active conversation to fork");
+    }
+
+    const forkPoint = active.messages.findIndex((msg) => msg.id === messageId);
+    if (forkPoint === -1) {
+      throw new Error(`Message not found in active conversation: ${messageId}`);
+    }
+
+    // Extract messages from fork point onward
+    const archivedMessages = active.messages.slice(forkPoint);
+
+    // Create new branch with archived messages
+    const branch: ConversationBranch = {
+      messages: archivedMessages,
+      archivedAt: new Date().toISOString(),
+    };
+
+    // Initialize archivedBranches if needed, then add the new branch
+    if (!active.archivedBranches) {
+      active.archivedBranches = [];
+    }
+    active.archivedBranches.push(branch);
+
+    // Remove archived messages from active conversation (truncate at fork point)
+    active.messages = active.messages.slice(0, forkPoint);
+
+    // Persist atomically
+    await this.save();
+
+    return { archivedMessages, forkPoint };
   }
 
   async generateConversationSummary(

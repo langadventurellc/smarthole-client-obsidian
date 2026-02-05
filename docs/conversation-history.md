@@ -50,6 +50,18 @@ interface Conversation {
   title: string | null;    // LLM-generated title when ended
   summary: string | null;  // LLM-generated summary when ended
   messages: ConversationMessage[];
+  archivedBranches?: ConversationBranch[];  // Branches created when forking
+}
+```
+
+#### Conversation Branch
+
+When a user edits a previous message, the conversation forks. Messages from the edit point onward are archived into a branch:
+
+```typescript
+interface ConversationBranch {
+  messages: ConversationMessage[];  // Archived messages from the fork point
+  archivedAt: string;               // ISO 8601 timestamp when archived
 }
 ```
 
@@ -101,6 +113,26 @@ await conversationManager.clearAll();
 ```
 
 This resets the conversations array to empty, clears the active conversation, and persists the empty state. Users can also clear history via the Settings UI button with confirmation dialog.
+
+#### Forking Conversations
+
+When a user edits a previous message, the conversation forks from that point. Messages from the fork point onward are archived:
+
+```typescript
+// Fork from a specific message
+const { archivedMessages, forkPoint } = await conversationManager.forkConversation(messageId);
+
+// archivedMessages: Messages that were removed from the active conversation
+// forkPoint: Index in the messages array where the fork occurred
+
+// After forking:
+// - Messages from forkPoint onward are moved to a new ConversationBranch
+// - The branch is stored in conversation.archivedBranches
+// - The active conversation.messages is truncated at forkPoint
+// - Changes are persisted automatically
+```
+
+The fork operation is atomic - archiving and truncation happen in a single save. This enables the ChatView edit message feature where users can modify a previous message and continue the conversation from that point with different content.
 
 #### Getting Context for LLM
 

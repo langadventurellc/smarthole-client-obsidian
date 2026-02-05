@@ -1,5 +1,6 @@
 import { ItemView, setIcon, WorkspaceLeaf } from "obsidian";
 import type SmartHolePlugin from "../main";
+import type { ConversationManager } from "../context";
 
 export const VIEW_TYPE_CHAT = "smarthole-chat-view";
 
@@ -23,6 +24,8 @@ export class ChatView extends ItemView {
   private unsubscribeMessageReceived: (() => void) | null = null;
   private unsubscribeAgentMessage: (() => void) | null = null;
   private renderedMessageIds = new Set<string>();
+  private messageElements = new Map<string, HTMLElement>();
+  private editingMessageId: string | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: SmartHolePlugin) {
     super(leaf);
@@ -63,6 +66,11 @@ export class ChatView extends ItemView {
 
     // Input event handlers
     this.inputEl.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Escape" && this.editingMessageId) {
+        e.preventDefault();
+        this.cancelEditMode();
+        return;
+      }
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         this.handleSend();
@@ -173,6 +181,8 @@ export class ChatView extends ItemView {
 
     this.messages = [];
     this.renderedMessageIds.clear();
+    this.messageElements.clear();
+    this.editingMessageId = null;
     this.messagesEl = null;
     this.inputEl = null;
     this.typingEl = null;
@@ -213,16 +223,57 @@ export class ChatView extends ItemView {
   clearMessages(): void {
     this.messages = [];
     this.renderedMessageIds.clear();
+    this.messageElements.clear();
+    this.editingMessageId = null;
     if (this.messagesEl) {
       this.messagesEl.empty();
     }
   }
 
-  private handleSend(): void {
+  private async handleSend(): Promise<void> {
     if (!this.inputEl) return;
 
     const text = this.inputEl.value.trim();
     if (!text) return;
+
+    // Handle fork-on-send if in edit mode
+    if (this.editingMessageId) {
+      const editingId = this.editingMessageId;
+      const editingMessage = this.messages.find((m) => m.id === editingId);
+
+      // Clear edit state before processing
+      this.clearEditState();
+
+      if (editingMessage) {
+        try {
+          const conversationManager = this.plugin.getConversationManager();
+          if (conversationManager) {
+            // Find the corresponding message in ConversationManager by matching content
+            // ChatView IDs may differ from ConversationManager IDs due to optimistic UI
+            const conversationMessageId = this.findConversationMessageId(
+              conversationManager,
+              editingMessage
+            );
+
+            if (conversationMessageId) {
+              const { forkPoint } =
+                await conversationManager.forkConversation(conversationMessageId);
+
+              // Remove archived messages from ChatView display
+              this.removeMessagesFromIndex(forkPoint);
+            } else {
+              // Message not found in ConversationManager - remove from ChatView based on local index
+              const localIndex = this.messages.findIndex((m) => m.id === editingId);
+              if (localIndex !== -1) {
+                this.removeMessagesFromIndex(localIndex);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("SmartHole Chat: Failed to fork conversation", error);
+        }
+      }
+    }
 
     // Clear input
     this.inputEl.value = "";
@@ -234,6 +285,43 @@ export class ChatView extends ItemView {
     } else {
       console.log("SmartHole Chat: Message sent (no handler set)", text);
     }
+  }
+
+  /**
+   * Find the ConversationManager message ID that corresponds to a ChatView message.
+   * ChatView uses optimistic IDs (crypto.randomUUID) while ConversationManager uses
+   * a different format (${messageId}-user). This method matches by content and role.
+   */
+  private findConversationMessageId(
+    conversationManager: ConversationManager,
+    chatMessage: ChatMessage
+  ): string | null {
+    const activeConversation = conversationManager.getActiveConversation();
+    if (!activeConversation) return null;
+
+    // Find matching message by content and role
+    const match = activeConversation.messages.find(
+      (m) => m.role === chatMessage.role && m.content === chatMessage.content
+    );
+
+    return match?.id ?? null;
+  }
+
+  /**
+   * Clear edit state without clearing the input.
+   * Used when we need to preserve input text for sending.
+   */
+  private clearEditState(): void {
+    if (!this.editingMessageId) return;
+
+    // Remove editing class from message element
+    const messageEl = this.messageElements.get(this.editingMessageId);
+    if (messageEl) {
+      messageEl.removeClass("smarthole-chat-message-editing");
+    }
+
+    // Clear edit state
+    this.editingMessageId = null;
   }
 
   private formatTimestamp(isoString: string): string {
@@ -264,6 +352,9 @@ export class ChatView extends ItemView {
     const messageEl = this.messagesEl.createEl("div", {
       cls: `smarthole-chat-message smarthole-chat-message-${message.role}`,
     });
+
+    // Store reference for edit mode highlighting
+    this.messageElements.set(message.id, messageEl);
 
     // Header with role label and timestamp
     const headerEl = messageEl.createEl("div", { cls: "smarthole-chat-message-header" });
@@ -297,6 +388,101 @@ export class ChatView extends ItemView {
         toolItem.setText(tool);
       }
     }
+
+    // Footer action bar
+    const footerEl = messageEl.createEl("div", { cls: "smarthole-chat-message-footer" });
+
+    // Edit button for user messages only
+    if (message.role === "user") {
+      const editBtn = footerEl.createEl("button", {
+        cls: "smarthole-chat-action-btn",
+        attr: { "data-message-id": message.id, "aria-label": "Edit message" },
+      });
+      setIcon(editBtn, "pencil");
+
+      editBtn.addEventListener("click", () => {
+        this.enterEditMode(message.id);
+      });
+    }
+  }
+
+  /**
+   * Enter edit mode for a specific message.
+   * Populates the input with the original message text and highlights the message being edited.
+   */
+  private enterEditMode(messageId: string): void {
+    // Find the original message
+    const message = this.messages.find((m) => m.id === messageId);
+    if (!message || !this.inputEl) return;
+
+    // Set edit state
+    this.editingMessageId = messageId;
+
+    // Populate input with original text
+    this.inputEl.value = message.content;
+    this.autoResizeTextarea();
+
+    // Select all text for easy replacement
+    this.inputEl.focus();
+    this.inputEl.setSelectionRange(0, message.content.length);
+
+    // Add visual indicator to the message being edited
+    const messageEl = this.messageElements.get(messageId);
+    if (messageEl) {
+      messageEl.addClass("smarthole-chat-message-editing");
+    }
+  }
+
+  /**
+   * Cancel edit mode without making changes.
+   * Clears the input and removes the editing indicator from the message.
+   */
+  private cancelEditMode(): void {
+    if (!this.editingMessageId) return;
+
+    // Remove editing class from message element
+    const messageEl = this.messageElements.get(this.editingMessageId);
+    if (messageEl) {
+      messageEl.removeClass("smarthole-chat-message-editing");
+    }
+
+    // Clear edit state
+    this.editingMessageId = null;
+
+    // Clear input
+    if (this.inputEl) {
+      this.inputEl.value = "";
+      this.autoResizeTextarea();
+    }
+  }
+
+  /**
+   * Remove messages from a specific index onward.
+   * Used when forking a conversation to clear archived messages from the display.
+   */
+  private removeMessagesFromIndex(index: number): void {
+    if (!this.messagesEl || index < 0 || index >= this.messages.length) return;
+
+    // Get the messages to remove
+    const messagesToRemove = this.messages.slice(index);
+
+    // Remove DOM elements and clean up tracking data
+    for (const message of messagesToRemove) {
+      // Remove from renderedMessageIds
+      this.renderedMessageIds.delete(message.id);
+
+      // Remove DOM element
+      const messageEl = this.messageElements.get(message.id);
+      if (messageEl) {
+        messageEl.remove();
+      }
+
+      // Remove from messageElements map
+      this.messageElements.delete(message.id);
+    }
+
+    // Truncate the messages array
+    this.messages = this.messages.slice(0, index);
   }
 
   private scrollToBottom(): void {
