@@ -71,12 +71,7 @@ export class SmartHoleSettingTab extends PluginSettingTab {
         toggle.setValue(this.plugin.settings.enableSmartHoleConnection).onChange(async (value) => {
           this.plugin.settings.enableSmartHoleConnection = value;
           await this.plugin.saveSettings();
-          // Dynamically control connection (method added in T-add-setsmartholeconnectionenab)
-          if ("setSmartHoleConnectionEnabled" in this.plugin) {
-            (
-              this.plugin as { setSmartHoleConnectionEnabled: (v: boolean) => void }
-            ).setSmartHoleConnectionEnabled(value);
-          }
+          this.plugin.setSmartHoleConnectionEnabled(value);
         })
       );
 

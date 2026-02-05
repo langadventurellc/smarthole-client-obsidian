@@ -103,9 +103,13 @@ export default class SmartHolePlugin extends Plugin {
       }
     };
 
-    // Enable reconnection and initiate connection
-    this.connection.enableReconnection();
-    this.connection.connect();
+    // Enable reconnection and initiate connection (if enabled in settings)
+    if (this.settings.enableSmartHoleConnection) {
+      this.connection.enableReconnection();
+      this.connection.connect();
+    } else {
+      this.updateStatusBar("disabled");
+    }
 
     // Reprocess any pending messages from previous sessions
     this.messageProcessor.reprocessPending().catch((error) => {
@@ -160,6 +164,8 @@ export default class SmartHolePlugin extends Plugin {
     const settings: Partial<SmartHoleSettings> = {};
 
     // Only extract known settings keys to avoid pulling in other data
+    if (typeof d.enableSmartHoleConnection === "boolean")
+      settings.enableSmartHoleConnection = d.enableSmartHoleConnection;
     if (typeof d.anthropicApiKeyName === "string")
       settings.anthropicApiKeyName = d.anthropicApiKeyName;
     if (typeof d.model === "string") settings.model = d.model as SmartHoleSettings["model"];
@@ -189,6 +195,24 @@ export default class SmartHolePlugin extends Plugin {
       disabled: "SmartHole: Disabled",
     };
     this.statusBarEl.setText(statusText[status]);
+  }
+
+  /**
+   * Enable or disable the SmartHole WebSocket connection.
+   * Called from settings toggle to dynamically control connection.
+   */
+  setSmartHoleConnectionEnabled(enabled: boolean): void {
+    if (enabled) {
+      this.connection?.enableReconnection();
+      this.connection?.connect();
+      // Status will be updated by onStateChange callback
+    } else {
+      // Note: disconnect() already calls disableReconnection() internally,
+      // but we call it explicitly for clarity and defensive coding
+      this.connection?.disableReconnection();
+      this.connection?.disconnect();
+      this.updateStatusBar("disabled");
+    }
   }
 
   async activateChatView(): Promise<void> {
