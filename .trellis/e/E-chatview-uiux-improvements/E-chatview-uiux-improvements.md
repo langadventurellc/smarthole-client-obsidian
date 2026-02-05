@@ -57,6 +57,12 @@ affectedFiles:
     calls, check abort before tool loop iterations, wrapped body in try/catch
     for abort errors (returns empty response), cleanup AbortController after
     processing, and added public abort() method
+  src/processor/MessageProcessor.ts: Added `currentLLMService` field to track
+    active LLM service, added `cancelCurrentProcessing()` public method, wrapped
+    LLM creation block in try/finally for cleanup, added abort error detection
+    before retry logic in catch block returning success:true with empty response
+  src/main.ts: Added public `cancelCurrentProcessing()` method that delegates to
+    `this.messageProcessor?.cancelCurrentProcessing()`
 log: []
 schema: v1.0
 childrenIds:

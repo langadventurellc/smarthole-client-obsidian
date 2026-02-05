@@ -1,13 +1,46 @@
 ---
 id: T-add-cancellation-support-to
 title: Add cancellation support to MessageProcessor and Plugin
-status: open
+status: done
 priority: high
 parent: F-stop-agent-while-processing
 prerequisites:
   - T-add-abortcontroller-support
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/processor/MessageProcessor.ts: Added `currentLLMService` field to track
+    active LLM service, added `cancelCurrentProcessing()` public method, wrapped
+    LLM creation block in try/finally for cleanup, added abort error detection
+    before retry logic in catch block returning success:true with empty response
+  src/main.ts: Added public `cancelCurrentProcessing()` method that delegates to
+    `this.messageProcessor?.cancelCurrentProcessing()`
+log:
+  - >-
+    Research phase complete. Verified:
+
+    1. Prerequisite T-add-abortcontroller-support is done -- LLMService.abort()
+    exists (line 241-244)
+
+    2. LLMError with 'aborted' code and factory method exists in types.ts
+
+    3. MessageProcessor.processWithRetry() structure verified (lines 282-450)
+
+    4. LLMError import already present in MessageProcessor.ts (line 16)
+
+    5. main.ts structure verified -- processDirectMessage() at line 243,
+    messageProcessor field at line 23
+
+    Beginning implementation.
+  - 'Added cancellation support to MessageProcessor and Plugin. MessageProcessor
+    now tracks the active LLMService instance via `currentLLMService` field,
+    stores it after initialization in `processWithRetry()` with a `finally`
+    block for cleanup, and exposes a public `cancelCurrentProcessing()` method
+    that delegates to `LLMService.abort()`. Abort errors are detected in the
+    catch block via `error instanceof LLMError && error.code === "aborted"`
+    BEFORE existing retry logic, returning `success: true` with empty response
+    to avoid error notifications. The Plugin class exposes
+    `cancelCurrentProcessing()` that delegates to MessageProcessor. Both methods
+    are safe to call when not processing (no-op). All quality checks pass (lint,
+    format, type-check) and build succeeds.'
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T20:13:59.809Z

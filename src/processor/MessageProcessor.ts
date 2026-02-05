@@ -49,6 +49,9 @@ export class MessageProcessor {
   private messageReceivedCallbacks: MessageReceivedCallback[] = [];
   private agentMessageCallbacks: AgentMessageCallback[] = [];
 
+  /** Track the active LLM service instance for cancellation support */
+  private currentLLMService: LLMService | null = null;
+
   /** Map of conversation ID to active conversation state */
   private conversationStates: Map<string, ConversationState> = new Map();
 
@@ -69,6 +72,15 @@ export class MessageProcessor {
   async initialize(): Promise<void> {
     await this.loadConversationStates();
     await this.cleanupStaleStates();
+  }
+
+  /**
+   * Cancel the currently in-flight LLM processing.
+   * Safe to call at any time -- no-op if not currently processing.
+   */
+  cancelCurrentProcessing(): void {
+    this.currentLLMService?.abort();
+    this.currentLLMService = null;
   }
 
   /**
@@ -294,132 +306,149 @@ export class MessageProcessor {
         // Create fresh LLMService instance for each processing
         const llmService = new LLMService(this.app, this.settings);
         await llmService.initialize();
+        this.currentLLMService = llmService;
 
-        // Check if this is a continuation of a pending conversation
-        const activeConversation = this.conversationManager.getActiveConversation();
-        let conversationContext = this.conversationManager.getContextPrompt();
+        try {
+          // Check if this is a continuation of a pending conversation
+          const activeConversation = this.conversationManager.getActiveConversation();
+          let conversationContext = this.conversationManager.getContextPrompt();
 
-        if (activeConversation) {
-          const pendingState = this.conversationStates.get(activeConversation.id);
-          if (pendingState?.isWaitingForResponse) {
-            // Restore LLM context for continuation
-            llmService.restoreConversationState({
-              isWaitingForResponse: false, // Clear since we're resuming
-              pendingContext: pendingState.pendingContext,
-            });
+          if (activeConversation) {
+            const pendingState = this.conversationStates.get(activeConversation.id);
+            if (pendingState?.isWaitingForResponse) {
+              // Restore LLM context for continuation
+              llmService.restoreConversationState({
+                isWaitingForResponse: false, // Clear since we're resuming
+                pendingContext: pendingState.pendingContext,
+              });
 
-            // Inject context about the pending question into system prompt
-            const continuationContext = this.buildContinuationContext(pendingState);
-            conversationContext = conversationContext + "\n\n" + continuationContext;
+              // Inject context about the pending question into system prompt
+              const continuationContext = this.buildContinuationContext(pendingState);
+              conversationContext = conversationContext + "\n\n" + continuationContext;
 
-            // Clear the pending state since we're processing the response
-            this.conversationStates.delete(activeConversation.id);
-            await this.persistConversationStates();
+              // Clear the pending state since we're processing the response
+              this.conversationStates.delete(activeConversation.id);
+              await this.persistConversationStates();
+            }
           }
-        }
 
-        // Set conversation context from ConversationManager (with continuation context if applicable)
-        llmService.setConversationContext(conversationContext);
+          // Set conversation context from ConversationManager (with continuation context if applicable)
+          llmService.setConversationContext(conversationContext);
 
-        // Register all vault tools and track their names
-        const tools = createVaultTools(this.app);
-        const toolNames = tools.map((t) => t.definition.name);
-        for (const tool of tools) {
-          llmService.registerTool(tool);
-        }
-
-        // Create SendMessageContext and register send_message tool
-        const sendMessageContext: SendMessageContext = {
-          sendToSmartHole: (message: string, priority: "normal" | "high" = "normal") => {
-            this.connection.sendNotification(messageId, {
-              body: message,
-              priority,
-            });
-          },
-          sendToChatView: (message: string, isQuestion: boolean) => {
-            this.notifyAgentMessageCallbacks(message, isQuestion);
-          },
-          source,
-          setWaitingForResponse: (message: string) => {
-            llmService.setWaitingForResponse(message, messageId);
-          },
-        };
-
-        const sendMessageTool = createSendMessageTool(sendMessageContext);
-        llmService.registerTool(sendMessageTool);
-        toolNames.push(sendMessageTool.definition.name);
-
-        // Create EndConversationContext and register end_conversation tool
-        const endConversationContext: EndConversationContext = {
-          conversationManager: this.conversationManager,
-          getLLMService: () => llmService,
-        };
-
-        const endConversationTool = createEndConversationTool(endConversationContext);
-        llmService.registerTool(endConversationTool);
-        toolNames.push(endConversationTool.definition.name);
-
-        // Create GetConversationContext and register get_conversation tool
-        const getConversationContext: GetConversationContext = {
-          conversationManager: this.conversationManager,
-        };
-
-        const getConversationTool = createGetConversationTool(getConversationContext);
-        llmService.registerTool(getConversationTool);
-        toolNames.push(getConversationTool.definition.name);
-
-        // Process the message
-        const response = await llmService.processMessage(messageText);
-        const textContent = extractTextContent(response);
-
-        // Determine which tools were actually used by examining the response history
-        const toolsUsed = this.extractToolsUsed(llmService, toolNames);
-
-        // Record user message in conversation
-        const timestamp = new Date().toISOString();
-        const userMessage: ConversationMessage = {
-          id: `${messageId}-user`,
-          timestamp,
-          role: "user",
-          content: messageText,
-        };
-        // Pass llmService to enable auto-summary generation on idle timeout
-        await this.conversationManager.addMessage(userMessage, llmService);
-
-        // Record assistant response in conversation
-        const assistantMessage: ConversationMessage = {
-          id: `${messageId}-assistant`,
-          timestamp,
-          role: "assistant",
-          content: textContent,
-          toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
-        };
-        await this.conversationManager.addMessage(assistantMessage);
-
-        // Check if agent is waiting for user response
-        const isWaitingForResponse = llmService.isWaitingForUserResponse();
-
-        // Persist conversation state if agent is waiting for a response
-        if (isWaitingForResponse) {
-          const conversationState = llmService.getConversationState();
-          const currentConversation = this.conversationManager.getActiveConversation();
-
-          if (currentConversation && conversationState.isWaitingForResponse) {
-            this.conversationStates.set(currentConversation.id, conversationState);
-            await this.persistConversationStates();
-            console.log(
-              `MessageProcessor: Persisted waiting state for conversation ${currentConversation.id}`
-            );
+          // Register all vault tools and track their names
+          const tools = createVaultTools(this.app);
+          const toolNames = tools.map((t) => t.definition.name);
+          for (const tool of tools) {
+            llmService.registerTool(tool);
           }
-        }
 
-        return {
-          success: true,
-          response: textContent,
-          toolsUsed,
-          isWaitingForResponse,
-        };
+          // Create SendMessageContext and register send_message tool
+          const sendMessageContext: SendMessageContext = {
+            sendToSmartHole: (message: string, priority: "normal" | "high" = "normal") => {
+              this.connection.sendNotification(messageId, {
+                body: message,
+                priority,
+              });
+            },
+            sendToChatView: (message: string, isQuestion: boolean) => {
+              this.notifyAgentMessageCallbacks(message, isQuestion);
+            },
+            source,
+            setWaitingForResponse: (message: string) => {
+              llmService.setWaitingForResponse(message, messageId);
+            },
+          };
+
+          const sendMessageTool = createSendMessageTool(sendMessageContext);
+          llmService.registerTool(sendMessageTool);
+          toolNames.push(sendMessageTool.definition.name);
+
+          // Create EndConversationContext and register end_conversation tool
+          const endConversationContext: EndConversationContext = {
+            conversationManager: this.conversationManager,
+            getLLMService: () => llmService,
+          };
+
+          const endConversationTool = createEndConversationTool(endConversationContext);
+          llmService.registerTool(endConversationTool);
+          toolNames.push(endConversationTool.definition.name);
+
+          // Create GetConversationContext and register get_conversation tool
+          const getConversationContext: GetConversationContext = {
+            conversationManager: this.conversationManager,
+          };
+
+          const getConversationTool = createGetConversationTool(getConversationContext);
+          llmService.registerTool(getConversationTool);
+          toolNames.push(getConversationTool.definition.name);
+
+          // Process the message
+          const response = await llmService.processMessage(messageText);
+          const textContent = extractTextContent(response);
+
+          // Determine which tools were actually used by examining the response history
+          const toolsUsed = this.extractToolsUsed(llmService, toolNames);
+
+          // Record user message in conversation
+          const timestamp = new Date().toISOString();
+          const userMessage: ConversationMessage = {
+            id: `${messageId}-user`,
+            timestamp,
+            role: "user",
+            content: messageText,
+          };
+          // Pass llmService to enable auto-summary generation on idle timeout
+          await this.conversationManager.addMessage(userMessage, llmService);
+
+          // Record assistant response in conversation
+          const assistantMessage: ConversationMessage = {
+            id: `${messageId}-assistant`,
+            timestamp,
+            role: "assistant",
+            content: textContent,
+            toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+          };
+          await this.conversationManager.addMessage(assistantMessage);
+
+          // Check if agent is waiting for user response
+          const isWaitingForResponse = llmService.isWaitingForUserResponse();
+
+          // Persist conversation state if agent is waiting for a response
+          if (isWaitingForResponse) {
+            const conversationState = llmService.getConversationState();
+            const currentConversation = this.conversationManager.getActiveConversation();
+
+            if (currentConversation && conversationState.isWaitingForResponse) {
+              this.conversationStates.set(currentConversation.id, conversationState);
+              await this.persistConversationStates();
+              console.log(
+                `MessageProcessor: Persisted waiting state for conversation ${currentConversation.id}`
+              );
+            }
+          }
+
+          return {
+            success: true,
+            response: textContent,
+            toolsUsed,
+            isWaitingForResponse,
+          };
+        } finally {
+          this.currentLLMService = null;
+        }
       } catch (error) {
+        // Defensive: LLMService swallows abort errors, but guard here in case behavior changes.
+        // Never retry, never notify on cancellation.
+        if (error instanceof LLMError && error.code === "aborted") {
+          console.log("MessageProcessor: Processing cancelled by user");
+          return {
+            success: true,
+            response: "",
+            toolsUsed: [],
+            isWaitingForResponse: false,
+          };
+        }
+
         const isLLMError = error instanceof LLMError;
         const isRetryable = isLLMError && error.retryable;
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
