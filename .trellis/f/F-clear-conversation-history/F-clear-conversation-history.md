@@ -9,12 +9,16 @@ affectedFiles:
   src/context/ConversationManager.ts: Added clearAll() method that resets
     conversations to empty array, sets activeConversationId to null, and
     persists the cleared state
+  src/settings.ts: Added Modal to import from obsidian. Created new
+    ClearHistoryModal class (lines 52-89) with constructor accepting App and
+    onConfirm callback, onOpen() method that displays warning heading/message
+    and Cancel/Clear All buttons, and onClose() method that cleans up contentEl.
 log: []
 schema: v1.0
 childrenIds:
   - T-add-clear-conversation
-  - T-add-clearall-method-to
   - T-create-clearhistorymodal
+  - T-add-clearall-method-to
 created: 2026-02-05T06:06:19.835Z
 updated: 2026-02-05T06:06:19.835Z
 ---
