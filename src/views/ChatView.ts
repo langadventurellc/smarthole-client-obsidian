@@ -404,6 +404,25 @@ export class ChatView extends ItemView {
         this.enterEditMode(message.id);
       });
     }
+
+    // Copy button for all messages
+    const copyBtn = footerEl.createEl("button", {
+      cls: "smarthole-chat-action-btn",
+      attr: { "aria-label": "Copy message" },
+    });
+    setIcon(copyBtn, "copy");
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(message.content);
+        setIcon(copyBtn, "check");
+        setTimeout(() => {
+          setIcon(copyBtn, "copy");
+        }, 1500);
+      } catch (error) {
+        console.warn("SmartHole Chat: Failed to copy message to clipboard", error);
+      }
+    });
   }
 
   /**
