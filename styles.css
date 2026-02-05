@@ -57,12 +57,13 @@
   word-wrap: break-word;
 }
 
-/* User messages - right aligned with accent styling */
+/* User messages - right aligned with subtle styling */
 .smarthole-chat-message-user {
-  background-color: var(--interactive-accent);
-  color: var(--text-on-accent);
+  background-color: var(--background-secondary-alt);
+  color: var(--text-normal);
   align-self: flex-end;
   margin-left: var(--size-4-8);
+  border-right: 3px solid var(--interactive-accent);
 }
 
 /* Assistant messages - left aligned with secondary styling */
@@ -92,11 +93,94 @@
   font-size: var(--font-smallest);
 }
 
-/* Message content */
+/* Message content - rendered Markdown */
 .smarthole-chat-message-content {
-  white-space: pre-wrap;
   line-height: 1.5;
   user-select: text;
+}
+
+/* Remove extra margins on first/last children inside chat bubbles */
+.smarthole-chat-message-content > *:first-child {
+  margin-top: 0;
+}
+
+.smarthole-chat-message-content > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Code blocks inside chat messages */
+.smarthole-chat-message-content pre {
+  background-color: var(--code-background);
+  border-radius: var(--radius-s);
+  padding: var(--size-4-2) var(--size-4-3);
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.smarthole-chat-message-content pre > code {
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* Inline code inside chat messages */
+.smarthole-chat-message-content :not(pre) > code {
+  background-color: var(--code-background);
+  border-radius: var(--radius-s);
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+}
+
+/* Lists inside chat messages */
+.smarthole-chat-message-content ul,
+.smarthole-chat-message-content ol {
+  padding-left: var(--size-4-6);
+  margin: var(--size-4-1) 0;
+}
+
+/* Blockquotes inside chat messages */
+.smarthole-chat-message-content blockquote {
+  border-left: 3px solid var(--text-faint);
+  padding-left: var(--size-4-3);
+  margin: var(--size-4-2) 0;
+  color: var(--text-muted);
+}
+
+/* Links inside chat messages */
+.smarthole-chat-message-content a {
+  color: var(--link-color);
+  text-decoration: var(--link-decoration);
+}
+
+.smarthole-chat-message-content a:hover {
+  color: var(--link-color-hover);
+  text-decoration: var(--link-decoration-hover);
+}
+
+/* Tables inside chat messages */
+.smarthole-chat-message-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--size-4-2) 0;
+  font-size: var(--font-smaller);
+}
+
+.smarthole-chat-message-content th,
+.smarthole-chat-message-content td {
+  border: 1px solid var(--background-modifier-border);
+  padding: var(--size-4-1) var(--size-4-2);
+  text-align: left;
+}
+
+.smarthole-chat-message-content th {
+  background-color: var(--background-secondary);
+  font-weight: var(--font-semibold);
+}
+
+/* Images inside chat messages */
+.smarthole-chat-message-content img {
+  max-width: 100%;
+  border-radius: var(--radius-s);
 }
 
 /* Tool actions - collapsible section */
