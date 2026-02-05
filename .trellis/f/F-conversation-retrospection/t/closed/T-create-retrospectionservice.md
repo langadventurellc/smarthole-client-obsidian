@@ -1,12 +1,73 @@
 ---
 id: T-create-retrospectionservice
 title: Create RetrospectionService
-status: open
+status: done
 priority: high
 parent: F-conversation-retrospection
 prerequisites: []
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/retrospection/RetrospectionService.ts: "New file: RetrospectionService class
+    with runRetrospection(), buildPrompt(), formatEntry(), and
+    persistRetrospection() methods"
+  src/retrospection/index.ts: "New file: barrel exports for RetrospectionService
+    and RetrospectionResult type"
+  tests/retrospection/RetrospectionService.test.ts: "New file: 11 unit tests
+    covering buildPrompt (8 tests) and formatEntry (3 tests)"
+log:
+  - >-
+    Research phase complete. Key findings:
+
+    - LLMService pattern: `new LLMService(app, settings)` + `await
+    llmService.initialize()` + `llmService.processMessage(prompt)` (no tools
+    registered = no tool_use loop)
+
+    - `extractTextContent()` from `src/llm/types.ts` extracts text from LLM
+    response
+
+    - `formatLocalTimestamp()` from `src/utils/time.ts` for date formatting
+
+    - `Conversation` type from `src/context/types.ts` has `title`, `messages`
+    (ConversationMessage[]), etc.
+
+    - ConversationMessage has `id`, `timestamp`, `role`, `content`, `toolsUsed?`
+
+    - Test pattern: vitest `describe/it/expect`, import from source directly
+
+    - Barrel export pattern: standard re-exports in `index.ts`
+
+    - File adapter pattern: `app.vault.adapter.read()` / `.write()` for raw file
+    I/O
+
+
+    Starting implementation of src/retrospection/RetrospectionService.ts,
+    src/retrospection/index.ts, and
+    tests/retrospection/RetrospectionService.test.ts.
+  - >-
+    Implemented RetrospectionService module with full unit test coverage.
+
+
+    The service accepts a completed Conversation, creates a fresh LLMService
+    instance with no tools registered (read-only reflection), builds a prompt
+    from conversation messages + the user's retrospectionPrompt setting, calls
+    the LLM, and persists results to .smarthole/retrospection.md (prepend at
+    top, dated Markdown sections).
+
+
+    Key decisions:
+
+    - buildPrompt() and formatEntry() are public for unit testability
+
+    - Uses app.vault.adapter.read()/write() for file I/O (handles both existing
+    and non-existing files)
+
+    - Follows the same message formatting pattern as
+    ConversationManager.generateConversationSummary()
+
+    - Throws on errors (caller handles fire-and-forget)
+
+    - 11 unit tests covering prompt building (title, messages, tools, edge
+    cases) and entry formatting (Markdown structure, timestamp formatting,
+    multiline content)
 schema: v1.0
 childrenIds: []
 created: 2026-02-05T23:05:10.143Z
