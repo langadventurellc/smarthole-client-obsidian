@@ -13,6 +13,7 @@ import type {
 
 const CONVERSATION_DATA_KEY = "conversationData";
 const HISTORY_DATA_KEY = "conversationHistory";
+const RECENT_SUMMARY_COUNT = 2;
 
 export class ConversationManager {
   private plugin: SmartHolePlugin;
@@ -259,19 +260,33 @@ SUMMARY: [your summary here]`;
   }
 
   getContextPrompt(): string {
-    const active = this.getActiveConversation();
-    if (!active || active.messages.length === 0) {
-      return "";
+    const sections: string[] = [];
+
+    // Build recent conversations section from ended conversations with summaries
+    const recentConversations = this.getRecentConversations(RECENT_SUMMARY_COUNT).filter(
+      (c) => c.title !== null && c.summary !== null
+    );
+
+    if (recentConversations.length > 0) {
+      const summaries = recentConversations
+        .map((c) => `### ${c.title} (ended ${c.endedAt})\n${c.summary}`)
+        .join("\n\n");
+      sections.push(`## Recent Conversations\n${summaries}`);
     }
 
-    const messageSection = active.messages
-      .map((msg) => {
-        const tools = msg.toolsUsed?.length ? ` [used: ${msg.toolsUsed.join(", ")}]` : "";
-        return `[${msg.timestamp}]\n${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}${tools}`;
-      })
-      .join("\n\n");
+    // Build current conversation section
+    const active = this.getActiveConversation();
+    if (active && active.messages.length > 0) {
+      const messageSection = active.messages
+        .map((msg) => {
+          const tools = msg.toolsUsed?.length ? ` [used: ${msg.toolsUsed.join(", ")}]` : "";
+          return `[${msg.timestamp}]\n${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}${tools}`;
+        })
+        .join("\n\n");
+      sections.push(`## Current Conversation\n${messageSection}`);
+    }
 
-    return `## Current Conversation\n${messageSection}`;
+    return sections.join("\n\n");
   }
 
   getConversation(id: string): Conversation | null {
