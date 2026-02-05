@@ -23,6 +23,8 @@ export class ChatView extends ItemView {
   private unsubscribeMessageReceived: (() => void) | null = null;
   private unsubscribeAgentMessage: (() => void) | null = null;
   private renderedMessageIds = new Set<string>();
+  private messageElements = new Map<string, HTMLElement>();
+  private editingMessageId: string | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: SmartHolePlugin) {
     super(leaf);
@@ -63,6 +65,11 @@ export class ChatView extends ItemView {
 
     // Input event handlers
     this.inputEl.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Escape" && this.editingMessageId) {
+        e.preventDefault();
+        this.cancelEditMode();
+        return;
+      }
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         this.handleSend();
@@ -173,6 +180,8 @@ export class ChatView extends ItemView {
 
     this.messages = [];
     this.renderedMessageIds.clear();
+    this.messageElements.clear();
+    this.editingMessageId = null;
     this.messagesEl = null;
     this.inputEl = null;
     this.typingEl = null;
@@ -213,6 +222,8 @@ export class ChatView extends ItemView {
   clearMessages(): void {
     this.messages = [];
     this.renderedMessageIds.clear();
+    this.messageElements.clear();
+    this.editingMessageId = null;
     if (this.messagesEl) {
       this.messagesEl.empty();
     }
@@ -223,6 +234,15 @@ export class ChatView extends ItemView {
 
     const text = this.inputEl.value.trim();
     if (!text) return;
+
+    // Clear edit mode if active (before clearing input)
+    if (this.editingMessageId) {
+      const messageEl = this.messageElements.get(this.editingMessageId);
+      if (messageEl) {
+        messageEl.removeClass("smarthole-chat-message-editing");
+      }
+      this.editingMessageId = null;
+    }
 
     // Clear input
     this.inputEl.value = "";
@@ -264,6 +284,9 @@ export class ChatView extends ItemView {
     const messageEl = this.messagesEl.createEl("div", {
       cls: `smarthole-chat-message smarthole-chat-message-${message.role}`,
     });
+
+    // Store reference for edit mode highlighting
+    this.messageElements.set(message.id, messageEl);
 
     // Header with role label and timestamp
     const headerEl = messageEl.createEl("div", { cls: "smarthole-chat-message-header" });
@@ -317,11 +340,52 @@ export class ChatView extends ItemView {
 
   /**
    * Enter edit mode for a specific message.
-   * Implementation will be completed in a subsequent task.
+   * Populates the input with the original message text and highlights the message being edited.
    */
   private enterEditMode(messageId: string): void {
-    // TODO: Implement in T-implement-edit-mode-state-and task
-    console.log("Enter edit mode for message:", messageId);
+    // Find the original message
+    const message = this.messages.find((m) => m.id === messageId);
+    if (!message || !this.inputEl) return;
+
+    // Set edit state
+    this.editingMessageId = messageId;
+
+    // Populate input with original text
+    this.inputEl.value = message.content;
+    this.autoResizeTextarea();
+
+    // Select all text for easy replacement
+    this.inputEl.focus();
+    this.inputEl.setSelectionRange(0, message.content.length);
+
+    // Add visual indicator to the message being edited
+    const messageEl = this.messageElements.get(messageId);
+    if (messageEl) {
+      messageEl.addClass("smarthole-chat-message-editing");
+    }
+  }
+
+  /**
+   * Cancel edit mode without making changes.
+   * Clears the input and removes the editing indicator from the message.
+   */
+  private cancelEditMode(): void {
+    if (!this.editingMessageId) return;
+
+    // Remove editing class from message element
+    const messageEl = this.messageElements.get(this.editingMessageId);
+    if (messageEl) {
+      messageEl.removeClass("smarthole-chat-message-editing");
+    }
+
+    // Clear edit state
+    this.editingMessageId = null;
+
+    // Clear input
+    if (this.inputEl) {
+      this.inputEl.value = "";
+      this.autoResizeTextarea();
+    }
   }
 
   private scrollToBottom(): void {

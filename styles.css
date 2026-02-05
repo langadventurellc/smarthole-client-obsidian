@@ -218,3 +218,14 @@
   width: 14px;
   height: 14px;
 }
+
+/* Message editing state indicator */
+.smarthole-chat-message-editing {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* Always show footer when message is being edited */
+.smarthole-chat-message-editing .smarthole-chat-message-footer {
+  opacity: 1;
+}
