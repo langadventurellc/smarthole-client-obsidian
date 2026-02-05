@@ -15,6 +15,7 @@ LLM tools for manipulating the Obsidian vault. Each tool is a factory function t
 | `search_files` | Search file contents using regex patterns with context |
 | `list_files` | List files and folders matching a glob pattern |
 | `get_file_info` | Get file/folder metadata (dates, size) |
+| `get_active_note` | Get metadata of the currently open file in the editor |
 
 ## Usage
 
@@ -754,6 +755,56 @@ Error: Access denied: Cannot access files in '.obsidian/' directory (protected s
 - **Use `move_file`** when you need to rename files or move them to different locations
 - Works for both files and folders (folders move with all contents)
 
+## get_active_note
+
+Get metadata about the file currently open in Obsidian's editor. Useful when the user refers to "this note", "the current file", or wants to operate on what they're looking at.
+
+### Input Schema
+
+```typescript
+{
+  // No input parameters required
+}
+```
+
+### Behavior
+
+- Returns the file path, name, and modification timestamp when a file is active
+- Returns a clear message when no file is currently open
+- Supports any file type (not just markdown)
+- Does NOT return file content (only metadata)
+- Uses `app.workspace.getActiveFile()` internally
+
+### Example
+
+```typescript
+// Get info about the currently open file
+{
+  name: "get_active_note",
+  input: {}
+}
+```
+
+### Response Format
+
+When a file is active:
+```
+Active file: Projects/meeting-notes.md
+Name: meeting-notes.md
+Modified: 2026-02-04 10:30:22
+```
+
+When no file is active:
+```
+No file is currently open. The user may be viewing settings, an empty workspace, or a non-file view.
+```
+
+### When to Use
+
+- **Use `get_active_note`** when the user refers to "this note", "the current file", or "what I'm looking at"
+- Combine with other tools (like `read_file` or `edit_file`) to operate on the active file
+- Useful for context-aware operations without requiring the user to specify a path
+
 ## Tool Handler Interface
 
 ```typescript
@@ -802,6 +853,7 @@ Located in `src/llm/tools/`:
 - `searchFiles.ts` - Regex content search factory
 - `listFiles.ts` - Glob-based file listing factory
 - `getFileInfo.ts` - File/folder metadata retrieval factory
+- `getActiveNote.ts` - Active file metadata retrieval factory
 - `pathUtils.ts` - Shared path normalization, glob matching (case-insensitive), and case-insensitive file/folder lookup utilities
 - `protected.ts` - Protected path validation utility (case-insensitive)
 - `index.ts` - `createVaultTools()` aggregator

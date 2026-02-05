@@ -16,6 +16,7 @@ import { createMoveFileTool } from "./moveFile";
 import { createSearchFilesTool } from "./searchFiles";
 import { createListFilesTool } from "./listFiles";
 import { createGetFileInfoTool } from "./getFileInfo";
+import { createGetActiveNoteTool } from "./getActiveNote";
 
 /**
  * Creates all vault tools for registration with LLMService.
@@ -34,6 +35,7 @@ export function createVaultTools(app: App): ToolHandler[] {
     createSearchFilesTool(app),
     createListFilesTool(app),
     createGetFileInfoTool(app),
+    createGetActiveNoteTool(app),
   ];
 }
 
@@ -47,6 +49,7 @@ export { createMoveFileTool } from "./moveFile";
 export { createSearchFilesTool } from "./searchFiles";
 export { createListFilesTool } from "./listFiles";
 export { createGetFileInfoTool } from "./getFileInfo";
+export { createGetActiveNoteTool } from "./getActiveNote";
 
 // Send Message Tool (separate from vault tools - requires runtime context)
 export { createSendMessageTool } from "./sendMessage";
