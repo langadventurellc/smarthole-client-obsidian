@@ -1,13 +1,57 @@
 ---
 id: T-migrate-sendmessage-to
 title: Migrate sendMessage to streaming with abort and micro-agent opt-out
-status: open
+status: done
 priority: high
 parent: F-streaming-api-for-anthropicpro
 prerequisites:
   - T-add-model-aware-max-output
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/AnthropicProvider.ts: Added streaming constructor option (default true),
+    extracted sendStreaming() and sendNonStreaming() private methods, updated
+    sendMessage() to dispatch based on this.streaming flag
+  src/llm/LLMService.ts: "Added optional { streaming?: boolean } third parameter
+    to constructor, forwarded to AnthropicProvider"
+  src/processor/MessageProcessor.ts: "Passed { streaming: false } to LLMService for commit message generation"
+  src/retrospection/RetrospectionService.ts: "Passed { streaming: false } to LLMService for retrospection"
+  src/context/ConversationManager.ts: "Passed { streaming: false } to LLMService
+    for conversation summary generation"
+  src/settings.ts: "Passed { streaming: false } to LLMService for routing
+    description generation"
+log:
+  - >-
+    Research complete. Key findings:
+
+    - SDK v0.39.0 confirmed with `messages.stream()` and `MessageStream`
+    available
+
+    - `MessageStream.abort()` and `MessageStream.finalMessage()` both present
+
+    - `MessageStreamParams` = `MessageCreateParamsBase` (same as create minus
+    stream field)
+
+    - `finalMessage()` returns `Promise<Message>` — same type as `create()`
+
+    - 5 callers to update: MessageProcessor (primary agent + commit),
+    RetrospectionService, ConversationManager, settings.ts
+
+    - LLMService constructor currently takes (app, settings), creates
+    AnthropicProvider(settings.model)
+
+    - Plan: Add `streaming` option to AnthropicProvider constructor, add
+    `streaming` option to LLMService constructor, pass `false` from micro-agent
+    callers
+  - "Migrated AnthropicProvider.sendMessage() to use streaming
+    (messages.stream() + finalMessage()) by default, with a non-streaming
+    fallback for micro-agent callers. Added a `streaming` boolean constructor
+    option to both AnthropicProvider (default true) and LLMService (forwarded to
+    provider). The streaming path bridges the existing AbortSignal to
+    stream.abort() via addEventListener/removeEventListener in a finally block.
+    The non-streaming path uses messages.create() with explicit stream:false for
+    type narrowing. All micro-agent callers (commit messages, retrospection,
+    conversation summaries, settings description generation) now pass {
+    streaming: false }. The primary agent path uses the default streaming=true.
+    Retry logic wraps both paths identically. Quality checks pass."
 schema: v1.0
 childrenIds: []
 created: 2026-02-06T04:28:05.013Z

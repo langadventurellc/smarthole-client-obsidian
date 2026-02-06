@@ -1,7 +1,7 @@
 ---
 id: F-streaming-api-for-anthropicpro
 title: Streaming API for AnthropicProvider
-status: in-progress
+status: done
 priority: high
 parent: none
 prerequisites: []
@@ -11,8 +11,20 @@ affectedFiles:
     models)
   src/llm/AnthropicProvider.ts: Replaced DEFAULT_MAX_TOKENS usage with
     CLAUDE_MODEL_MAX_OUTPUT_TOKENS[this.model], removed the DEFAULT_MAX_TOKENS
-    constant, updated import to include the new mapping
-log: []
+    constant, updated import to include the new mapping; Added streaming
+    constructor option (default true), extracted sendStreaming() and
+    sendNonStreaming() private methods, updated sendMessage() to dispatch based
+    on this.streaming flag
+  src/llm/LLMService.ts: "Added optional { streaming?: boolean } third parameter
+    to constructor, forwarded to AnthropicProvider"
+  src/processor/MessageProcessor.ts: "Passed { streaming: false } to LLMService for commit message generation"
+  src/retrospection/RetrospectionService.ts: "Passed { streaming: false } to LLMService for retrospection"
+  src/context/ConversationManager.ts: "Passed { streaming: false } to LLMService
+    for conversation summary generation"
+  src/settings.ts: "Passed { streaming: false } to LLMService for routing
+    description generation"
+log:
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
   - T-add-model-aware-max-output

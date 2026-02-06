@@ -61,10 +61,10 @@ export class LLMService {
   private waitingForMessageId: string | null = null;
   private toolCallsInSession = 0;
 
-  constructor(app: App, settings: SmartHoleSettings) {
+  constructor(app: App, settings: SmartHoleSettings, options?: { streaming?: boolean }) {
     this.app = app;
     this.settings = settings;
-    this.provider = new AnthropicProvider(settings.model);
+    this.provider = new AnthropicProvider(settings.model, { streaming: options?.streaming });
   }
 
   /**

@@ -631,7 +631,7 @@ export class MessageProcessor {
       model: "claude-haiku-4-5-20251001" as ClaudeModelId,
     };
 
-    const llmService = new LLMService(this.app, commitSettings);
+    const llmService = new LLMService(this.app, commitSettings, { streaming: false });
     await llmService.initialize();
 
     const prompt = `Generate a concise git commit message for the following changes.
