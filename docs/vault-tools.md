@@ -833,6 +833,7 @@ All file operation tools share protected path validation via `src/llm/tools/prot
 
 - `.obsidian/` - Obsidian configuration (could break the app)
 - `.smarthole/` - Internal storage (inbox, trash, etc.)
+- `.git/` - Git repository data (managed by GitService)
 
 Protection is case-insensitive, so `.Obsidian/`, `.OBSIDIAN/`, and `.obsidian/` are all blocked.
 
