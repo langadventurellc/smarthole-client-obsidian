@@ -27,6 +27,8 @@ export interface SmartHoleSettings {
   enableGitVersionControl: boolean;
   /** Whether to auto-commit after agent message processing */
   autoCommitAfterProcessing: boolean;
+  /** Whether to enable verbose debug logging in the dev console */
+  enableVerboseLogging: boolean;
 }
 
 const DEFAULT_RETROSPECTION_PROMPT = `Review this conversation and reflect on opportunities for improvement. Consider:
@@ -71,6 +73,7 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   retrospectionPrompt: DEFAULT_RETROSPECTION_PROMPT,
   enableGitVersionControl: false,
   autoCommitAfterProcessing: true,
+  enableVerboseLogging: false,
 };
 
 export class ClearHistoryModal extends Modal {
@@ -473,5 +476,20 @@ Generate only the routing description text, nothing else. Do not include any pre
             })
         );
     }
+
+    // Developer section
+    containerEl.createEl("h3", { text: "Developer" });
+
+    new Setting(containerEl)
+      .setName("Verbose Debug Logging")
+      .setDesc(
+        "Log detailed LLM and tool execution diagnostics to the dev console. Takes effect immediately."
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.enableVerboseLogging).onChange(async (value) => {
+          this.plugin.settings.enableVerboseLogging = value;
+          await this.plugin.saveSettings();
+        })
+      );
   }
 }

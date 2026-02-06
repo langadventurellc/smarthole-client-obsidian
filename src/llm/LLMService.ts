@@ -11,6 +11,7 @@
 import type { App } from "obsidian";
 import type { SmartHoleSettings } from "../settings";
 import type { ConversationState } from "../context";
+import { debug } from "../utils/logger";
 import { AnthropicProvider } from "./AnthropicProvider";
 import type { LLMMessage, LLMResponse, Tool, ToolCall, ToolResultContentBlock } from "./types";
 import { extractToolCalls, LLMError } from "./types";
@@ -150,6 +151,9 @@ export class LLMService {
       content: userMessage,
     });
 
+    const truncatedMsg = userMessage.length > 100 ? userMessage.slice(0, 100) + "..." : userMessage;
+    debug("LLM", `processMessage entry — "${truncatedMsg}" (${this.tools.size} tools registered)`);
+
     try {
       // Get tool definitions
       const toolDefs = this.getToolDefinitions();
@@ -183,6 +187,10 @@ export class LLMService {
 
         // Extract and execute tool calls
         const toolCalls = extractToolCalls(response);
+        debug(
+          "LLM",
+          `tool loop iteration ${iterations} — stop_reason=${response.stopReason}, tools=[${toolCalls.map((t) => t.name).join(", ")}]`
+        );
         const toolResults = await this.executeToolCalls(toolCalls);
 
         // Add tool results to history
@@ -199,6 +207,12 @@ export class LLMService {
           this.abortController.signal
         );
       }
+
+      const finalHasToolUse = response.content.some((b) => b.type === "tool_use");
+      debug(
+        "LLM",
+        `tool loop exited — stop_reason=${response.stopReason}, iterations=${iterations}, has_tool_use_in_final=${finalHasToolUse}`
+      );
 
       // Warn if response was truncated due to max_tokens — tool calls may have been dropped
       if (response.stopReason === "max_tokens") {
@@ -454,6 +468,7 @@ ${toolsSection}${contextSection}`.trim();
 
     try {
       const result = await handler.execute(call.input);
+      debug("LLM", `tool ${call.name} succeeded (result length=${result.length})`);
       return {
         type: "tool_result",
         toolUseId: call.id,
@@ -461,6 +476,7 @@ ${toolsSection}${contextSection}`.trim();
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      debug("LLM", `tool ${call.name} failed: ${errorMessage}`);
       return {
         type: "tool_result",
         toolUseId: call.id,

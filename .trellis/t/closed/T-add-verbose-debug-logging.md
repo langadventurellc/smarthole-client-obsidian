@@ -1,13 +1,74 @@
 ---
 id: T-add-verbose-debug-logging
 title: Add verbose debug logging toggle for LLM and tool execution
-status: open
+status: done
 priority: medium
 parent: none
 prerequisites:
   - T-fix-max-tokens-truncation
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/utils/logger.ts: New file — lightweight debug logger with
+    setVerboseLogging() and debug() functions
+  src/settings.ts: Added enableVerboseLogging to SmartHoleSettings interface,
+    DEFAULT_SETTINGS, and Developer section toggle in settings tab
+  src/main.ts: Import and initialize setVerboseLogging in onload() and
+    saveSettings(), added enableVerboseLogging to extractSettings()
+  src/llm/LLMService.ts: "Added 6 debug() calls: processMessage entry, tool loop
+    iteration, tool loop exit, tool execution success, tool execution failure"
+  src/llm/AnthropicProvider.ts: "Added 3 debug() calls: before API call, after response, on retry"
+  src/processor/MessageProcessor.ts: Added 1 debug() call for tools used summary after processing
+log:
+  - >-
+    Research complete. Key findings:
+
+    - settings.ts: SmartHoleSettings interface at line 7, DEFAULT_SETTINGS at
+    line 59, SmartHoleSettingTab.display() at line 123, last section is "Version
+    Control" at line 444
+
+    - main.ts: onload() at line 31, loadSettings() at line 158, saveSettings()
+    at line 164, extractSettings() at line 171
+
+    - LLMService.ts: processMessage() at line 129, executeToolCalls() at line
+    423, executeToolCall() at line 443, already has console.warn for max_tokens
+    at line 205
+
+    - AnthropicProvider.ts: sendMessage() at line 63, retry loop at line 78
+
+    - MessageProcessor.ts: processWithRetry() at line 338, toolsUsed extraction
+    at line 445
+
+    - src/utils/ has time.ts (no index.ts barrel file, imports are direct path)
+
+    - No existing logger utility
+
+
+    Plan:
+
+    1. Create src/utils/logger.ts with setVerboseLogging() and debug()
+
+    2. Add enableVerboseLogging to SmartHoleSettings, DEFAULT_SETTINGS, and
+    extractSettings()
+
+    3. Add Developer section with toggle in settings tab
+
+    4. Add debug() calls to LLMService.ts
+
+    5. Add debug() calls to AnthropicProvider.ts  
+
+    6. Add debug() call to MessageProcessor.ts
+
+    7. Initialize logger in main.ts onload() and saveSettings()
+  - Implemented verbose debug logging toggle for LLM and tool execution. Added
+    enableVerboseLogging setting (default false) with a Developer section toggle
+    in settings UI. Created a lightweight logger utility (src/utils/logger.ts)
+    with setVerboseLogging() and debug() functions. Added ~6 debug() calls to
+    LLMService.ts (processMessage entry, tool loop iterations, tool loop exit,
+    tool execution success/failure), ~3 debug() calls to AnthropicProvider.ts
+    (before API call, after response, on retry), and 1 debug() call to
+    MessageProcessor.ts (tools used summary). Logger is initialized in main.ts
+    onload() and updated in saveSettings() for immediate effect without restart.
+    The existing console.warn for max_tokens truncation in LLMService.ts is
+    preserved and not duplicated.
 schema: v1.0
 childrenIds: []
 created: 2026-02-06T02:49:37.820Z

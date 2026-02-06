@@ -12,6 +12,7 @@ import {
 } from "./processor";
 import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 import type { ConnectionStatus } from "./types";
+import { setVerboseLogging } from "./utils/logger";
 import { ChatView, VIEW_TYPE_CHAT } from "./views";
 import { SmartHoleConnection } from "./websocket/SmartHoleConnection";
 import type { RoutedMessage } from "./websocket";
@@ -30,6 +31,7 @@ export default class SmartHolePlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    setVerboseLogging(this.settings.enableVerboseLogging);
     this.addSettingTab(new SmartHoleSettingTab(this.app, this));
 
     // Initialize status bar
@@ -166,6 +168,8 @@ export default class SmartHolePlugin extends Plugin {
     const existingData = (await this.loadData()) || {};
     const mergedData = { ...existingData, ...this.settings };
     await this.saveData(mergedData);
+    // Update logger immediately so toggling takes effect without restart
+    setVerboseLogging(this.settings.enableVerboseLogging);
   }
 
   private extractSettings(data: unknown): Partial<SmartHoleSettings> {
@@ -202,6 +206,8 @@ export default class SmartHolePlugin extends Plugin {
       settings.enableGitVersionControl = d.enableGitVersionControl;
     if (typeof d.autoCommitAfterProcessing === "boolean")
       settings.autoCommitAfterProcessing = d.autoCommitAfterProcessing;
+    if (typeof d.enableVerboseLogging === "boolean")
+      settings.enableVerboseLogging = d.enableVerboseLogging;
 
     return settings;
   }

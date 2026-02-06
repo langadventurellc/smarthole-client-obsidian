@@ -26,6 +26,7 @@ import {
   createGetConversationTool,
   createGitTools,
 } from "../llm";
+import { debug } from "../utils/logger";
 import type { SendMessageContext, EndConversationContext, GetConversationContext } from "../llm";
 import type { GitCommitMetadata } from "../git";
 import { RetrospectionService } from "../retrospection";
@@ -443,6 +444,7 @@ export class MessageProcessor {
 
           // Determine which tools were actually used by examining the response history
           const toolsUsed = this.extractToolsUsed(llmService, toolNames);
+          debug("Processor", `processing complete — tools used: [${toolsUsed.join(", ")}]`);
 
           // Capture active conversation ID before addMessage (for idle timeout detection)
           const activeConvIdBeforeAdd =
