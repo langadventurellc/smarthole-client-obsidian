@@ -10,6 +10,7 @@ An Obsidian plugin that acts as a SmartHole client, receiving voice and text com
 - **Customizable Organization**: Define your own "information architecture" to guide how notes are organized
 - **Message Durability**: Commands are saved to an inbox before processing, so nothing is lost if the API is temporarily unavailable
 - **Conversation Context**: Groups messages into discrete conversations with automatic boundaries and LLM-generated summaries
+- **Git Version Control**: Optionally tracks vault changes with git, auto-commits after agent processing with LLM-generated commit messages, and gives the agent tools to search commit history
 
 ## Requirements
 
@@ -49,6 +50,9 @@ After enabling the plugin, go to Settings → SmartHole Client to configure:
 | **Client Name** | Name shown in SmartHole (default: "Miss Simone") |
 | **Routing Description** | Tells SmartHole what kinds of commands to route to this plugin |
 | **Information Architecture** | Defines how you want your notes organized |
+| **Enable Git Version Control** | Track vault changes with git (off by default, initializes a repo on first enable) |
+| **Auto-commit after processing** | Automatically commit after the agent finishes processing (on by default, only visible when git is enabled) |
+| **Verbose Debug Logging** | Log detailed LLM, tool execution, and message processing diagnostics to the dev console (off by default) |
 | **Clear Conversation History** | Permanently delete all stored conversations (with confirmation) |
 
 ## Usage
@@ -113,6 +117,7 @@ Claude can perform these operations on your vault:
 - **Modify notes**: Append content, update sections, or edit existing notes
 - **Search notes**: Find and read notes matching your query
 - **Organize notes**: Rename or move notes between folders
+- **Search history**: Search git commit history, view file changes over time, inspect individual commits (when git is enabled)
 
 ## Troubleshooting
 
@@ -146,7 +151,6 @@ See [CLAUDE.md](CLAUDE.md) for development guidelines and architecture details.
 ```bash
 mise run dev         # Start dev mode
 mise run build       # Build for distribution
-mise run test        # Run tests
 mise run quality     # All quality checks
 ```
 

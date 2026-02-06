@@ -4,7 +4,7 @@ Obsidian plugin that acts as a SmartHole client, using Claude (Anthropic) to int
 
 ## Tech Stack
 
-TypeScript, Obsidian Plugin API, esbuild, @anthropic-ai/sdk, Vitest
+TypeScript, Obsidian Plugin API, esbuild, @anthropic-ai/sdk, isomorphic-git
 
 ## Commands
 
@@ -13,7 +13,6 @@ Commands use `mise` for all development tasks:
 ```bash
 mise run dev         # Start dev mode with hot reload
 mise run build       # Build for distribution
-mise run test        # Run tests
 mise run quality     # All quality checks (lint + format + type-check)
 mise run lint        # ESLint only
 mise run format      # Prettier only
@@ -29,14 +28,14 @@ src/
 ├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
 ├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
-│   └── tools/     # Tools (vault: readFile, editFile, writeFile, createFolder, deleteFile, moveFile, searchFiles, listFiles, getFileInfo, getActiveNote; communication: sendMessage, endConversation, getConversation; utils: pathUtils, protected)
+│   └── tools/     # Tools (vault: readFile, editFile, writeFile, createFolder, deleteFile, moveFile, searchFiles, listFiles, getFileInfo, getActiveNote; communication: sendMessage, endConversation, getConversation; git: searchGitHistory, viewFileHistory, viewCommit; utils: pathUtils, protected)
+├── git/           # Git version control (GitService wrapping isomorphic-git, types)
 ├── inbox/         # Message durability layer (InboxManager, persists to .smarthole/inbox/)
-├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup)
+├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup, auto-commit)
 ├── context/       # Conversation management (ConversationManager for grouped conversations, ConversationHistory legacy)
 ├── retrospection/ # Background conversation retrospection (RetrospectionService, persists to .smarthole/retrospection.md)
-├── utils/         # Shared utilities (time formatting for LLM context)
+├── utils/         # Shared utilities (time formatting for LLM context, debug logger)
 └── views/         # UI components (ChatView sidebar for direct interaction)
-tests/             # Unit tests (Vitest)
 ```
 
 ## Architecture Rules
@@ -97,6 +96,7 @@ tests/             # Unit tests (Vitest)
 - [Conversation History](docs/conversation-history.md) - Conversation boundaries, message grouping, LLM summaries
 - [Inbox Manager](docs/inbox-manager.md) - Message durability, crash recovery
 - [Chat View](docs/chat-view.md) - Sidebar UI, direct messages, tool display
+- [Git Version Control](docs/git-version-control.md) - GitService, git tools, auto-commit
 - [Living Spec](docs/living-spec.md) - Product vision and requirements
 - [Agentic Architecture](docs/requirements-agentic-architecture.md) - Planned filesystem access and autonomous execution
 

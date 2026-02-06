@@ -6,17 +6,19 @@
  * "we're done with this topic" rather than relying solely on idle timeout.
  */
 
+import type { App } from "obsidian";
 import type { ToolHandler } from "../LLMService";
 import type { Tool } from "../types";
 import type { ConversationManager } from "../../context";
-import type { LLMService } from "../LLMService";
+import type { SmartHoleSettings } from "../../settings";
 
 // =============================================================================
 // Context Interface
 // =============================================================================
 
 /**
- * Context providing access to conversation management and LLM services.
+ * Context providing access to conversation management and app/settings
+ * for creating isolated LLMService instances during summary generation.
  * Passed to the tool factory during registration.
  */
 export interface EndConversationContext {
@@ -26,11 +28,14 @@ export interface EndConversationContext {
   conversationManager: ConversationManager;
 
   /**
-   * Factory function to get the current LLM service for summary generation.
-   * Uses a factory pattern because LLMService may not be initialized at
-   * the time the tool is registered.
+   * Obsidian App instance for creating isolated LLMService instances.
    */
-  getLLMService: () => LLMService;
+  app: App;
+
+  /**
+   * Plugin settings for creating isolated LLMService instances.
+   */
+  settings: SmartHoleSettings;
 }
 
 // =============================================================================
@@ -92,10 +97,12 @@ export function createEndConversationTool(context: EndConversationContext): Tool
         return "No active conversation to end.";
       }
 
-      // End conversation with summary generation
+      // End conversation with summary generation (uses isolated LLMService internally)
       try {
-        const llmService = context.getLLMService();
-        await context.conversationManager.endConversation(llmService);
+        await context.conversationManager.endConversation({
+          app: context.app,
+          settings: context.settings,
+        });
 
         const reasonSuffix = reason ? ` Reason: ${reason}` : "";
         return `Conversation ended successfully.${reasonSuffix} A summary has been generated. The next message will start a new conversation.`;

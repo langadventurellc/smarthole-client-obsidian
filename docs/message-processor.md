@@ -36,10 +36,11 @@ The `initialize()` method loads any persisted conversation states from the previ
 
 1. **Save to inbox** - Message persisted for durability before any processing
 2. **Send acknowledgment** - Notify SmartHole that message was received
-3. **LLM processing** - Create LLMService, register tools, process with retry
+3. **LLM processing** - Create LLMService, register tools (including git tools if enabled), process with retry
 4. **Send notification** - Success or error notification via SmartHole
 5. **Record history** - Add messages to active conversation via ConversationManager
 6. **Cleanup** - Remove message from inbox on success
+7. **Auto-commit** (async, non-blocking) - If git enabled, commit vault changes with LLM-generated message
 
 ## Usage
 
@@ -266,6 +267,40 @@ When `enableConversationRetrospection` is enabled in settings, the processor lau
 3. The LLM response is persisted to `.smarthole/retrospection.md` (prepended as a dated Markdown section)
 4. Registered `onRetrospection` callbacks are notified with the result (used by ChatView to display a system message)
 5. Failures are logged to console and silently ignored
+
+## Auto-Commit After Processing
+
+When `enableGitVersionControl` and `autoCommitAfterProcessing` are both enabled in settings, the processor automatically commits vault changes after successful message processing. This runs as a fire-and-forget async task (same pattern as retrospection) so it never blocks or delays the user's response.
+
+### Auto-Commit Flow
+
+1. After successful LLM processing, check if `GitService` is available and `autoCommitAfterProcessing` is enabled
+2. Call `gitService.hasChanges()` to verify there are uncommitted changes
+3. Generate a commit message via a lightweight Haiku LLM call (separate `LLMService` instance, no tools)
+4. Call `gitService.commitAll()` with structured metadata (conversation ID, tools used, files affected)
+5. Failures are logged to console and silently ignored
+
+### Commit Message Generation
+
+A fresh `LLMService` is created with Haiku (`claude-haiku-4-5-20251001`) regardless of the user's model setting, to keep commit message generation fast and cheap. The LLM receives the user's original request, tools used, and files changed to produce a conventional commit message in the format `type(scope): summary`.
+
+### Git History Tools
+
+When `GitService` is available, three additional tools are registered during `processWithRetry()`:
+
+| Tool | Description |
+|------|-------------|
+| `search_git_history` | Search commits by message text, file path, and/or date range |
+| `view_file_history` | Show commit history for a specific file with optional diffs |
+| `view_commit` | View full details of a specific commit (message, author, file diffs) |
+
+These tools are conditionally registered only when git is enabled, and are not available when git is disabled.
+
+See [Git Version Control](git-version-control.md) for detailed tool documentation.
+
+## Debug Logging
+
+When `enableVerboseLogging` is enabled in settings, the processor emits `[Processor]` debug messages after each successful processing run (listing which tools were used). See [LLM Service](llm-service.md#debug-logging) for related LLM-level debug output.
 
 ## Configuration
 

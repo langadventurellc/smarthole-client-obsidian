@@ -2,13 +2,14 @@
   "name": "smarthole-client-obsidian",
   "version": "1.0.0",
   "private": true,
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "build": "node esbuild.config.mjs production",
     "prepare": "husky"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0"
+    "@anthropic-ai/sdk": "^0.39.0",
+    "isomorphic-git": "^1.36.3"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

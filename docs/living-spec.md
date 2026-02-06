@@ -172,6 +172,20 @@ The information architecture prompt allows users to define their organizational 
 - [x] Visually distinct system message in ChatView when retrospection completes
 - [x] Feature is completely inert when the setting is disabled
 
+**Git Version Control**
+- [x] `enableGitVersionControl` toggle in settings, defaults to `false`
+- [x] `autoCommitAfterProcessing` toggle in settings, defaults to `true` (only visible when git enabled)
+- [x] Git repository initialized on first enable (via `isomorphic-git`)
+- [x] `.gitignore` seeded on initialization
+- [x] `.git/` added to protected paths (agent cannot access repository data)
+- [x] Automatic commits after message processing with LLM-generated commit messages (structured metadata)
+- [x] `search_git_history` tool available to agent when git is enabled
+- [x] `view_file_history` tool available to agent when git is enabled
+- [x] `view_commit` tool available to agent when git is enabled
+- [x] Git tools not registered when feature is disabled
+- [x] Plugin lifecycle management (init on enable, teardown on disable/unload)
+- [x] Feature is completely inert when the setting is disabled
+
 ---
 
 ## Settings Specification
@@ -185,6 +199,8 @@ The information architecture prompt allows users to define their organizational 
 | `informationArchitecture` | textarea | (see below) | Prompt defining vault organization |
 | `enableConversationRetrospection` | toggle | `false` | Run background LLM retrospection when conversations end |
 | `retrospectionPrompt` | textarea | (see below) | Prompt used for the retrospection LLM call |
+| `enableGitVersionControl` | toggle | `false` | Track vault changes with git (initializes repo on first enable) |
+| `autoCommitAfterProcessing` | toggle | `true` | Auto-commit after agent processing (only visible when git enabled) |
 | `maxConversationHistory` | number | `50` | Maximum recent conversations to retain (older ones are summarized) |
 
 ### Default Routing Description
@@ -231,6 +247,7 @@ For detailed technical documentation, see the individual docs:
 - [Conversation History](conversation-history.md) - Storage, context injection, summarization
 - [Inbox Manager](inbox-manager.md) - Durability layer, crash recovery
 - [Chat View](chat-view.md) - Sidebar UI implementation
+- [Git Version Control](git-version-control.md) - GitService, git tools, auto-commit
 
 ### Reference Documentation
 

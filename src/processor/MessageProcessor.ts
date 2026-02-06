@@ -24,9 +24,13 @@ import {
   createSendMessageTool,
   createEndConversationTool,
   createGetConversationTool,
+  createGitTools,
 } from "../llm";
+import { debug } from "../utils/logger";
 import type { SendMessageContext, EndConversationContext, GetConversationContext } from "../llm";
+import type { GitCommitMetadata } from "../git";
 import { RetrospectionService } from "../retrospection";
+import type { ClaudeModelId } from "../types";
 import type {
   MessageProcessorConfig,
   ProcessResult,
@@ -407,7 +411,8 @@ export class MessageProcessor {
           // Create EndConversationContext and register end_conversation tool
           const endConversationContext: EndConversationContext = {
             conversationManager: this.conversationManager,
-            getLLMService: () => llmService,
+            app: this.app,
+            settings: this.settings,
           };
 
           const endConversationTool = createEndConversationTool(endConversationContext);
@@ -423,12 +428,23 @@ export class MessageProcessor {
           llmService.registerTool(getConversationTool);
           toolNames.push(getConversationTool.definition.name);
 
+          // Conditionally register git history tools when git is enabled
+          const gitService = this.plugin.getGitService();
+          if (gitService) {
+            const gitTools = createGitTools(gitService);
+            for (const tool of gitTools) {
+              llmService.registerTool(tool);
+              toolNames.push(tool.definition.name);
+            }
+          }
+
           // Process the message
           const response = await llmService.processMessage(messageText);
           const textContent = extractTextContent(response);
 
           // Determine which tools were actually used by examining the response history
           const toolsUsed = this.extractToolsUsed(llmService, toolNames);
+          debug("Processor", `processing complete — tools used: [${toolsUsed.join(", ")}]`);
 
           // Capture active conversation ID before addMessage (for idle timeout detection)
           const activeConvIdBeforeAdd =
@@ -442,8 +458,11 @@ export class MessageProcessor {
             role: "user",
             content: messageText,
           };
-          // Pass llmService to enable auto-summary generation on idle timeout
-          await this.conversationManager.addMessage(userMessage, llmService);
+          // Pass app/settings to enable auto-summary generation on idle timeout
+          await this.conversationManager.addMessage(userMessage, {
+            app: this.app,
+            settings: this.settings,
+          });
 
           // Check if idle timeout triggered a conversation end
           if (this.settings.enableConversationRetrospection && activeConvIdBeforeAdd !== null) {
@@ -503,6 +522,14 @@ export class MessageProcessor {
             }
           }
 
+          // Auto-commit after successful processing (fire-and-forget, non-critical)
+          const activeConversationForCommit = this.conversationManager.getActiveConversation();
+          if (activeConversationForCommit) {
+            void this.autoCommit(messageText, toolsUsed, activeConversationForCommit.id).catch(
+              (err) => console.error("MessageProcessor: Auto-commit failed:", err)
+            );
+          }
+
           return {
             success: true,
             response: textContent,
@@ -552,6 +579,112 @@ export class MessageProcessor {
       success: false,
       error: lastError || "Unknown error during LLM processing",
     };
+  }
+
+  /**
+   * Auto-commit vault changes after successful message processing.
+   * Non-critical -- failures are logged but never propagate.
+   */
+  private async autoCommit(
+    messageText: string,
+    toolsUsed: string[],
+    conversationId: string
+  ): Promise<void> {
+    const gitService = this.plugin.getGitService();
+    if (!gitService) return;
+    if (!this.settings.autoCommitAfterProcessing) return;
+
+    const hasChanges = await gitService.hasChanges();
+    if (!hasChanges) return;
+
+    const changedFiles = await gitService.getChangedFiles();
+
+    const commitMessage = await this.generateCommitMessage(messageText, toolsUsed, changedFiles);
+
+    const metadata: GitCommitMetadata = {
+      conversationId,
+      toolsUsed,
+      filesAffected: changedFiles,
+      source: "agent",
+    };
+
+    await gitService.commitAll({
+      type: commitMessage.type,
+      summary: commitMessage.summary,
+      body: commitMessage.body,
+      metadata,
+      authorName: this.settings.clientName,
+    });
+  }
+
+  /**
+   * Generate a commit message using a lightweight Haiku LLM call.
+   * Creates a fresh LLMService instance to avoid polluting the main conversation history.
+   */
+  private async generateCommitMessage(
+    originalRequest: string,
+    toolsUsed: string[],
+    changedFiles: string[]
+  ): Promise<{ type: "vault" | "organize" | "cleanup"; summary: string; body: string }> {
+    const commitSettings = {
+      ...this.settings,
+      model: "claude-haiku-4-5-20251001" as ClaudeModelId,
+    };
+
+    const llmService = new LLMService(this.app, commitSettings);
+    await llmService.initialize();
+
+    const prompt = `Generate a concise git commit message for the following changes.
+
+Return ONLY a type keyword on the first line, a short summary on the second line, and an optional body after a blank line.
+
+Format:
+type
+summary (short, imperative mood, no period)
+
+optional body description
+
+Where type is one of: vault (file changes), organize (moves/renames/folders), cleanup (deletions).
+Do NOT include the type in the summary line. The summary should be a plain description like "Update meeting notes" or "Move old files to archive".
+
+Files changed: ${changedFiles.join(", ")}
+User's request: ${originalRequest}
+Tools used by agent: ${toolsUsed.join(", ")}`;
+
+    const response = await llmService.processMessage(prompt);
+    const text = extractTextContent(response).trim();
+
+    const lines = text.split("\n");
+    const firstLine = (lines[0] || "").trim();
+
+    // Parse type from the first line
+    const typeMatch = firstLine.match(/^(vault|organize|cleanup)$/);
+    let type: "vault" | "organize" | "cleanup";
+    let summary: string;
+    let bodyLines: string[];
+
+    if (typeMatch) {
+      // LLM followed the expected format: type on first line, summary on second
+      type = typeMatch[1] as "vault" | "organize" | "cleanup";
+      summary = (lines[1] || "update files").trim();
+      bodyLines = lines.slice(2);
+    } else {
+      // Fallback: LLM may have put everything on one line.
+      // Handles formats like "vault(vault): summary", "vault: summary", "vault summary"
+      const inlineMatch = firstLine.match(/^(vault|organize|cleanup)(?:\([^)]*\))?[:\s]*(.*)/);
+      if (inlineMatch) {
+        type = inlineMatch[1] as "vault" | "organize" | "cleanup";
+        summary = (inlineMatch[2] || "update files").trim();
+      } else {
+        type = "vault";
+        summary = firstLine || "update files";
+      }
+      bodyLines = lines.slice(1);
+    }
+
+    const body = bodyLines.join("\n").trim();
+
+    return { type, summary, body };
   }
 
   private extractToolsUsed(llmService: LLMService, availableTools: string[]): string[] {

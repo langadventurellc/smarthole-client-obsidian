@@ -62,3 +62,6 @@ export type { EndConversationContext, EndConversationInput } from "./endConversa
 // Get Conversation Tool (separate from vault tools - requires runtime context)
 export { createGetConversationTool } from "./getConversation";
 export type { GetConversationContext, GetConversationInput } from "./getConversation";
+
+// Git Tools (conditionally registered when git is enabled)
+export { createGitTools } from "./git";

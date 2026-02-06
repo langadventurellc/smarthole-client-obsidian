@@ -23,6 +23,12 @@ export interface SmartHoleSettings {
   enableConversationRetrospection: boolean;
   /** Prompt used for the retrospection LLM call */
   retrospectionPrompt: string;
+  /** Whether to enable git version control for vault changes */
+  enableGitVersionControl: boolean;
+  /** Whether to auto-commit after agent message processing */
+  autoCommitAfterProcessing: boolean;
+  /** Whether to enable verbose debug logging in the dev console */
+  enableVerboseLogging: boolean;
 }
 
 const DEFAULT_RETROSPECTION_PROMPT = `Review this conversation and reflect on opportunities for improvement. Consider:
@@ -65,6 +71,9 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   conversationStateTimeoutMinutes: 60,
   enableConversationRetrospection: false,
   retrospectionPrompt: DEFAULT_RETROSPECTION_PROMPT,
+  enableGitVersionControl: false,
+  autoCommitAfterProcessing: true,
+  enableVerboseLogging: false,
 };
 
 export class ClearHistoryModal extends Modal {
@@ -433,5 +442,54 @@ Generate only the routing description text, nothing else. Do not include any pre
           }).open();
         })
     );
+
+    // Version Control section
+    containerEl.createEl("h3", { text: "Version Control" });
+
+    new Setting(containerEl)
+      .setName("Enable Git Version Control")
+      .setDesc("Track vault changes with git. Initializes a git repository on first enable.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.enableGitVersionControl).onChange(async (value) => {
+          this.plugin.settings.enableGitVersionControl = value;
+          await this.plugin.saveSettings();
+          if (value) {
+            await this.plugin.initializeGitService();
+          } else {
+            this.plugin.teardownGitService();
+          }
+          this.display(); // Re-render to show/hide auto-commit toggle
+        })
+      );
+
+    // Only show auto-commit when git is enabled
+    if (this.plugin.settings.enableGitVersionControl) {
+      new Setting(containerEl)
+        .setName("Auto-commit after processing")
+        .setDesc("Automatically commit vault changes after the agent finishes processing a message")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.plugin.settings.autoCommitAfterProcessing)
+            .onChange(async (value) => {
+              this.plugin.settings.autoCommitAfterProcessing = value;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
+
+    // Developer section
+    containerEl.createEl("h3", { text: "Developer" });
+
+    new Setting(containerEl)
+      .setName("Verbose Debug Logging")
+      .setDesc(
+        "Log detailed LLM and tool execution diagnostics to the dev console. Takes effect immediately."
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.enableVerboseLogging).onChange(async (value) => {
+          this.plugin.settings.enableVerboseLogging = value;
+          await this.plugin.saveSettings();
+        })
+      );
   }
 }

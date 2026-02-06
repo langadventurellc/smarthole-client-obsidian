@@ -93,6 +93,9 @@ The service automatically handles multi-turn conversations when tools are invoke
 2. If LLM returns `tool_use`, execute the tool
 3. Send tool result back to LLM
 4. Repeat until `stop_reason: "end_turn"` or max iterations (10)
+5. If the final response has `stop_reason: "max_tokens"`, a `console.warn` is emitted (tool calls may have been dropped)
+
+A reentrancy guard prevents nested `processMessage()` calls on the same `LLMService` instance. If a tool (e.g., `end_conversation`) needs to call the LLM, it must create a separate `LLMService` instance.
 
 ```typescript
 // Automatic tool execution loop
@@ -208,9 +211,10 @@ const provider = new AnthropicProvider(
 );
 ```
 
-### Retry Logic
+### Configuration
 
-- Maximum 3 attempts for retryable errors
+- Default max tokens per response: 16384
+- Maximum 3 retry attempts for retryable errors
 - Exponential backoff: 1s → 2s → 4s
 - Non-retryable errors fail immediately
 
@@ -262,7 +266,8 @@ import { createEndConversationTool, EndConversationContext } from "./llm/tools";
 
 const context: EndConversationContext = {
   conversationManager,
-  getLLMService: () => llmService,
+  app,
+  settings,
 };
 
 const tool = createEndConversationTool(context);
@@ -300,6 +305,15 @@ Tool input:
 ```
 
 When `conversation_id` is provided, returns the full conversation with all messages. When `list_recent` is provided (or neither parameter), returns summaries of recent conversations. Only completed conversations are accessible (not the current active one).
+
+## Debug Logging
+
+When `enableVerboseLogging` is enabled in settings, both `LLMService` and `AnthropicProvider` emit `console.debug` messages via `src/utils/logger.ts`:
+
+- **[Anthropic]** - API request parameters (model, message count, tool count), response metadata (stop reason, output tokens, content blocks), and retry attempts with backoff delays
+- **[LLM]** - Message entry (truncated content, registered tool count), tool loop iterations (stop reason, tool names), tool execution results (success/failure), and loop exit conditions
+
+These logs are useful for diagnosing tool execution flow, unexpected truncation, and retry behavior.
 
 ## Implementation
 

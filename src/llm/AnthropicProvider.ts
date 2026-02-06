@@ -6,6 +6,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { debug } from "../utils/logger";
 import type { ContentBlock, LLMMessage, LLMProvider, LLMResponse, StopReason, Tool } from "./types";
 import { LLMError } from "./types";
 import type { ClaudeModelId } from "../types";
@@ -17,7 +18,7 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 1000;
 
 /** Default max tokens for responses */
-const DEFAULT_MAX_TOKENS = 4096;
+const DEFAULT_MAX_TOKENS = 16384;
 
 /**
  * AnthropicProvider implements the LLMProvider interface for Claude API.
@@ -77,15 +78,29 @@ export class AnthropicProvider implements LLMProvider {
 
     for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
       try {
+        debug(
+          "Anthropic",
+          `sendMessage — model=${this.model}, messages=${anthropicMessages.length}, tools=${anthropicTools?.length ?? 0}`
+        );
+
         const response = await this.client.messages.create(
           {
             model: this.model,
             max_tokens: DEFAULT_MAX_TOKENS,
             messages: anthropicMessages,
-            ...(anthropicTools && anthropicTools.length > 0 && { tools: anthropicTools }),
+            ...(anthropicTools &&
+              anthropicTools.length > 0 && {
+                tools: anthropicTools,
+                tool_choice: { type: "auto" as const, disable_parallel_tool_use: true },
+              }),
             ...(systemPrompt && { system: systemPrompt }),
           },
           { signal }
+        );
+
+        debug(
+          "Anthropic",
+          `response — stop_reason=${response.stop_reason}, output_tokens=${response.usage.output_tokens}, content_blocks=${response.content.length}`
         );
 
         return this.convertResponse(response);
@@ -102,6 +117,7 @@ export class AnthropicProvider implements LLMProvider {
         // Don't wait after the last attempt
         if (attempt < MAX_RETRY_ATTEMPTS - 1) {
           const delay = this.calculateBackoffDelay(attempt);
+          debug("Anthropic", `retry attempt ${attempt + 1} after ${delay}ms — ${llmError.message}`);
           await this.sleep(delay);
         }
       }
