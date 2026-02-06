@@ -24,6 +24,7 @@ import {
   createSendMessageTool,
   createEndConversationTool,
   createGetConversationTool,
+  createGitTools,
 } from "../llm";
 import type { SendMessageContext, EndConversationContext, GetConversationContext } from "../llm";
 import { RetrospectionService } from "../retrospection";
@@ -422,6 +423,16 @@ export class MessageProcessor {
           const getConversationTool = createGetConversationTool(getConversationContext);
           llmService.registerTool(getConversationTool);
           toolNames.push(getConversationTool.definition.name);
+
+          // Conditionally register git history tools when git is enabled
+          const gitService = this.plugin.getGitService();
+          if (gitService) {
+            const gitTools = createGitTools(gitService);
+            for (const tool of gitTools) {
+              llmService.registerTool(tool);
+              toolNames.push(tool.definition.name);
+            }
+          }
 
           // Process the message
           const response = await llmService.processMessage(messageText);

@@ -29,6 +29,29 @@ affectedFiles:
     teardown in onunload(), and two new field extractions in extractSettings().
   src/llm/tools/protected.ts: Added .git to PROTECTED_FOLDERS array and updated
     JSDoc to document the new protected folder.
+  src/llm/tools/git/searchGitHistory.ts: Created search_git_history tool with
+    query/file_path/date range filtering, input validation, and formatted commit
+    listing output
+  src/llm/tools/git/viewFileHistory.ts: Created view_file_history tool with file
+    path history, optional diff inclusion, and formatted output per commit
+  src/llm/tools/git/viewCommit.ts: Created view_commit tool that shows full commit
+    details including author, date, message, and per-file diffs
+  src/llm/tools/git/index.ts: Created createGitTools() aggregator returning all
+    three git tool handlers, with re-exports of individual factories
+  src/llm/tools/index.ts: Added re-export of createGitTools from ./git module
+  src/llm/index.ts: Added re-export of createGitTools from ./tools module
+  src/processor/MessageProcessor.ts: Added import of createGitTools and
+    conditional git tool registration block after getConversationTool
+    registration, gated on this.plugin.getGitService() being non-null
+  tests/llm/tools/git/searchGitHistory.test.ts: Created 11 unit tests covering
+    input validation, GitService delegation, date parsing, result formatting,
+    and error handling
+  tests/llm/tools/git/viewFileHistory.test.ts: Created 10 unit tests covering
+    input validation, log delegation, diff inclusion filtering, and error
+    handling
+  tests/llm/tools/git/viewCommit.test.ts: Created 9 unit tests covering input
+    validation, getCommitDetails delegation, output formatting with files
+    changed, and error handling
 log:
   - >-
     Implementation plan created. Analyzed the full codebase to identify:
@@ -63,9 +86,9 @@ log:
     - Acceptance criteria
 schema: v1.0
 childrenIds:
-  - T-add-git-settings-protected
   - T-implement-auto-commit-after
   - T-implement-git-history-tools
+  - T-add-git-settings-protected
   - T-implement-gitservice-core
 created: 2026-02-06T00:28:35.580Z
 updated: 2026-02-06T00:28:35.580Z
