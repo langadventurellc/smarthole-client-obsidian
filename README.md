@@ -150,7 +150,6 @@ See [CLAUDE.md](CLAUDE.md) for development guidelines and architecture details.
 ```bash
 mise run dev         # Start dev mode
 mise run build       # Build for distribution
-mise run test        # Run tests
 mise run quality     # All quality checks
 ```
 

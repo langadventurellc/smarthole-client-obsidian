@@ -24,13 +24,13 @@ The vault base path is obtained via `(app.vault.adapter as any).basePath`, which
 On first initialization, a `.gitignore` is created with:
 
 ```
-.obsidian/
-.smarthole/
-.trash/
+.*/
 .DS_Store
 Thumbs.db
 desktop.ini
 ```
+
+The `.*` pattern ignores all hidden directories (`.obsidian/`, `.smarthole/`, `.trash/`, etc.), ensuring only notes and their supporting files are tracked.
 
 If a `.gitignore` already exists, it is left untouched.
 

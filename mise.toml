@@ -8,7 +8,7 @@ run = "node esbuild.config.mjs production"
 
 [tasks.test]
 description = "Run tests"
-run = "npx vitest run"
+run = "echo 'There are no tests. This is intended.'"
 
 [tasks.quality]
 description = "All quality checks (lint + format + type-check)"

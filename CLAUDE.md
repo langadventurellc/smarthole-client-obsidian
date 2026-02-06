@@ -4,7 +4,7 @@ Obsidian plugin that acts as a SmartHole client, using Claude (Anthropic) to int
 
 ## Tech Stack
 
-TypeScript, Obsidian Plugin API, esbuild, @anthropic-ai/sdk, isomorphic-git, Vitest
+TypeScript, Obsidian Plugin API, esbuild, @anthropic-ai/sdk, isomorphic-git
 
 ## Commands
 
@@ -13,7 +13,6 @@ Commands use `mise` for all development tasks:
 ```bash
 mise run dev         # Start dev mode with hot reload
 mise run build       # Build for distribution
-mise run test        # Run tests
 mise run quality     # All quality checks (lint + format + type-check)
 mise run lint        # ESLint only
 mise run format      # Prettier only
@@ -37,7 +36,6 @@ src/
 ├── retrospection/ # Background conversation retrospection (RetrospectionService, persists to .smarthole/retrospection.md)
 ├── utils/         # Shared utilities (time formatting for LLM context)
 └── views/         # UI components (ChatView sidebar for direct interaction)
-tests/             # Unit tests (Vitest)
 ```
 
 ## Architecture Rules

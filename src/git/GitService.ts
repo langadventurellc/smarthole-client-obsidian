@@ -14,9 +14,7 @@ import type { GitCommitInfo, GitCommitOptions, GitDiffEntry, GitSearchOptions } 
 
 const SMARTHOLE_EMAIL = "smarthole@local";
 
-const DEFAULT_GITIGNORE = `.obsidian/
-.smarthole/
-.trash/
+const DEFAULT_GITIGNORE = `.*/
 .DS_Store
 Thumbs.db
 desktop.ini
