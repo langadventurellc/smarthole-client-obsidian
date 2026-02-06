@@ -211,7 +211,7 @@ When the agent is processing a message, a stop button replaces the send button i
 4. The user's original message is preserved in conversation history
 5. No error notifications are shown for cancelled requests
 
-The cancellation propagates through the full stack: `ChatView -> Plugin.cancelCurrentProcessing() -> MessageProcessor.cancelCurrentProcessing() -> LLMService.abort() -> AbortController.abort()`. If the agent is in a multi-turn tool-use loop, pending tool calls are also short-circuited.
+The cancellation propagates through the full stack: `ChatView -> Plugin.cancelCurrentProcessing() -> MessageProcessor.cancelCurrentProcessing() -> LLMService.abort() -> AbortController.abort()`. For streaming requests (the default agent path), the abort signal is bridged to `stream.abort()` on the `MessageStream` object. If the agent is in a multi-turn tool-use loop, pending tool calls are also short-circuited.
 
 ## Styling
 

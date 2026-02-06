@@ -25,7 +25,7 @@ mise run type-check  # TypeScript only
 src/
 ├── main.ts        # Main plugin class (Plugin lifecycle, status bar, view registration)
 ├── settings.ts    # Settings interface, defaults, and tab UI
-├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS)
+├── types.ts       # Shared type definitions (ConnectionStatus, CLAUDE_MODELS, CLAUDE_MODEL_MAX_OUTPUT_TOKENS)
 ├── websocket/     # WebSocket connection manager (SmartHoleConnection, protocol types)
 ├── llm/           # LLM service layer (LLMService, AnthropicProvider, types)
 │   └── tools/     # Tools (vault: readFile, editFile, writeFile, createFolder, deleteFile, moveFile, searchFiles, listFiles, getFileInfo, getActiveNote; communication: sendMessage, endConversation, getConversation; git: searchGitHistory, viewFileHistory, viewCommit; utils: pathUtils, protected)
@@ -81,11 +81,13 @@ src/
 
 ## Claude Models
 
-| Model | API ID | Use Case |
-|-------|--------|----------|
-| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | Fast, cost-efficient (default) |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | Balance of speed and capability |
-| Claude Opus 4.5 | `claude-opus-4-5-20251101` | Maximum intelligence |
+| Model | API ID | Max Output Tokens | Use Case |
+|-------|--------|-------------------|----------|
+| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | 64,000 | Fast, cost-efficient (default) |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | 64,000 | Balance of speed and capability |
+| Claude Opus 4.5 | `claude-opus-4-5-20251101` | 64,000 | Maximum intelligence |
+
+The max output token mapping is defined in `CLAUDE_MODEL_MAX_OUTPUT_TOKENS` in `src/types.ts`.
 
 ## Detailed Documentation
 

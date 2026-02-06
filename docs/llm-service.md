@@ -5,10 +5,15 @@ Provider-agnostic LLM integration layer with tool registration, conversation man
 ## Initialization
 
 ```typescript
-import { LLMService, AnthropicProvider } from "./llm";
+import { LLMService } from "./llm";
 
-const provider = new AnthropicProvider(apiKey, "claude-haiku-4-5-20251001");
-const service = new LLMService(provider);
+// Primary agent path: uses streaming by default
+const service = new LLMService(app, settings);
+
+// Micro-agent path: non-streaming for short-lived LLM calls
+const microService = new LLMService(app, settings, { streaming: false });
+
+await service.initialize();
 
 // Register tools
 service.registerTool({
@@ -174,10 +179,13 @@ service.abort();
 ```
 
 When `abort()` is called:
-1. The `AbortController` signal fires, causing the Anthropic SDK to throw `APIUserAbortError`
-2. `AnthropicProvider.classifyError()` maps this to `LLMError.aborted()` (non-retryable)
-3. `LLMService.processMessage()` catches the abort and returns an empty response (`content: [], stopReason: "end_turn"`)
-4. If in a multi-turn tool loop, pending tool calls are short-circuited before the next iteration
+1. **Streaming path** (default): The `AbortSignal` is bridged to `stream.abort()` via `addEventListener("abort", ...)`. When fired, the stream is cancelled and `finalMessage()` rejects with `APIUserAbortError`.
+2. **Non-streaming path**: The `AbortController` signal is passed directly to `messages.create()`, causing the SDK to throw `APIUserAbortError`.
+3. `AnthropicProvider.classifyError()` maps this to `LLMError.aborted()` (non-retryable)
+4. `LLMService.processMessage()` catches the abort and returns an empty response (`content: [], stopReason: "end_turn"`)
+5. If in a multi-turn tool loop, pending tool calls are short-circuited before the next iteration
+
+Already-aborted signals are detected before stream creation to avoid a race condition where `addEventListener("abort", ...)` would not fire for signals that are already aborted.
 
 The user's message is preserved in the local conversation history (it is added before the API call), but neither user nor assistant messages are recorded to the `ConversationManager` on cancellation.
 
@@ -205,26 +213,45 @@ interface LLMError {
 Concrete implementation for Claude models:
 
 ```typescript
-const provider = new AnthropicProvider(
-  apiKey,          // Anthropic API key
-  modelId          // e.g., "claude-haiku-4-5-20251001"
-);
+// Streaming (default) — used for the primary agent path
+const provider = new AnthropicProvider("claude-haiku-4-5-20251001");
+
+// Non-streaming — used for micro-agent calls (commit messages, retrospection, summaries)
+const provider = new AnthropicProvider("claude-haiku-4-5-20251001", { streaming: false });
 ```
+
+### Streaming vs Non-Streaming
+
+The provider supports two request modes controlled by the `streaming` constructor option (default: `true`):
+
+| Mode | SDK Method | Abort Mechanism | Use Case |
+|------|-----------|-----------------|----------|
+| Streaming (`true`) | `messages.stream()` + `finalMessage()` | `stream.abort()` via signal bridge | Primary agent path — avoids HTTP timeout restrictions |
+| Non-streaming (`false`) | `messages.create()` | `AbortSignal` in `RequestOptions` | Micro-agent calls — simpler, no streaming overhead |
+
+Both modes return the same `Anthropic.Message` type and feed into the same `convertResponse()` method. The choice is transparent to `LLMService` and all downstream consumers.
+
+Callers that use non-streaming:
+- **Commit message generation** (`MessageProcessor`) — short, single-turn Haiku calls
+- **Conversation retrospection** (`RetrospectionService`) — background reflection
+- **Conversation summaries** (`ConversationManager`) — summary generation on conversation end
+- **Routing description generation** (`settings.ts`) — settings UI helper
 
 ### Configuration
 
-- Default max tokens per response: 16384
+- Max tokens per response: model-aware via `CLAUDE_MODEL_MAX_OUTPUT_TOKENS` (64,000 for all current models)
 - Maximum 3 retry attempts for retryable errors
 - Exponential backoff: 1s → 2s → 4s
 - Non-retryable errors fail immediately
+- Retry logic wraps both streaming and non-streaming paths identically
 
 ### Supported Models
 
-| Model | API ID | Use Case |
-|-------|--------|----------|
-| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | Fast, cost-efficient |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | Balanced |
-| Claude Opus 4.5 | `claude-opus-4-5-20251101` | Maximum capability |
+| Model | API ID | Max Output Tokens | Use Case |
+|-------|--------|-------------------|----------|
+| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | 64,000 | Fast, cost-efficient |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | 64,000 | Balanced |
+| Claude Opus 4.5 | `claude-opus-4-5-20251101` | 64,000 | Maximum capability |
 
 ## Communication Tools
 
@@ -310,7 +337,7 @@ When `conversation_id` is provided, returns the full conversation with all messa
 
 When `enableVerboseLogging` is enabled in settings, both `LLMService` and `AnthropicProvider` emit `console.debug` messages via `src/utils/logger.ts`:
 
-- **[Anthropic]** - API request parameters (model, message count, tool count), response metadata (stop reason, output tokens, content blocks), and retry attempts with backoff delays
+- **[Anthropic]** - API request parameters (model, message count, tool count, streaming mode), response metadata (stop reason, output tokens, content blocks), and retry attempts with backoff delays
 - **[LLM]** - Message entry (truncated content, registered tool count), tool loop iterations (stop reason, tool names), tool execution results (success/failure), and loop exit conditions
 
 These logs are useful for diagnosing tool execution flow, unexpected truncation, and retry behavior.

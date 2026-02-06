@@ -263,7 +263,7 @@ When `enableConversationRetrospection` is enabled in settings, the processor lau
 ### Retrospection Flow
 
 1. `RetrospectionService` builds a prompt from the conversation's messages and the user's `retrospectionPrompt` setting
-2. A fresh `LLMService` is created with no tools (read-only reflection)
+2. A fresh `LLMService` is created with no tools and `streaming: false` (read-only reflection)
 3. The LLM response is persisted to `.smarthole/retrospection.md` (prepended as a dated Markdown section)
 4. Registered `onRetrospection` callbacks are notified with the result (used by ChatView to display a system message)
 5. Failures are logged to console and silently ignored
@@ -282,7 +282,7 @@ When `enableGitVersionControl` and `autoCommitAfterProcessing` are both enabled 
 
 ### Commit Message Generation
 
-A fresh `LLMService` is created with Haiku (`claude-haiku-4-5-20251001`) regardless of the user's model setting, to keep commit message generation fast and cheap. The LLM receives the user's original request, tools used, and files changed to produce a conventional commit message in the format `type(scope): summary`.
+A fresh `LLMService` is created with Haiku (`claude-haiku-4-5-20251001`) and `streaming: false` regardless of the user's model setting, to keep commit message generation fast and cheap. The LLM receives the user's original request, tools used, and files changed to produce a conventional commit message in the format `type(scope): summary`.
 
 ### Git History Tools
 
