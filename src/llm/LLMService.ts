@@ -52,6 +52,7 @@ export class LLMService {
   private initialized = false;
   private conversationContext = "";
   private abortController: AbortController | null = null;
+  private isProcessing = false;
 
   // Conversation state tracking
   private waitingForResponse = false;
@@ -129,6 +130,16 @@ export class LLMService {
     if (!this.initialized) {
       throw LLMError.authError("LLMService not initialized. Call initialize() first.");
     }
+
+    // Reentrancy guard: prevent nested processMessage calls on the same instance.
+    // This catches bugs where a tool (e.g. end_conversation) calls processMessage
+    // on the same LLMService mid-execution, which would corrupt conversation history.
+    if (this.isProcessing) {
+      throw new Error(
+        "LLMService.processMessage() called reentrantly — use a separate LLMService instance"
+      );
+    }
+    this.isProcessing = true;
 
     // Create a new AbortController for this request
     this.abortController = new AbortController();
@@ -223,6 +234,8 @@ export class LLMService {
       }
 
       throw error;
+    } finally {
+      this.isProcessing = false;
     }
   }
 

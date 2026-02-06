@@ -1,6 +1,8 @@
+import type { App } from "obsidian";
 import type SmartHolePlugin from "../main";
-import type { LLMService } from "../llm";
-import { extractTextContent } from "../llm";
+import type { SmartHoleSettings } from "../settings";
+import { LLMService, extractTextContent } from "../llm";
+import type { ClaudeModelId } from "../types";
 import { formatLocalTimestamp } from "../utils/time";
 import type {
   Conversation,
@@ -64,13 +66,16 @@ export class ConversationManager {
     return this.conversations.find((c) => c.id === this.activeConversationId) ?? null;
   }
 
-  async addMessage(message: ConversationMessage, llmService?: LLMService): Promise<Conversation> {
+  async addMessage(
+    message: ConversationMessage,
+    summaryContext?: { app: App; settings: SmartHoleSettings }
+  ): Promise<Conversation> {
     if (this.shouldStartNewConversation()) {
-      // End previous conversation with summary if it exists
-      if (this.activeConversationId && llmService) {
-        await this.endConversation(llmService);
+      // End previous conversation with summary if context provided
+      if (this.activeConversationId && summaryContext) {
+        await this.endConversation(summaryContext);
       } else if (this.activeConversationId) {
-        // End without summary if no LLM service available
+        // End without summary if no context available
         const active = this.getActiveConversation();
         if (active) {
           active.endedAt = new Date().toISOString();
@@ -96,7 +101,7 @@ export class ConversationManager {
     return activeConversation;
   }
 
-  async endConversation(llmService?: LLMService): Promise<void> {
+  async endConversation(summaryContext?: { app: App; settings: SmartHoleSettings }): Promise<void> {
     const active = this.getActiveConversation();
     if (!active) {
       return;
@@ -104,10 +109,14 @@ export class ConversationManager {
 
     active.endedAt = new Date().toISOString();
 
-    // Generate summary if LLM service provided and conversation has messages
-    if (llmService && active.messages.length > 0) {
+    // Generate summary if context provided and conversation has messages
+    if (summaryContext && active.messages.length > 0) {
       try {
-        const { title, summary } = await this.generateConversationSummary(active.id, llmService);
+        const { title, summary } = await this.generateConversationSummary(
+          active.id,
+          summaryContext.app,
+          summaryContext.settings
+        );
         active.title = title;
         active.summary = summary;
       } catch (error) {
@@ -180,7 +189,8 @@ export class ConversationManager {
 
   async generateConversationSummary(
     conversationId: string,
-    llmService: LLMService
+    app: App,
+    settings: SmartHoleSettings
   ): Promise<{ title: string; summary: string }> {
     const conversation = this.getConversation(conversationId);
     if (!conversation) {
@@ -206,6 +216,15 @@ Generate:
 Format your response as:
 TITLE: [your title here]
 SUMMARY: [your summary here]`;
+
+    // Create an isolated LLMService instance to avoid reentrancy with the active one.
+    // Uses Haiku for cost efficiency (same pattern as generateCommitMessage).
+    const summarySettings = {
+      ...settings,
+      model: "claude-haiku-4-5-20251001" as ClaudeModelId,
+    };
+    const llmService = new LLMService(app, summarySettings);
+    await llmService.initialize();
 
     const response = await llmService.processMessage(prompt);
 

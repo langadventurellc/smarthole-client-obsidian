@@ -410,7 +410,8 @@ export class MessageProcessor {
           // Create EndConversationContext and register end_conversation tool
           const endConversationContext: EndConversationContext = {
             conversationManager: this.conversationManager,
-            getLLMService: () => llmService,
+            app: this.app,
+            settings: this.settings,
           };
 
           const endConversationTool = createEndConversationTool(endConversationContext);
@@ -455,8 +456,11 @@ export class MessageProcessor {
             role: "user",
             content: messageText,
           };
-          // Pass llmService to enable auto-summary generation on idle timeout
-          await this.conversationManager.addMessage(userMessage, llmService);
+          // Pass app/settings to enable auto-summary generation on idle timeout
+          await this.conversationManager.addMessage(userMessage, {
+            app: this.app,
+            settings: this.settings,
+          });
 
           // Check if idle timeout triggered a conversation end
           if (this.settings.enableConversationRetrospection && activeConvIdBeforeAdd !== null) {
