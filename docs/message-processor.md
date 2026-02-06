@@ -298,6 +298,10 @@ These tools are conditionally registered only when git is enabled, and are not a
 
 See [Git Version Control](git-version-control.md) for detailed tool documentation.
 
+## Debug Logging
+
+When `enableVerboseLogging` is enabled in settings, the processor emits `[Processor]` debug messages after each successful processing run (listing which tools were used). See [LLM Service](llm-service.md#debug-logging) for related LLM-level debug output.
+
 ## Configuration
 
 ```typescript

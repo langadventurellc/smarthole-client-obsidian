@@ -34,7 +34,7 @@ src/
 ├── processor/     # Message orchestration (MessageProcessor: inbox -> ack -> LLM -> notify -> cleanup, auto-commit)
 ├── context/       # Conversation management (ConversationManager for grouped conversations, ConversationHistory legacy)
 ├── retrospection/ # Background conversation retrospection (RetrospectionService, persists to .smarthole/retrospection.md)
-├── utils/         # Shared utilities (time formatting for LLM context)
+├── utils/         # Shared utilities (time formatting for LLM context, debug logger)
 └── views/         # UI components (ChatView sidebar for direct interaction)
 ```
 

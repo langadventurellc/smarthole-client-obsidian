@@ -52,6 +52,7 @@ After enabling the plugin, go to Settings → SmartHole Client to configure:
 | **Information Architecture** | Defines how you want your notes organized |
 | **Enable Git Version Control** | Track vault changes with git (off by default, initializes a repo on first enable) |
 | **Auto-commit after processing** | Automatically commit after the agent finishes processing (on by default, only visible when git is enabled) |
+| **Verbose Debug Logging** | Log detailed LLM, tool execution, and message processing diagnostics to the dev console (off by default) |
 | **Clear Conversation History** | Permanently delete all stored conversations (with confirmation) |
 
 ## Usage
