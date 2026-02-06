@@ -18,7 +18,7 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 1000;
 
 /** Default max tokens for responses */
-const DEFAULT_MAX_TOKENS = 16384;
+const DEFAULT_MAX_TOKENS = 64000;
 
 /**
  * AnthropicProvider implements the LLMProvider interface for Claude API.
