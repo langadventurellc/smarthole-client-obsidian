@@ -7,6 +7,7 @@ import {
   type ResponseCallback,
   type MessageReceivedCallback,
   type AgentMessageCallback,
+  type RetrospectionCallback,
 } from "./processor";
 import { DEFAULT_SETTINGS, SmartHoleSettingTab, type SmartHoleSettings } from "./settings";
 import type { ConnectionStatus } from "./types";
@@ -182,6 +183,10 @@ export default class SmartHolePlugin extends Plugin {
       settings.maxConversationsRetained = d.maxConversationsRetained;
     if (typeof d.conversationStateTimeoutMinutes === "number")
       settings.conversationStateTimeoutMinutes = d.conversationStateTimeoutMinutes;
+    if (typeof d.enableConversationRetrospection === "boolean")
+      settings.enableConversationRetrospection = d.enableConversationRetrospection;
+    if (typeof d.retrospectionPrompt === "string")
+      settings.retrospectionPrompt = d.retrospectionPrompt;
 
     return settings;
   }
@@ -304,5 +309,17 @@ export default class SmartHolePlugin extends Plugin {
       return () => {};
     }
     return this.messageProcessor.onAgentMessage(callback);
+  }
+
+  /**
+   * Subscribe to retrospection completion notifications.
+   * Used by ChatView to display retrospection insights.
+   * Returns an unsubscribe function.
+   */
+  onRetrospection(callback: RetrospectionCallback): () => void {
+    if (!this.messageProcessor) {
+      return () => {};
+    }
+    return this.messageProcessor.onRetrospection(callback);
   }
 }

@@ -19,7 +19,23 @@ export interface SmartHoleSettings {
   maxConversationsRetained: number;
   /** Minutes before a pending conversation state is considered stale and cleaned up */
   conversationStateTimeoutMinutes: number;
+  /** Whether to run a background retrospection when conversations end */
+  enableConversationRetrospection: boolean;
+  /** Prompt used for the retrospection LLM call */
+  retrospectionPrompt: string;
 }
+
+const DEFAULT_RETROSPECTION_PROMPT = `Review this conversation and reflect on opportunities for improvement. Consider:
+
+1. **System Prompt Improvements**: Were there missing instructions, unclear guidance, or information that should be added to the system prompt to handle this type of request better?
+
+2. **Vault Knowledge Gaps**: What did you not know about the vault's structure, naming conventions, or content that would have helped? Were there files or folders you expected to exist but didn't?
+
+3. **Tooling Opportunities**: Were there actions you wished you could take but couldn't? Tools that would have made the interaction smoother or more effective?
+
+4. **Workflow Improvements**: Could this type of request be handled more efficiently? Are there patterns or shortcuts that would improve the experience?
+
+Provide specific, actionable insights. Focus on what would make future similar conversations more effective.`;
 
 const DEFAULT_ROUTING_DESCRIPTION = `Miss Simone - I manage personal notes, journals, lists, and knowledge in Obsidian. I can create notes, update existing ones, search for information, and organize files. Use me for anything related to remembering things, note-taking, or personal knowledge management.`;
 
@@ -47,6 +63,8 @@ export const DEFAULT_SETTINGS: SmartHoleSettings = {
   conversationIdleTimeoutMinutes: 30,
   maxConversationsRetained: 1000,
   conversationStateTimeoutMinutes: 60,
+  enableConversationRetrospection: false,
+  retrospectionPrompt: DEFAULT_RETROSPECTION_PROMPT,
 };
 
 export class ClearHistoryModal extends Modal {
@@ -318,6 +336,34 @@ Generate only the routing description text, nothing else. Do not include any pre
             }
           })
       );
+
+    // Enable Conversation Retrospection toggle
+    new Setting(containerEl)
+      .setName("Enable Conversation Retrospection")
+      .setDesc(
+        "When enabled, the LLM will reflect on each completed conversation and log insights to .smarthole/retrospection.md"
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.enableConversationRetrospection)
+          .onChange(async (value) => {
+            this.plugin.settings.enableConversationRetrospection = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Retrospection Prompt textarea
+    new Setting(containerEl)
+      .setName("Retrospection Prompt")
+      .setDesc("Prompt used when reflecting on completed conversations")
+      .addTextArea((text) => {
+        text.inputEl.rows = 8;
+        text.inputEl.cols = 50;
+        return text.setValue(this.plugin.settings.retrospectionPrompt).onChange(async (value) => {
+          this.plugin.settings.retrospectionPrompt = value;
+          await this.plugin.saveSettings();
+        });
+      });
 
     // Max Conversations Retained setting
     new Setting(containerEl)

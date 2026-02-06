@@ -82,6 +82,12 @@ processor.onAgentMessage((message) => {
   // Display real-time updates from agent
   console.log(message.content, message.isQuestion);
 });
+
+// Subscribe to retrospection completion
+processor.onRetrospection((result) => {
+  // Display retrospection insights in chat
+  console.log(result.conversationTitle, result.content);
+});
 ```
 
 ### Cancelling Processing
@@ -243,6 +249,24 @@ States are considered stale when `pendingContext.createdAt` is older than `conve
 await processor.cleanupStaleStates();
 ```
 
+## Conversation Retrospection
+
+When `enableConversationRetrospection` is enabled in settings, the processor launches a background LLM call after conversations end to reflect on opportunities for improvement. This runs as a fire-and-forget async task using a separate `LLMService` instance (no tools registered), so it never blocks or delays the user's response.
+
+### Trigger Paths
+
+**Explicit ending (end_conversation tool):** After the LLM response is recorded, the processor checks if `end_conversation` was among the tools used. If so, the most recently ended conversation is retrieved and retrospection is launched in the background.
+
+**Idle timeout:** Before calling `conversationManager.addMessage()`, the processor captures the active conversation ID. After the call, if the active ID has changed (meaning the old conversation was ended due to idle timeout), retrospection is launched for the ended conversation.
+
+### Retrospection Flow
+
+1. `RetrospectionService` builds a prompt from the conversation's messages and the user's `retrospectionPrompt` setting
+2. A fresh `LLMService` is created with no tools (read-only reflection)
+3. The LLM response is persisted to `.smarthole/retrospection.md` (prepended as a dated Markdown section)
+4. Registered `onRetrospection` callbacks are notified with the result (used by ChatView to display a system message)
+5. Failures are logged to console and silently ignored
+
 ## Configuration
 
 ```typescript
@@ -259,6 +283,6 @@ interface MessageProcessorConfig {
 ## Implementation
 
 Located in `src/processor/`:
-- `types.ts` - Configuration and result interfaces (includes `AgentMessageCallback`)
+- `types.ts` - Configuration and result interfaces (includes `AgentMessageCallback`, `RetrospectionCallback`)
 - `MessageProcessor.ts` - Main orchestration class
 - `index.ts` - Public exports

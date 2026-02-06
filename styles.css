@@ -74,6 +74,26 @@
   border-left: 3px solid var(--text-muted);
 }
 
+/* Retrospection messages - visually distinct system message */
+.smarthole-chat-message-retrospection {
+  background-color: var(--background-secondary);
+  align-self: stretch;
+  margin: 0;
+  max-width: 100%;
+  border-left: 3px solid var(--text-accent);
+  opacity: 0.85;
+}
+
+.smarthole-chat-message-retrospection .smarthole-chat-message-role {
+  font-style: italic;
+  color: var(--text-accent);
+}
+
+.smarthole-chat-message-retrospection .smarthole-chat-message-content {
+  color: var(--text-muted);
+  font-size: var(--font-smaller);
+}
+
 /* Message header with role label and timestamp */
 .smarthole-chat-message-header {
   display: flex;

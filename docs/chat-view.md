@@ -17,6 +17,7 @@ In-Obsidian sidebar interface for direct interaction with the SmartHole agent, c
 - Copy message content to clipboard
 - File drag-and-drop inserts vault-relative paths
 - Stop button to cancel in-flight LLM requests
+- Retrospection messages with distinct visual styling
 
 ## Activation
 
@@ -104,6 +105,11 @@ plugin.onMessageReceived((message) => {
 plugin.onAgentMessage((message) => {
   // Display real-time agent updates
 });
+
+// Subscribe to retrospection completion
+plugin.onRetrospection((result) => {
+  // Display retrospection insights as distinct system message
+});
 ```
 
 ### History Loading
@@ -185,6 +191,16 @@ Every message (both user and assistant) has a copy button in the footer action b
 3. Visual feedback: the icon swaps from "copy" to "check" for 1.5 seconds, then reverts
 4. Clipboard API failures are handled gracefully (logged to console, no user-facing error)
 
+## Retrospection Messages
+
+When conversation retrospection is enabled, a background LLM reflection runs after conversations end. The result appears as a visually distinct message in ChatView:
+
+- Subscribed via `plugin.onRetrospection()` in `onOpen()`, cleaned up in `onClose()`
+- Messages use `type: "retrospection"` on the `ChatMessage` interface
+- Role label displays "Retrospection: [conversation title]" (or just "Retrospection" if untitled)
+- Styled with accent border, muted text, and slightly reduced opacity (`.smarthole-chat-message-retrospection`)
+- Source indicator, tool display, and edit button are skipped; copy button is available
+
 ## Stop / Cancel Processing
 
 When the agent is processing a message, a stop button replaces the send button in the input area:
@@ -217,6 +233,7 @@ All styles are in `styles.css` at project root:
 | `.smarthole-chat-message` | Individual message |
 | `.smarthole-chat-message-user` | User message styling |
 | `.smarthole-chat-message-assistant` | Assistant message styling |
+| `.smarthole-chat-message-retrospection` | Retrospection message styling (accent border, muted) |
 | `.smarthole-chat-input` | Input container |
 | `.smarthole-chat-tools` | Tool usage display |
 | `.smarthole-chat-message-footer` | Footer action bar (shows on hover) |
