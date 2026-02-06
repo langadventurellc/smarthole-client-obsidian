@@ -172,6 +172,13 @@ The information architecture prompt allows users to define their organizational 
 - [x] Visually distinct system message in ChatView when retrospection completes
 - [x] Feature is completely inert when the setting is disabled
 
+**Streaming API**
+- [x] Primary agent path uses `messages.stream()` + `finalMessage()` to avoid HTTP timeout restrictions
+- [x] Model-aware max output tokens (64K for all Claude 4.5 models) via `CLAUDE_MODEL_MAX_OUTPUT_TOKENS`
+- [x] Abort signal bridging from `AbortController` to `stream.abort()` for streaming cancellation
+- [x] Micro-agent callers (commit messages, retrospection, summaries, settings) use non-streaming `messages.create()`
+- [x] Streaming option (`streaming: boolean`) on `LLMService` and `AnthropicProvider` constructors (default: `true`)
+
 **Git Version Control**
 - [x] `enableGitVersionControl` toggle in settings, defaults to `false`
 - [x] `autoCommitAfterProcessing` toggle in settings, defaults to `true` (only visible when git enabled)

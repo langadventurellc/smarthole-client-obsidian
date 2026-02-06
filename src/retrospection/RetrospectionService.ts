@@ -26,8 +26,9 @@ export class RetrospectionService {
     // Build prompt from conversation messages + retrospection prompt
     const prompt = this.buildPrompt(conversation);
 
-    // Create a fresh LLMService with no tools registered (read-only reflection)
-    const llmService = new LLMService(this.app, this.settings);
+    // Create a fresh LLMService with no tools registered (read-only reflection).
+    // Non-streaming: micro-agent call that doesn't need streaming benefits.
+    const llmService = new LLMService(this.app, this.settings, { streaming: false });
     await llmService.initialize();
 
     // Call LLM -- no tools registered, so no tool_use loop

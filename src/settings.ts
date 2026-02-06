@@ -261,7 +261,7 @@ export class SmartHoleSettingTab extends PluginSettingTab {
 
         try {
           // Initialize LLM service
-          const llmService = new LLMService(this.app, this.plugin.settings);
+          const llmService = new LLMService(this.app, this.plugin.settings, { streaming: false });
           await llmService.initialize();
 
           // Create prompt for generating routing description

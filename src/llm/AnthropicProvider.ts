@@ -9,16 +9,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import { debug } from "../utils/logger";
 import type { ContentBlock, LLMMessage, LLMProvider, LLMResponse, StopReason, Tool } from "./types";
 import { LLMError } from "./types";
-import type { ClaudeModelId } from "../types";
+import { CLAUDE_MODEL_MAX_OUTPUT_TOKENS, type ClaudeModelId } from "../types";
 
 /** Maximum retry attempts for transient failures */
 const MAX_RETRY_ATTEMPTS = 3;
 
 /** Base delay for exponential backoff (1 second) */
 const RETRY_BASE_DELAY_MS = 1000;
-
-/** Default max tokens for responses */
-const DEFAULT_MAX_TOKENS = 16384;
 
 /**
  * AnthropicProvider implements the LLMProvider interface for Claude API.
@@ -33,9 +30,11 @@ const DEFAULT_MAX_TOKENS = 16384;
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic | null = null;
   private model: ClaudeModelId;
+  private streaming: boolean;
 
-  constructor(model: ClaudeModelId) {
+  constructor(model: ClaudeModelId, options?: { streaming?: boolean }) {
     this.model = model;
+    this.streaming = options?.streaming ?? true;
   }
 
   /**
@@ -74,29 +73,30 @@ export class AnthropicProvider implements LLMProvider {
     const anthropicMessages = this.convertMessages(messages);
     const anthropicTools = tools ? this.convertTools(tools) : undefined;
 
+    const params = {
+      model: this.model,
+      max_tokens: CLAUDE_MODEL_MAX_OUTPUT_TOKENS[this.model],
+      messages: anthropicMessages,
+      ...(anthropicTools &&
+        anthropicTools.length > 0 && {
+          tools: anthropicTools,
+          tool_choice: { type: "auto" as const, disable_parallel_tool_use: true },
+        }),
+      ...(systemPrompt && { system: systemPrompt }),
+    };
+
     let lastError: LLMError | null = null;
 
     for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
       try {
         debug(
           "Anthropic",
-          `sendMessage — model=${this.model}, messages=${anthropicMessages.length}, tools=${anthropicTools?.length ?? 0}`
+          `sendMessage — model=${this.model}, messages=${anthropicMessages.length}, tools=${anthropicTools?.length ?? 0}, streaming=${this.streaming}`
         );
 
-        const response = await this.client.messages.create(
-          {
-            model: this.model,
-            max_tokens: DEFAULT_MAX_TOKENS,
-            messages: anthropicMessages,
-            ...(anthropicTools &&
-              anthropicTools.length > 0 && {
-                tools: anthropicTools,
-                tool_choice: { type: "auto" as const, disable_parallel_tool_use: true },
-              }),
-            ...(systemPrompt && { system: systemPrompt }),
-          },
-          { signal }
-        );
+        const response = this.streaming
+          ? await this.sendStreaming(params, signal)
+          : await this.sendNonStreaming(params, signal);
 
         debug(
           "Anthropic",
@@ -125,6 +125,46 @@ export class AnthropicProvider implements LLMProvider {
 
     // All retries exhausted
     throw lastError ?? LLMError.unknown("Request failed after retries");
+  }
+
+  /**
+   * Send a non-streaming request using messages.create().
+   * Used for micro-agent calls (commit messages, retrospection, summaries).
+   */
+  private async sendNonStreaming(
+    params: Anthropic.MessageCreateParams,
+    signal?: AbortSignal
+  ): Promise<Anthropic.Message> {
+    return await this.client!.messages.create({ ...params, stream: false }, { signal });
+  }
+
+  /**
+   * Send a streaming request using messages.stream() + finalMessage().
+   * Used for the primary agent path to avoid HTTP timeout restrictions.
+   * Bridges the existing AbortSignal to stream.abort() since messages.stream()
+   * does not accept an AbortSignal in RequestOptions.
+   */
+  private async sendStreaming(
+    params: Anthropic.MessageCreateParams,
+    signal?: AbortSignal
+  ): Promise<Anthropic.Message> {
+    // Guard against already-aborted signals — addEventListener("abort", ...) does not
+    // fire the callback for signals that are already aborted, so without this check
+    // the stream would proceed and never be cancelled.
+    if (signal?.aborted) {
+      throw new Anthropic.APIUserAbortError();
+    }
+
+    const stream = this.client!.messages.stream(params);
+
+    const onAbort = () => stream.abort();
+    signal?.addEventListener("abort", onAbort);
+
+    try {
+      return await stream.finalMessage();
+    } finally {
+      signal?.removeEventListener("abort", onAbort);
+    }
   }
 
   /**

@@ -223,7 +223,7 @@ SUMMARY: [your summary here]`;
       ...settings,
       model: "claude-haiku-4-5-20251001" as ClaudeModelId,
     };
-    const llmService = new LLMService(app, summarySettings);
+    const llmService = new LLMService(app, summarySettings, { streaming: false });
     await llmService.initialize();
 
     const response = await llmService.processMessage(prompt);
