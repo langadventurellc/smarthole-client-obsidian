@@ -1,13 +1,35 @@
 ---
 id: T-add-git-settings-protected
 title: Add git settings, protected paths, and plugin lifecycle
-status: open
+status: done
 priority: high
 parent: F-git-version-control
 prerequisites:
   - T-implement-gitservice-core
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/settings.ts: Added enableGitVersionControl and autoCommitAfterProcessing to
+    SmartHoleSettings interface and DEFAULT_SETTINGS. Added Version Control
+    section in display() with Enable Git toggle (calls
+    initializeGitService/teardownGitService) and conditional Auto-commit toggle.
+  src/main.ts: Added GitService import, gitService property,
+    initializeGitService() async method, teardownGitService() method,
+    getGitService() getter. Added git initialization in onload() when enabled,
+    teardown in onunload(), and two new field extractions in extractSettings().
+  src/llm/tools/protected.ts: Added .git to PROTECTED_FOLDERS array and updated
+    JSDoc to document the new protected folder.
+log:
+  - "Added git version control settings, protected paths, and plugin lifecycle
+    integration. Added enableGitVersionControl (default: false) and
+    autoCommitAfterProcessing (default: true) to the settings interface and
+    defaults. Added a Version Control section in the settings UI with an Enable
+    Git toggle that initializes/tears down GitService, and a conditional
+    Auto-commit toggle visible only when git is enabled. Added .git to
+    PROTECTED_FOLDERS so the agent cannot access git internals. Added GitService
+    lifecycle management in SmartHolePlugin: initializeGitService(),
+    teardownGitService(), getGitService() methods; initialization in onload()
+    when setting is enabled; teardown in onunload(). Updated extractSettings()
+    for the two new fields. All quality checks pass (lint, format, type-check)
+    and all 39 tests pass."
 schema: v1.0
 childrenIds: []
 created: 2026-02-06T00:41:36.718Z

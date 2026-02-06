@@ -2,8 +2,8 @@
  * Protected Path Utility
  *
  * Shared utility functions for protecting sensitive directories from file
- * operation tools. Prevents access to .obsidian/ and .smarthole/ directories
- * which contain configuration and internal storage.
+ * operation tools. Prevents access to .obsidian/, .smarthole/, and .git/
+ * directories which contain configuration, internal storage, and repository data.
  */
 
 import { normalizePath } from "./pathUtils";
@@ -12,12 +12,13 @@ import { normalizePath } from "./pathUtils";
  * Folders that are protected from agent file operations.
  * - .obsidian/: Obsidian configuration (could break the app)
  * - .smarthole/: Internal storage (inbox, trash, etc.)
+ * - .git/: Git repository data (managed by GitService)
  */
-const PROTECTED_FOLDERS = [".obsidian", ".smarthole"] as const;
+const PROTECTED_FOLDERS = [".obsidian", ".smarthole", ".git"] as const;
 
 /**
  * Checks if a path is within a protected directory (case-insensitive).
- * Protected directories are .obsidian/ and .smarthole/ at the vault root.
+ * Protected directories are those listed in PROTECTED_FOLDERS, matched at the vault root.
  *
  * @param relativePath - Path relative to the vault root
  * @returns true if the path is protected, false otherwise

@@ -1,6 +1,7 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 
 import { ConversationManager } from "./context";
+import { GitService } from "./git";
 import { InboxManager } from "./inbox";
 import {
   MessageProcessor,
@@ -24,6 +25,8 @@ export default class SmartHolePlugin extends Plugin {
   messageProcessor: MessageProcessor | null = null;
   /** Manages conversation lifecycle and history */
   private conversationManager: ConversationManager | null = null;
+  /** Git version control service, active when enabled in settings */
+  private gitService: GitService | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -72,6 +75,11 @@ export default class SmartHolePlugin extends Plugin {
     // Initialize ConversationManager and load persisted data
     this.conversationManager = new ConversationManager(this);
     await this.conversationManager.load();
+
+    // Initialize GitService if enabled
+    if (this.settings.enableGitVersionControl) {
+      await this.initializeGitService();
+    }
 
     // Initialize MessageProcessor
     this.messageProcessor = new MessageProcessor({
@@ -127,6 +135,9 @@ export default class SmartHolePlugin extends Plugin {
       this.connection.disconnect();
       this.connection = null;
     }
+
+    // Clean up git service
+    this.teardownGitService();
 
     // Clear processor references
     this.inboxManager = null;
@@ -187,6 +198,10 @@ export default class SmartHolePlugin extends Plugin {
       settings.enableConversationRetrospection = d.enableConversationRetrospection;
     if (typeof d.retrospectionPrompt === "string")
       settings.retrospectionPrompt = d.retrospectionPrompt;
+    if (typeof d.enableGitVersionControl === "boolean")
+      settings.enableGitVersionControl = d.enableGitVersionControl;
+    if (typeof d.autoCommitAfterProcessing === "boolean")
+      settings.autoCommitAfterProcessing = d.autoCommitAfterProcessing;
 
     return settings;
   }
@@ -218,6 +233,40 @@ export default class SmartHolePlugin extends Plugin {
       this.connection?.disconnect();
       this.updateStatusBar("disabled");
     }
+  }
+
+  /**
+   * Initialize the GitService for vault version control.
+   * Called when git is enabled in settings or on plugin load if already enabled.
+   */
+  async initializeGitService(): Promise<void> {
+    try {
+      const basePath = (this.app.vault.adapter as any).basePath as string;
+      this.gitService = new GitService(basePath);
+      await this.gitService.initialize();
+      this.gitService.seedGitignore();
+      console.log("SmartHole: Git service initialized");
+    } catch (error) {
+      console.error("SmartHole: Failed to initialize git service:", error);
+      this.gitService = null;
+    }
+  }
+
+  /**
+   * Tear down the GitService. The repo remains on disk;
+   * the plugin just stops interacting with it.
+   */
+  teardownGitService(): void {
+    this.gitService = null;
+    console.log("SmartHole: Git service torn down");
+  }
+
+  /**
+   * Get the active GitService instance, or null if git is disabled.
+   * Used by MessageProcessor for conditional git tool registration and auto-commit.
+   */
+  getGitService(): GitService | null {
+    return this.gitService;
   }
 
   async activateChatView(): Promise<void> {

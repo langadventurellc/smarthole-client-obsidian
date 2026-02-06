@@ -19,6 +19,16 @@ affectedFiles:
   tests/git/GitService.test.ts: Created 23 unit tests covering initialization,
     gitignore seeding, change detection, commit operations, message formatting,
     log queries, search filtering, commit details, and file diffs
+  src/settings.ts: Added enableGitVersionControl and autoCommitAfterProcessing to
+    SmartHoleSettings interface and DEFAULT_SETTINGS. Added Version Control
+    section in display() with Enable Git toggle (calls
+    initializeGitService/teardownGitService) and conditional Auto-commit toggle.
+  src/main.ts: Added GitService import, gitService property,
+    initializeGitService() async method, teardownGitService() method,
+    getGitService() getter. Added git initialization in onload() when enabled,
+    teardown in onunload(), and two new field extractions in extractSettings().
+  src/llm/tools/protected.ts: Added .git to PROTECTED_FOLDERS array and updated
+    JSDoc to document the new protected folder.
 log:
   - >-
     Implementation plan created. Analyzed the full codebase to identify:
