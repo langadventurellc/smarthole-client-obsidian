@@ -200,6 +200,11 @@ export class LLMService {
         );
       }
 
+      // Warn if response was truncated due to max_tokens — tool calls may have been dropped
+      if (response.stopReason === "max_tokens") {
+        console.warn("LLM response truncated (max_tokens) — tool calls may have been dropped");
+      }
+
       // If aborted via break from the tool loop, return a benign response
       if (this.abortController?.signal.aborted) {
         this.abortController = null;
