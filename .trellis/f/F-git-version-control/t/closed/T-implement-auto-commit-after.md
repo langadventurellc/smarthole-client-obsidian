@@ -1,14 +1,55 @@
 ---
 id: T-implement-auto-commit-after
 title: Implement auto-commit after message processing
-status: open
+status: done
 priority: medium
 parent: F-git-version-control
 prerequisites:
   - T-implement-gitservice-core
   - T-add-git-settings-protected
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/processor/MessageProcessor.ts: Added imports for GitCommitMetadata and
+    ClaudeModelId. Added autoCommit() private method with guard checks (git
+    enabled, auto-commit setting, hasChanges). Added generateCommitMessage()
+    private method using fresh Haiku LLMService. Hooked auto-commit into
+    processWithRetry() success path using fire-and-forget void .catch() pattern.
+  tests/processor/autoCommit.test.ts: "Created 14 unit tests covering: trigger
+    conditions (commitAll called with correct args), skip conditions (git null,
+    auto-commit disabled, no changes), error handling (errors propagate to
+    .catch), commit message formatting (vault/organize/cleanup type parsing,
+    empty response fallback, single-line response), Haiku model enforcement
+    regardless of user setting, and metadata structure verification."
+log:
+  - >-
+    Research complete. Key findings:
+
+    - GitService already has hasChanges() and getChangedFiles() methods
+
+    - MessageProcessor already imports LLMService, extractTextContent,
+    createGitTools from ../llm
+
+    - RetrospectionService pattern: create fresh LLMService(app, settings),
+    initialize(), processMessage() with no tools
+
+    - Fire-and-forget pattern at lines 467 and 494 in MessageProcessor
+
+    - Need to add imports for ClaudeModelId (from ../types) and
+    GitCommitMetadata (from ../git)
+
+    - Auto-commit hook goes just before the return at line 517 in
+    processWithRetry()
+
+
+    Starting implementation.
+  - "Implemented auto-commit after message processing in MessageProcessor. Added
+    two private methods: `autoCommit()` which checks git enabled, auto-commit
+    setting, and change detection before committing, and
+    `generateCommitMessage()` which creates a fresh LLMService with Haiku model
+    to generate semantic commit messages. Hooked into processWithRetry()
+    post-processing using the fire-and-forget void .catch() pattern. Created 14
+    unit tests covering trigger conditions, skip conditions, error handling,
+    message formatting/parsing, Haiku model enforcement, and metadata
+    structure."
 schema: v1.0
 childrenIds: []
 created: 2026-02-06T00:42:47.043Z

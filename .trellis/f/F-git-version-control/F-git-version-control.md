@@ -1,7 +1,7 @@
 ---
 id: F-git-version-control
 title: Git Version Control Integration
-status: in-progress
+status: done
 priority: medium
 parent: none
 prerequisites: []
@@ -42,7 +42,12 @@ affectedFiles:
   src/llm/index.ts: Added re-export of createGitTools from ./tools module
   src/processor/MessageProcessor.ts: Added import of createGitTools and
     conditional git tool registration block after getConversationTool
-    registration, gated on this.plugin.getGitService() being non-null
+    registration, gated on this.plugin.getGitService() being non-null; Added
+    imports for GitCommitMetadata and ClaudeModelId. Added autoCommit() private
+    method with guard checks (git enabled, auto-commit setting, hasChanges).
+    Added generateCommitMessage() private method using fresh Haiku LLMService.
+    Hooked auto-commit into processWithRetry() success path using
+    fire-and-forget void .catch() pattern.
   tests/llm/tools/git/searchGitHistory.test.ts: Created 11 unit tests covering
     input validation, GitService delegation, date parsing, result formatting,
     and error handling
@@ -52,6 +57,12 @@ affectedFiles:
   tests/llm/tools/git/viewCommit.test.ts: Created 9 unit tests covering input
     validation, getCommitDetails delegation, output formatting with files
     changed, and error handling
+  tests/processor/autoCommit.test.ts: "Created 14 unit tests covering: trigger
+    conditions (commitAll called with correct args), skip conditions (git null,
+    auto-commit disabled, no changes), error handling (errors propagate to
+    .catch), commit message formatting (vault/organize/cleanup type parsing,
+    empty response fallback, single-line response), Haiku model enforcement
+    regardless of user setting, and metadata structure verification."
 log:
   - >-
     Implementation plan created. Analyzed the full codebase to identify:
@@ -84,11 +95,12 @@ log:
     - Risk mitigations
 
     - Acceptance criteria
+  - "Auto-completed: All child tasks are complete"
 schema: v1.0
 childrenIds:
+  - T-add-git-settings-protected
   - T-implement-auto-commit-after
   - T-implement-git-history-tools
-  - T-add-git-settings-protected
   - T-implement-gitservice-core
 created: 2026-02-06T00:28:35.580Z
 updated: 2026-02-06T00:28:35.580Z
