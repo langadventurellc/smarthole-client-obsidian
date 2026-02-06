@@ -9,16 +9,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import { debug } from "../utils/logger";
 import type { ContentBlock, LLMMessage, LLMProvider, LLMResponse, StopReason, Tool } from "./types";
 import { LLMError } from "./types";
-import type { ClaudeModelId } from "../types";
+import { CLAUDE_MODEL_MAX_OUTPUT_TOKENS, type ClaudeModelId } from "../types";
 
 /** Maximum retry attempts for transient failures */
 const MAX_RETRY_ATTEMPTS = 3;
 
 /** Base delay for exponential backoff (1 second) */
 const RETRY_BASE_DELAY_MS = 1000;
-
-/** Default max tokens for responses */
-const DEFAULT_MAX_TOKENS = 16384;
 
 /**
  * AnthropicProvider implements the LLMProvider interface for Claude API.
@@ -86,7 +83,7 @@ export class AnthropicProvider implements LLMProvider {
         const response = await this.client.messages.create(
           {
             model: this.model,
-            max_tokens: DEFAULT_MAX_TOKENS,
+            max_tokens: CLAUDE_MODEL_MAX_OUTPUT_TOKENS[this.model],
             messages: anthropicMessages,
             ...(anthropicTools &&
               anthropicTools.length > 0 && {

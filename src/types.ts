@@ -7,3 +7,9 @@ export const CLAUDE_MODELS = {
 } as const;
 
 export type ClaudeModelId = keyof typeof CLAUDE_MODELS;
+
+export const CLAUDE_MODEL_MAX_OUTPUT_TOKENS: Record<ClaudeModelId, number> = {
+  "claude-haiku-4-5-20251001": 64000,
+  "claude-sonnet-4-5-20250929": 64000,
+  "claude-opus-4-5-20251101": 64000,
+} as const;
