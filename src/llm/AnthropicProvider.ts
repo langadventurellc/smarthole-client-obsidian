@@ -88,7 +88,11 @@ export class AnthropicProvider implements LLMProvider {
             model: this.model,
             max_tokens: DEFAULT_MAX_TOKENS,
             messages: anthropicMessages,
-            ...(anthropicTools && anthropicTools.length > 0 && { tools: anthropicTools }),
+            ...(anthropicTools &&
+              anthropicTools.length > 0 && {
+                tools: anthropicTools,
+                tool_choice: { type: "auto" as const, disable_parallel_tool_use: true },
+              }),
             ...(systemPrompt && { system: systemPrompt }),
           },
           { signal }

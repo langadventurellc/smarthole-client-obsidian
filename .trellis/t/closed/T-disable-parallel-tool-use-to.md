@@ -1,13 +1,23 @@
 ---
 id: T-disable-parallel-tool-use-to
 title: Disable parallel tool use to prevent batched tool calls from being dropped
-status: open
+status: done
 priority: high
 parent: none
 prerequisites:
   - T-increase-default-max-tokens
-affectedFiles: {}
-log: []
+affectedFiles:
+  src/llm/AnthropicProvider.ts: "Added tool_choice with disable_parallel_tool_use:
+    true to the messages.create() spread when tools are provided, forcing
+    sequential one-tool-at-a-time responses"
+log:
+  - 'Added `tool_choice: { type: "auto" as const, disable_parallel_tool_use:
+    true }` to the `messages.create()` call in `AnthropicProvider.ts` when tools
+    are provided. This forces the model to emit one tool call at a time,
+    preventing batched tool calls from being truncated by max_tokens limits and
+    preventing the "forgetfulness" pattern where the model skips remaining
+    operations after a large multi-tool response. Quality checks and build both
+    pass.'
 schema: v1.0
 childrenIds: []
 created: 2026-02-06T03:27:58.789Z
